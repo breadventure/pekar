@@ -496,6 +496,7 @@
         <div class="grid g2" style="gap:12px;max-width:460px">
           <div class="field"><label id="tk-qty-label">Количество</label><div class="unit-row"><input type="number" id="tk-qty" value="10" min="0.5" step="0.5" oninput="renderTKTable()"><span class="unit" id="tk-unit">шт</span></div></div>
           <div class="field" id="tk-weight-field" style="display:none"><label>Масса 1 изделия</label><div class="unit-row"><input type="number" id="tk-weight" value="780" min="1" oninput="tkRescale(this.value)"><span class="unit">г</span></div></div>
+          <div class="field" id="tk-safety-field" style="display:none"><label>Страховка на замес</label><div class="unit-row"><input type="number" id="tk-safety" value="0" min="0" step="10" oninput="tkSafetyEdit(this.value)"><span class="unit">г</span></div></div>
         </div>
         <p class="hint" style="margin:0 0 6px" id="tk-flour-line"></p>
         <table>
@@ -2191,6 +2192,8 @@ function renderTK(){
   document.getElementById('tk-weight-field').style.display='';
   if(r.weight && !r._normalized){ var _s0=0; r.ing.forEach(function(i){_s0+=i[1];}); if(_s0>0 && Math.abs(_s0-r.weight)>0.5){ var _f=r.weight/_s0; r.ing.forEach(function(i){i[1]=Math.round(i[1]*_f*100)/100;}); } r._normalized=true; }
   var twi=document.getElementById('tk-weight');twi.value=tkBaseWeight(r);twi.disabled=!isChef();twi.style.opacity=isChef()?'':'0.55';
+  var _sff=document.getElementById('tk-safety-field'); if(_sff)_sff.style.display='';
+  var _sfi=document.getElementById('tk-safety'); if(_sfi){ _sfi.value=(r.safety||0); _sfi.disabled=!isChef(); _sfi.style.opacity=isChef()?'':'0.55'; }
   // versions
   var vbox=document.getElementById('tk-versions');
   if(r.versions&&r.versions.length){
@@ -2357,15 +2360,19 @@ function renderTKClient(){
 }
 function tkClientEdit(field,val){ if(!currentRecipe.client)currentRecipe.client={}; currentRecipe.client[field]=val; }
 
+function tkSafetyEdit(v){ if(currentRecipe)currentRecipe.safety=parseFloat(v)||0; clearTimeout(window._tkST); window._tkST=setTimeout(renderTKTable,500); }
 function renderTKTable(){
   var r=currentRecipe,n=parseFloat(document.getElementById('tk-qty').value)||0;
   var ing=tkActiveIng(),scale=tkScale();
-  document.getElementById('tk-col-n').textContent='На '+n;
+  var safety=(function(){var el=document.getElementById('tk-safety');return el?(parseFloat(el.value)||0):0;})();
+  document.getElementById('tk-col-n').textContent='На '+n+(safety>0?' (к замесу)':'');
   var flour=tkFlourTotal(ing,scale),total1=0;
   var waterT=0,grainT=0; ing.forEach(function(i){total1+=i[1]*scale; if(/вод/i.test(i[0]))waterT+=i[1]*scale; else grainT+=i[1]*scale;});
+  var totalN0=total1*n; var bufFactor=(totalN0>0&&safety>0)?(totalN0+safety)/totalN0:1; var nb=n*bufFactor;
   document.getElementById('tk-flour-line').innerHTML = flour>0
     ? '<b>Общая мука = '+(Math.round(flour*10)/10)+' г = 100%</b> (включая муку из опары/закваски). Проценты считаются от неё; правьте % или граммы — пересчёт автоматический.'
     : 'В этой рецептуре нет муки — проценты не считаются.';
+  if(safety>0){var _fl=document.getElementById("tk-flour-line"); if(_fl)_fl.innerHTML+=' <span style="color:var(--accent)">🛟 +страховка '+safety+' г учтена в колонке «к замесу».</span>';}
   document.getElementById('tk-body').innerHTML=ing.map(function(i,idx){
     var per1=Math.round(i[1]*scale*10)/10;
     var h=starterHydr(i[0]);
@@ -2381,10 +2388,10 @@ function renderTKTable(){
       : '—';
     return '<tr><td>'+(isChef()?('<div style="display:flex;gap:6px;align-items:center"><input type="text" value="'+tkEsc(i[0])+'" oninput="tkEditName('+idx+',this.value)" style="flex:1;min-width:110px;border:1.5px solid var(--hair);border-radius:8px;padding:5px;font-size:13px"><button onclick="tkDelIng('+idx+')" title="Удалить" style="border:none;background:none;cursor:pointer;color:#C0392B;font-size:15px">✕</button></div>'):i[0])+sub+'</td><td class="num">'+pctCell+'</td>'+
       '<td class="num"><input type="number" value="'+per1+'"'+(isChef()?'':' disabled')+' step="0.1" style="width:80px;text-align:right;border:1.5px solid var(--hair);border-radius:8px;padding:5px'+(isChef()?'':';opacity:.55')+'" oninput="tkEditIng('+idx+',this.value)"></td>'+
-      '<td class="num"><strong>'+(Math.round(per1*n*10)/10).toLocaleString('ru-RU')+'</strong></td></tr>';
+      '<td class="num"><strong>'+(Math.round(per1*nb*10)/10).toLocaleString('ru-RU')+'</strong></td></tr>';
   }).join('')+
-    (flour>0?'<tr class="total" style="background:rgba(71,162,218,.10)"><td>Мука всего (100%, со стартером)</td><td class="num"></td><td class="num">'+Math.round(flour*10)/10+'</td><td class="num">'+(Math.round(flour*n*10)/10).toLocaleString('ru-RU')+'</td></tr>':'<tr class="total" style="background:rgba(71,162,218,.10)"><td>Зерновая смесь всего</td><td class="num"></td><td class="num">'+Math.round(grainT*10)/10+'</td><td class="num">'+(Math.round(grainT*n*10)/10).toLocaleString('ru-RU')+'</td></tr>'+(waterT>0?'<tr class="total" style="background:rgba(71,162,218,.06)"><td>Вода всего</td><td class="num"></td><td class="num">'+Math.round(waterT*10)/10+'</td><td class="num">'+(Math.round(waterT*n*10)/10).toLocaleString('ru-RU')+'</td></tr>':''))+
-    '<tr class="total"><td>ИТОГО ('+(flour>0?'тесто':'общая масса')+' на 1)</td><td class="num"></td><td class="num">'+Math.round(total1*10)/10+'</td><td class="num">'+(Math.round(total1*n*10)/10).toLocaleString('ru-RU')+'</td></tr>'+(isChef()?'<tr><td colspan="4" style="padding-top:10px"><button class="btn" style="padding:4px 12px;font-size:12px" onclick="tkAddIng()">+ ингредиент</button></td></tr>':'');
+    (flour>0?'<tr class="total" style="background:rgba(71,162,218,.10)"><td>Мука всего (100%, со стартером)</td><td class="num"></td><td class="num">'+Math.round(flour*10)/10+'</td><td class="num">'+(Math.round(flour*nb*10)/10).toLocaleString('ru-RU')+'</td></tr>':'<tr class="total" style="background:rgba(71,162,218,.10)"><td>Зерновая смесь всего</td><td class="num"></td><td class="num">'+Math.round(grainT*10)/10+'</td><td class="num">'+(Math.round(grainT*nb*10)/10).toLocaleString('ru-RU')+'</td></tr>'+(waterT>0?'<tr class="total" style="background:rgba(71,162,218,.06)"><td>Вода всего</td><td class="num"></td><td class="num">'+Math.round(waterT*10)/10+'</td><td class="num">'+(Math.round(waterT*nb*10)/10).toLocaleString('ru-RU')+'</td></tr>':''))+
+    '<tr class="total"><td>ИТОГО ('+(flour>0?'тесто':'общая масса')+' на 1)</td><td class="num"></td><td class="num">'+Math.round(total1*10)/10+'</td><td class="num">'+(Math.round(total1*nb*10)/10).toLocaleString('ru-RU')+'</td></tr>'+(isChef()?'<tr><td colspan="4" style="padding-top:10px"><button class="btn" style="padding:4px 12px;font-size:12px" onclick="tkAddIng()">+ ингредиент</button></td></tr>':'');
   var twi2=document.getElementById('tk-weight'); if(twi2 && document.activeElement!==twi2){ twi2.value=Math.round(total1*10)/10; }
   var note=document.getElementById('tk-note');
   if(!r.notes){ r.notes = r.note ? [r.note] : []; }
@@ -2893,6 +2900,8 @@ function renderTK(){
   document.getElementById('tk-weight-field').style.display='';
   if(r.weight && !r._normalized){ var _s0=0; r.ing.forEach(function(i){_s0+=i[1];}); if(_s0>0 && Math.abs(_s0-r.weight)>0.5){ var _f=r.weight/_s0; r.ing.forEach(function(i){i[1]=Math.round(i[1]*_f*100)/100;}); } r._normalized=true; }
   var twi=document.getElementById('tk-weight');twi.value=tkBaseWeight(r);twi.disabled=!isChef();twi.style.opacity=isChef()?'':'0.55';
+  var _sff=document.getElementById('tk-safety-field'); if(_sff)_sff.style.display='';
+  var _sfi=document.getElementById('tk-safety'); if(_sfi){ _sfi.value=(r.safety||0); _sfi.disabled=!isChef(); _sfi.style.opacity=isChef()?'':'0.55'; }
   // versions
   var vbox=document.getElementById('tk-versions');
   if(r.versions&&r.versions.length){
@@ -2943,12 +2952,15 @@ function tkFlourTotal(ing,scale){
 function renderTKTable(){
   var r=currentRecipe,n=parseFloat(document.getElementById('tk-qty').value)||0;
   var ing=tkActiveIng(),scale=tkScale();
-  document.getElementById('tk-col-n').textContent='На '+n;
+  var safety=(function(){var el=document.getElementById('tk-safety');return el?(parseFloat(el.value)||0):0;})();
+  document.getElementById('tk-col-n').textContent='На '+n+(safety>0?' (к замесу)':'');
   var flour=tkFlourTotal(ing,scale),total1=0;
   var waterT=0,grainT=0; ing.forEach(function(i){total1+=i[1]*scale; if(/вод/i.test(i[0]))waterT+=i[1]*scale; else grainT+=i[1]*scale;});
+  var totalN0=total1*n; var bufFactor=(totalN0>0&&safety>0)?(totalN0+safety)/totalN0:1; var nb=n*bufFactor;
   document.getElementById('tk-flour-line').innerHTML = flour>0
     ? '<b>Общая мука = '+(Math.round(flour*10)/10)+' г = 100%</b> (включая муку из опары/закваски). Проценты считаются от неё; правьте % или граммы — пересчёт автоматический.'
     : 'В этой рецептуре нет муки — проценты не считаются.';
+  if(safety>0){var _fl=document.getElementById("tk-flour-line"); if(_fl)_fl.innerHTML+=' <span style="color:var(--accent)">🛟 +страховка '+safety+' г учтена в колонке «к замесу».</span>';}
   document.getElementById('tk-body').innerHTML=ing.map(function(i,idx){
     var per1=Math.round(i[1]*scale*10)/10;
     var h=starterHydr(i[0]);
@@ -2964,10 +2976,10 @@ function renderTKTable(){
       : '—';
     return '<tr><td>'+(isChef()?('<div style="display:flex;gap:6px;align-items:center"><input type="text" value="'+tkEsc(i[0])+'" oninput="tkEditName('+idx+',this.value)" style="flex:1;min-width:110px;border:1.5px solid var(--hair);border-radius:8px;padding:5px;font-size:13px"><button onclick="tkDelIng('+idx+')" title="Удалить" style="border:none;background:none;cursor:pointer;color:#C0392B;font-size:15px">✕</button></div>'):i[0])+sub+'</td><td class="num">'+pctCell+'</td>'+
       '<td class="num"><input type="number" value="'+per1+'"'+(isChef()?'':' disabled')+' step="0.1" style="width:80px;text-align:right;border:1.5px solid var(--hair);border-radius:8px;padding:5px'+(isChef()?'':';opacity:.55')+'" oninput="tkEditIng('+idx+',this.value)"></td>'+
-      '<td class="num"><strong>'+(Math.round(per1*n*10)/10).toLocaleString('ru-RU')+'</strong></td></tr>';
+      '<td class="num"><strong>'+(Math.round(per1*nb*10)/10).toLocaleString('ru-RU')+'</strong></td></tr>';
   }).join('')+
-    (flour>0?'<tr class="total" style="background:rgba(71,162,218,.10)"><td>Мука всего (100%, со стартером)</td><td class="num"></td><td class="num">'+Math.round(flour*10)/10+'</td><td class="num">'+(Math.round(flour*n*10)/10).toLocaleString('ru-RU')+'</td></tr>':'<tr class="total" style="background:rgba(71,162,218,.10)"><td>Зерновая смесь всего</td><td class="num"></td><td class="num">'+Math.round(grainT*10)/10+'</td><td class="num">'+(Math.round(grainT*n*10)/10).toLocaleString('ru-RU')+'</td></tr>'+(waterT>0?'<tr class="total" style="background:rgba(71,162,218,.06)"><td>Вода всего</td><td class="num"></td><td class="num">'+Math.round(waterT*10)/10+'</td><td class="num">'+(Math.round(waterT*n*10)/10).toLocaleString('ru-RU')+'</td></tr>':''))+
-    '<tr class="total"><td>ИТОГО ('+(flour>0?'тесто':'общая масса')+' на 1)</td><td class="num"></td><td class="num">'+Math.round(total1*10)/10+'</td><td class="num">'+(Math.round(total1*n*10)/10).toLocaleString('ru-RU')+'</td></tr>'+(isChef()?'<tr><td colspan="4" style="padding-top:10px"><button class="btn" style="padding:4px 12px;font-size:12px" onclick="tkAddIng()">+ ингредиент</button></td></tr>':'');
+    (flour>0?'<tr class="total" style="background:rgba(71,162,218,.10)"><td>Мука всего (100%, со стартером)</td><td class="num"></td><td class="num">'+Math.round(flour*10)/10+'</td><td class="num">'+(Math.round(flour*nb*10)/10).toLocaleString('ru-RU')+'</td></tr>':'<tr class="total" style="background:rgba(71,162,218,.10)"><td>Зерновая смесь всего</td><td class="num"></td><td class="num">'+Math.round(grainT*10)/10+'</td><td class="num">'+(Math.round(grainT*nb*10)/10).toLocaleString('ru-RU')+'</td></tr>'+(waterT>0?'<tr class="total" style="background:rgba(71,162,218,.06)"><td>Вода всего</td><td class="num"></td><td class="num">'+Math.round(waterT*10)/10+'</td><td class="num">'+(Math.round(waterT*nb*10)/10).toLocaleString('ru-RU')+'</td></tr>':''))+
+    '<tr class="total"><td>ИТОГО ('+(flour>0?'тесто':'общая масса')+' на 1)</td><td class="num"></td><td class="num">'+Math.round(total1*10)/10+'</td><td class="num">'+(Math.round(total1*nb*10)/10).toLocaleString('ru-RU')+'</td></tr>'+(isChef()?'<tr><td colspan="4" style="padding-top:10px"><button class="btn" style="padding:4px 12px;font-size:12px" onclick="tkAddIng()">+ ингредиент</button></td></tr>':'');
   var twi2=document.getElementById('tk-weight'); if(twi2 && document.activeElement!==twi2){ twi2.value=Math.round(total1*10)/10; }
   var note=document.getElementById('tk-note');
   if(!r.notes){ r.notes = r.note ? [r.note] : []; }
