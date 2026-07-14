@@ -304,8 +304,8 @@
     <input id="pin-input" type="password" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="••••" style="width:100%;text-align:center;font-size:26px;letter-spacing:8px;padding:12px;border:1.5px solid var(--ink);border-radius:12px;outline:none" onkeydown="if(event.key==='Enter')pinSubmit()">
     <div id="pin-err" style="color:#C0392B;font-size:13px;font-weight:600;min-height:18px;margin:8px 0"></div>
     <button class="btn primary" style="width:100%;padding:12px;font-size:15px" onclick="pinSubmit()">Войти</button>
-    <details style="margin-top:16px;text-align:left">
-      <summary class="hint" style="cursor:pointer;font-weight:600">☁️ Подключить общую базу (для команды)</summary>
+    <details style="margin-top:16px;text-align:left" id="bv-cloud-setup">
+      <summary class="hint" style="cursor:pointer;font-weight:600">☁️ Подключить общую базу (разовая настройка)</summary>
       <div style="margin-top:10px">
         <input type="text" id="bv-cloud-input" placeholder="Адрес веб-приложения (заканчивается на /exec)" style="width:100%;padding:9px 10px;border:1.5px solid var(--ink);border-radius:8px;font-size:13px;box-sizing:border-box">
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
@@ -6514,7 +6514,7 @@ function bvSave(){ try{ localStorage.setItem(BV_KEY, JSON.stringify(bvSnapshot()
 function bvLoad(){ try{ var raw=localStorage.getItem(BV_KEY); if(!raw)return false; var o=JSON.parse(raw); var n=0; for(var k in o){ if(o.hasOwnProperty(k) && BV_PERSIST.indexOf(k)>=0){ try{ window[k]=o[k]; n++; }catch(e){} } } return n>0; }catch(e){ return false; } }
 function bvReset(){ if(!confirm('Сбросить все данные к демонстрационным? Всё, что ты ввела, будет удалено безвозвратно.'))return; try{ localStorage.removeItem(BV_KEY); }catch(e){} location.reload(); }
 /* ---------- ОБЩАЯ БАЗА (Google Таблицы через Apps Script) ---------- */
-var BV_CLOUD_URL_EMBED='';   /* сюда зашьётся адрес для всей команды */
+var BV_CLOUD_URL_EMBED='https://script.google.com/macros/s/AKfycbzfpIfC0DfjhNhwfuby2ZEXT6u5I2rpwNEQJ3uEy6psIp6I40CtacpTM1tR_MUymrKy/exec';   /* адрес общей базы — подключается у всех автоматически */
 var BV_CLOUD_URL = BV_CLOUD_URL_EMBED || (function(){ try{ return localStorage.getItem('bv_cloud_url')||''; }catch(e){ return ''; } })();
 var BV_LAST_PUSH='';
 function bvNow(){ var d=new Date(); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
@@ -6557,7 +6557,7 @@ function bvBootCloud(){
     }
   }).catch(function(e){});
 }
-bvBootCloud();bvLoad();try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; bvCloudStatus(BV_CLOUD_URL?'База подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
+bvBootCloud();bvLoad();try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
 renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderReminders();remNotifs();renderRtest();renderAch();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
 
 calcKalk();calcAkt();calcHidr();calcBP();
