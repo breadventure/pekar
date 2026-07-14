@@ -305,6 +305,18 @@
     <div id="pin-err" style="color:#C0392B;font-size:13px;font-weight:600;min-height:18px;margin:8px 0"></div>
     <button class="btn primary" style="width:100%;padding:12px;font-size:15px" onclick="pinSubmit()">Войти</button>
     <details style="margin-top:16px;text-align:left">
+      <summary class="hint" style="cursor:pointer;font-weight:600">☁️ Подключить общую базу (для команды)</summary>
+      <div style="margin-top:10px">
+        <input type="text" id="bv-cloud-input" placeholder="Адрес веб-приложения (заканчивается на /exec)" style="width:100%;padding:9px 10px;border:1.5px solid var(--ink);border-radius:8px;font-size:13px;box-sizing:border-box">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <button class="btn" style="font-size:12px" onclick="bvSetCloudUrl(document.getElementById('bv-cloud-input').value)">Сохранить адрес</button>
+          <button class="btn" style="font-size:12px" onclick="bvCloudPull(true)">⬇ Загрузить сейчас</button>
+          <button class="btn" style="font-size:12px" onclick="bvCloudSave(true)">⬆ Сохранить в базу</button>
+        </div>
+        <div id="bv-cloud-status" class="hint" style="margin-top:8px"></div>
+      </div>
+    </details>
+    <details style="margin-top:16px;text-align:left">
       <summary class="hint" style="cursor:pointer">Тестовые PIN-коды (для отладки)</summary>
       <div class="hint" style="margin-top:8px;line-height:1.7">
         Светлана · Шеф — <b>6145</b><br>
@@ -6501,16 +6513,60 @@ function bvSnapshot(){ var o={}; for(var i=0;i<BV_PERSIST.length;i++){ var k=BV_
 function bvSave(){ try{ localStorage.setItem(BV_KEY, JSON.stringify(bvSnapshot())); }catch(e){} }
 function bvLoad(){ try{ var raw=localStorage.getItem(BV_KEY); if(!raw)return false; var o=JSON.parse(raw); var n=0; for(var k in o){ if(o.hasOwnProperty(k) && BV_PERSIST.indexOf(k)>=0){ try{ window[k]=o[k]; n++; }catch(e){} } } return n>0; }catch(e){ return false; } }
 function bvReset(){ if(!confirm('Сбросить все данные к демонстрационным? Всё, что ты ввела, будет удалено безвозвратно.'))return; try{ localStorage.removeItem(BV_KEY); }catch(e){} location.reload(); }
-bvLoad();
+/* ---------- ОБЩАЯ БАЗА (Google Таблицы через Apps Script) ---------- */
+var BV_CLOUD_URL_EMBED='';   /* сюда зашьётся адрес для всей команды */
+var BV_CLOUD_URL = BV_CLOUD_URL_EMBED || (function(){ try{ return localStorage.getItem('bv_cloud_url')||''; }catch(e){ return ''; } })();
+var BV_LAST_PUSH='';
+function bvNow(){ var d=new Date(); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
+function bvCloudStatus(msg, ok){ var el=document.getElementById('bv-cloud-status'); if(el){ el.textContent=msg||''; el.style.color=(ok===false)?'#C0392B':((ok===true)?'#2E7D32':'#6b6b63'); } }
+function bvSetCloudUrl(u){ u=(u||'').trim(); try{ localStorage.setItem('bv_cloud_url', u); }catch(e){} BV_CLOUD_URL=u; bvCloudStatus(u?'Адрес базы сохранён. Нажми «Загрузить сейчас».':'Адрес очищен — данные только на этом устройстве.', u?true:null); }
+function bvCloudPull(manual){
+  if(!BV_CLOUD_URL){ if(manual)bvCloudStatus('Сначала вставь адрес базы.',false); return; }
+  bvCloudStatus('Загрузка из общей базы…');
+  fetch(BV_CLOUD_URL,{method:'GET'}).then(function(r){return r.json();}).then(function(res){
+    if(res&&res.ok&&res.data){
+      for(var k in res.data){ if(BV_PERSIST.indexOf(k)>=0){ try{ window[k]=res.data[k]; }catch(e){} } }
+      bvSave();
+      try{ sessionStorage.setItem('bv_pulled','1'); }catch(e){}
+      bvCloudStatus('Синхронизировано '+bvNow(), true);
+      if(manual){ location.reload(); }
+    } else { bvCloudStatus('База пуста — в ней пока ничего не сохранено.', null); }
+  }).catch(function(e){ bvCloudStatus('Нет связи с базой — работаешь локально.', false); });
+}
+function bvCloudSave(manual){
+  if(!BV_CLOUD_URL){ if(manual)bvCloudStatus('Сначала вставь адрес базы.',false); return; }
+  var snap=JSON.stringify(bvSnapshot());
+  if(!manual && snap===BV_LAST_PUSH) return;
+  BV_LAST_PUSH=snap;
+  if(manual)bvCloudStatus('Сохранение в общую базу…');
+  fetch(BV_CLOUD_URL,{method:'POST',body:JSON.stringify({action:'save',data:bvSnapshot()})}).then(function(r){return r.json();}).then(function(res){
+    bvCloudStatus((res&&res.ok)?('Синхронизировано '+bvNow()):'Ошибка сохранения в базе', !!(res&&res.ok));
+  }).catch(function(e){ bvCloudStatus('Нет связи — сохранено локально.', false); });
+}
+function bvBootCloud(){
+  if(!BV_CLOUD_URL) return;
+  try{ if(sessionStorage.getItem('bv_pulled')) return; }catch(e){}
+  fetch(BV_CLOUD_URL,{method:'GET'}).then(function(r){return r.json();}).then(function(res){
+    if(res&&res.ok&&res.data){
+      var cur=''; try{ cur=localStorage.getItem(BV_KEY)||''; }catch(e){}
+      for(var k in res.data){ if(BV_PERSIST.indexOf(k)>=0){ try{ window[k]=res.data[k]; }catch(e){} } }
+      bvSave();
+      try{ sessionStorage.setItem('bv_pulled','1'); }catch(e){}
+      var neu=''; try{ neu=localStorage.getItem(BV_KEY)||''; }catch(e){}
+      if(neu && neu!==cur){ location.reload(); }
+    }
+  }).catch(function(e){});
+}
+bvBootCloud();bvLoad();try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; bvCloudStatus(BV_CLOUD_URL?'База подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
 renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderReminders();remNotifs();renderRtest();renderAch();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
 
 calcKalk();calcAkt();calcHidr();calcBP();
 
 /* автосохранение введённых данных */
 try{
-  setInterval(bvSave, 5000);
-  window.addEventListener('beforeunload', bvSave);
-  document.addEventListener('visibilitychange', function(){ if(document.hidden) bvSave(); });
+  setInterval(function(){ bvSave(); bvCloudSave(false); }, 8000);
+  window.addEventListener('beforeunload', function(){ bvSave(); bvCloudSave(false); });
+  document.addEventListener('visibilitychange', function(){ if(document.hidden){ bvSave(); bvCloudSave(false); } });
 }catch(e){}
 </script>
 <div id="print-area"></div>
