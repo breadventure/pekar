@@ -518,11 +518,7 @@
     <div>
       <div class="card">
         <b style="font-size:15px">Фото продукта</b>
-        <div class="grid g3" style="gap:10px;margin-top:10px">
-          <div class="photo" style="height:90px">сверху</div>
-          <div class="photo" style="height:90px">сбоку</div>
-          <div class="photo" style="height:90px">в разрезе</div>
-        </div>
+        <div id="tk-photos" class="grid g3" style="gap:10px;margin-top:10px"></div>
       </div>
       <div class="card chef-only" style="margin-top:14px" id="tk-cost-card">
         <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">💰 Экономика</b><span class="tag warn">видит шеф</span></div>
@@ -2205,15 +2201,7 @@ function renderTK(){
     document.getElementById('tk-vcomment').textContent='💬 '+r.versions[r._v||0].comment;
   } else vbox.style.display='none';
   // errors
-  var e=r.errors, eb=document.getElementById('tk-errors');
-  function eList(title,cls,arr){
-    if(!arr||!arr.length)return '';
-    return '<div style="margin-bottom:8px"><span class="tag '+cls+'">'+title+'</span>'+arr.map(function(x){
-      return '<div style="padding:7px 0;border-bottom:1.5px dashed var(--hair)"><b style="font-size:13px">'+x[0]+'</b><p style="color:var(--muted);font-size:12.5px">'+x[1]+'</p></div>';
-    }).join('')+'</div>';
-  }
-  eb.innerHTML = e ? (eList('Можно исправить','warn',e.fix)+eList('Нельзя исправить','crit',e.nofix)+eList('Как предотвратить','ok',e.prevent))
-    : '<p class="hint">Для этого продукта ошибки ещё не описаны. Пришлите 2–3 типовых случая — добавим: что лечится, что нет, как не допустить.</p>';
+  renderTKErrors();
   // steps
   var sc=document.getElementById('tk-steps-card');
   if(r.steps&&r.steps.length){
@@ -2222,14 +2210,8 @@ function renderTK(){
       return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1.5px dashed var(--hair);align-items:flex-start"><span class="step-n">'+(i+1)+'</span><span style="font-size:13.5px;padding-top:3px">'+st+'</span></div>';
     }).join('');
   } else sc.style.display='none';
-  var cc=document.getElementById('tk-client-card'), cb=document.getElementById('tk-client');
-  if(r.client){
-    cc.style.display='';
-    var c=r.client;
-    function row(l,v){return v?'<div class="pair"><span>'+l+'</span><span style="text-align:right;max-width:62%">'+v+'</span></div>':'';}
-    cb.innerHTML=(c.say?'<div style="padding:10px;background:#fff;border-radius:10px;font-size:14px;margin-bottom:8px">💬 «'+c.say+'»</div>':'')+
-      row('Коротко',c.short)+row('Вкус',c.taste)+row('Текстура',c.texture)+row('Особенности',c.osob)+row('Состав простыми словами',c.sostav)+row('Аллергены',c.allerg)+row('Срок хранения',c.srok)+row('Как хранить',c.hran)+row('С чем сочетать',c.sochet)+row('Кому рекомендовать',c.komu);
-  } else { cc.style.display='none'; }
+  renderTKClient();
+  renderTKPhotos();
   renderTKTable();
 }
 function tkActiveIng(){
@@ -2274,6 +2256,107 @@ function renderTKNotes(r){
 function tkEditNote(i,val){ var r=currentRecipe; if(!r.notes)r.notes=[]; r.notes[i]=val; }
 function tkDelNote(i){ var r=currentRecipe; if(!r.notes)return; r.notes.splice(i,1); var el=document.getElementById('tk-note'); if(el){el.style.display=(r.notes.length||isChef())?'':'none';el.innerHTML=renderTKNotes(r);} }
 function tkAddNote(){ var r=currentRecipe; if(!r.notes)r.notes=r.note?[r.note]:[]; r.notes.push(''); var el=document.getElementById('tk-note'); if(el){el.style.display='';el.innerHTML=renderTKNotes(r);} }
+/* ===== ФОТО НА GOOGLE ДИСКЕ + РЕДАКТИРОВАНИЕ КАРТОЧКИ ПРОДУКТА ===== */
+function bvUploadPhoto(file, cb){
+  if(!BV_CLOUD_URL){ alert('Для фото нужна общая база (Google Диск). Она пока не подключена.'); cb(null); return; }
+  if(!file){ cb(null); return; }
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var img=new Image();
+    img.onload=function(){
+      var max=1400, w=img.width, h=img.height;
+      if(w>max||h>max){ if(w>h){ h=Math.round(h*max/w); w=max; } else { w=Math.round(w*max/h); h=max; } }
+      var cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      var b64=cv.toDataURL('image/jpeg',0.85).split(',')[1];
+      fetch(BV_CLOUD_URL,{method:'POST',body:JSON.stringify({action:'uploadPhoto',name:(file.name||'photo.jpg'),mimeType:'image/jpeg',dataBase64:b64})})
+        .then(function(r){return r.json();})
+        .then(function(res){ if(res&&res.ok&&res.url)cb(res.url); else { alert('Не удалось загрузить фото.'); cb(null); } })
+        .catch(function(e){ alert('Нет связи с базой — фото не загружено.'); cb(null); });
+    };
+    img.onerror=function(){ alert('Не удалось прочитать изображение.'); cb(null); };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* --- Фото продукта (сверху / сбоку / в разрезе) --- */
+var TK_UPLOADING={};
+function renderTKPhotos(){
+  var r=currentRecipe, box=document.getElementById('tk-photos'); if(!box)return;
+  if(!r.photos)r.photos={};
+  var chef=isChef();
+  var slots=[['top','сверху'],['side','сбоку'],['cut','в разрезе']];
+  box.innerHTML=slots.map(function(sl){
+    if(TK_UPLOADING[sl[0]]) return '<div class="photo" style="height:90px">Загрузка…</div>';
+    var url=r.photos[sl[0]];
+    if(url){
+      return '<div class="photo" style="height:90px;padding:0;overflow:hidden;position:relative"><img src="'+url+'" style="width:100%;height:100%;object-fit:cover" alt="'+sl[1]+'">'+(chef?'<button onclick="tkPhotoDel(\''+sl[0]+'\')" title="Удалить" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px;padding:1px 6px">✕</button>':'')+'</div>';
+    }
+    return '<label class="photo" style="height:90px;cursor:'+(chef?'pointer':'default')+'" title="'+sl[1]+'">'+sl[1]+(chef?'<input type="file" accept="image/*" style="display:none" onchange="tkPhotoPick(\''+sl[0]+'\',this)">':'')+'</label>';
+  }).join('');
+}
+function tkPhotoPick(key,inp){
+  if(!inp.files||!inp.files[0])return;
+  TK_UPLOADING[key]=true; renderTKPhotos();
+  bvUploadPhoto(inp.files[0], function(url){ TK_UPLOADING[key]=false; if(url){ if(!currentRecipe.photos)currentRecipe.photos={}; currentRecipe.photos[key]=url; } renderTKPhotos(); });
+}
+function tkPhotoDel(key){ if(currentRecipe.photos)delete currentRecipe.photos[key]; renderTKPhotos(); }
+
+/* --- Критические ошибки (редактируемые + фото) --- */
+function renderTKErrors(){
+  var r=currentRecipe, eb=document.getElementById('tk-errors'); if(!eb)return;
+  if(!r.errors)r.errors={fix:[],nofix:[],prevent:[]};
+  var chef=isChef();
+  var cats=[['fix','Можно исправить','warn'],['nofix','Нельзя исправить','crit'],['prevent','Как предотвратить','ok']];
+  var html=cats.map(function(cat){
+    var arr=r.errors[cat[0]]||(r.errors[cat[0]]=[]);
+    var items=arr.map(function(x,i){
+      if(chef){
+        var photo = x[2]
+          ? '<div style="margin-top:6px"><img src="'+x[2]+'" style="max-width:120px;border-radius:8px;display:block"><button onclick="tkErrPhotoDel(\''+cat[0]+'\','+i+')" style="border:none;background:none;color:#C0392B;cursor:pointer;font-size:12px;margin-top:2px">✕ убрать фото</button></div>'
+          : (TK_UPLOADING['err_'+cat[0]+'_'+i] ? '<span style="font-size:12px;color:var(--muted)">Загрузка фото…</span>' : '<label style="font-size:12px;color:var(--accent);cursor:pointer">📷 добавить фото<input type="file" accept="image/*" style="display:none" onchange="tkErrPhotoPick(\''+cat[0]+'\','+i+',this)"></label>');
+        return '<div style="padding:8px 0;border-bottom:1.5px dashed var(--hair)">'+
+          '<input type="text" value="'+tkEsc(x[0])+'" placeholder="Заголовок" oninput="tkErrEdit(\''+cat[0]+'\','+i+',0,this.value)" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:5px;font-size:13px;font-weight:600;margin-bottom:4px;box-sizing:border-box">'+
+          '<textarea oninput="tkErrEdit(\''+cat[0]+'\','+i+',1,this.value)" placeholder="Описание" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:5px;font-size:12.5px;min-height:38px;box-sizing:border-box">'+tkEsc(x[1]||'')+'</textarea>'+
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-top:4px">'+photo+'<button onclick="tkErrDel(\''+cat[0]+'\','+i+')" style="border:none;background:none;color:#C0392B;cursor:pointer;font-size:12px">🗑 удалить</button></div>'+
+          '</div>';
+      }
+      return '<div style="padding:7px 0;border-bottom:1.5px dashed var(--hair)"><b style="font-size:13px">'+tkEsc(x[0])+'</b><p style="color:var(--muted);font-size:12.5px;margin:2px 0 0">'+tkEsc(x[1]||'')+'</p>'+(x[2]?'<img src="'+x[2]+'" style="max-width:140px;border-radius:8px;margin-top:4px;display:block">':'')+'</div>';
+    }).join('');
+    var addBtn = chef ? '<button class="btn" style="padding:2px 10px;font-size:11px;margin-top:6px" onclick="tkErrAdd(\''+cat[0]+'\')">+ добавить</button>' : '';
+    if(!arr.length && !chef) return '';
+    return '<div style="margin-bottom:12px"><span class="tag '+cat[2]+'">'+cat[1]+'</span><div style="margin-top:6px">'+items+'</div>'+addBtn+'</div>';
+  }).join('');
+  eb.innerHTML = html || '<p class="hint">Ошибки ещё не описаны.</p>';
+}
+function tkErrEdit(cat,i,field,val){ var a=currentRecipe.errors[cat]; if(a&&a[i])a[i][field]=val; }
+function tkErrDel(cat,i){ var a=currentRecipe.errors[cat]; if(a){a.splice(i,1);} renderTKErrors(); }
+function tkErrAdd(cat){ if(!currentRecipe.errors)currentRecipe.errors={fix:[],nofix:[],prevent:[]}; (currentRecipe.errors[cat]=currentRecipe.errors[cat]||[]).push(['','']); renderTKErrors(); }
+function tkErrPhotoPick(cat,i,inp){ if(!inp.files||!inp.files[0])return; TK_UPLOADING['err_'+cat+'_'+i]=true; renderTKErrors(); bvUploadPhoto(inp.files[0], function(url){ TK_UPLOADING['err_'+cat+'_'+i]=false; var a=currentRecipe.errors[cat]; if(url&&a&&a[i])a[i][2]=url; renderTKErrors(); }); }
+function tkErrPhotoDel(cat,i){ var a=currentRecipe.errors[cat]; if(a&&a[i])a[i][2]=''; renderTKErrors(); }
+
+/* --- Что говорить клиенту (редактируемое) --- */
+function renderTKClient(){
+  var r=currentRecipe, cc=document.getElementById('tk-client-card'), cb=document.getElementById('tk-client');
+  if(!cb)return;
+  if(!r.client)r.client={};
+  var c=r.client, chef=isChef();
+  if(cc)cc.style.display='';
+  var fields=[['say','Что сказать клиенту (фраза)'],['short','Коротко'],['taste','Вкус'],['texture','Текстура'],['osob','Особенности'],['sostav','Состав простыми словами'],['allerg','Аллергены'],['srok','Срок хранения'],['hran','Как хранить'],['sochet','С чем сочетать'],['komu','Кому рекомендовать']];
+  if(chef){
+    cb.innerHTML=fields.map(function(f){
+      return '<div class="field" style="margin:0 0 8px"><label>'+f[1]+'</label><input type="text" value="'+tkEsc(c[f[0]]||'')+'" oninput="tkClientEdit(\''+f[0]+'\',this.value)" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:6px;font-size:13px;box-sizing:border-box"></div>';
+    }).join('');
+  } else {
+    function row(l,v){return v?'<div class="pair"><span>'+l+'</span><span style="text-align:right;max-width:62%">'+tkEsc(v)+'</span></div>':'';}
+    cb.innerHTML=(c.say?'<div style="padding:10px;background:#fff;border-radius:10px;font-size:14px;margin-bottom:8px">💬 «'+tkEsc(c.say)+'»</div>':'')+
+      fields.slice(1).map(function(f){return row(f[1],c[f[0]]);}).join('');
+    if(!c.say && !fields.slice(1).some(function(f){return c[f[0]];})){ if(cc)cc.style.display='none'; }
+  }
+}
+function tkClientEdit(field,val){ if(!currentRecipe.client)currentRecipe.client={}; currentRecipe.client[field]=val; }
+
 function renderTKTable(){
   var r=currentRecipe,n=parseFloat(document.getElementById('tk-qty').value)||0;
   var ing=tkActiveIng(),scale=tkScale();
@@ -2820,15 +2903,7 @@ function renderTK(){
     document.getElementById('tk-vcomment').textContent='💬 '+r.versions[r._v||0].comment;
   } else vbox.style.display='none';
   // errors
-  var e=r.errors, eb=document.getElementById('tk-errors');
-  function eList(title,cls,arr){
-    if(!arr||!arr.length)return '';
-    return '<div style="margin-bottom:8px"><span class="tag '+cls+'">'+title+'</span>'+arr.map(function(x){
-      return '<div style="padding:7px 0;border-bottom:1.5px dashed var(--hair)"><b style="font-size:13px">'+x[0]+'</b><p style="color:var(--muted);font-size:12.5px">'+x[1]+'</p></div>';
-    }).join('')+'</div>';
-  }
-  eb.innerHTML = e ? (eList('Можно исправить','warn',e.fix)+eList('Нельзя исправить','crit',e.nofix)+eList('Как предотвратить','ok',e.prevent))
-    : '<p class="hint">Для этого продукта ошибки ещё не описаны. Пришлите 2–3 типовых случая — добавим: что лечится, что нет, как не допустить.</p>';
+  renderTKErrors();
   // steps
   var sc=document.getElementById('tk-steps-card');
   if(r.steps&&r.steps.length){
@@ -2837,14 +2912,8 @@ function renderTK(){
       return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1.5px dashed var(--hair);align-items:flex-start"><span class="step-n">'+(i+1)+'</span><span style="font-size:13.5px;padding-top:3px">'+st+'</span></div>';
     }).join('');
   } else sc.style.display='none';
-  var cc=document.getElementById('tk-client-card'), cb=document.getElementById('tk-client');
-  if(r.client){
-    cc.style.display='';
-    var c=r.client;
-    function row(l,v){return v?'<div class="pair"><span>'+l+'</span><span style="text-align:right;max-width:62%">'+v+'</span></div>':'';}
-    cb.innerHTML=(c.say?'<div style="padding:10px;background:#fff;border-radius:10px;font-size:14px;margin-bottom:8px">💬 «'+c.say+'»</div>':'')+
-      row('Коротко',c.short)+row('Вкус',c.taste)+row('Текстура',c.texture)+row('Особенности',c.osob)+row('Состав простыми словами',c.sostav)+row('Аллергены',c.allerg)+row('Срок хранения',c.srok)+row('Как хранить',c.hran)+row('С чем сочетать',c.sochet)+row('Кому рекомендовать',c.komu);
-  } else { cc.style.display='none'; }
+  renderTKClient();
+  renderTKPhotos();
   renderTKTable();
 }
 function tkActiveIng(){
