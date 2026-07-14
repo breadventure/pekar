@@ -341,7 +341,7 @@
     <button data-v="regl" data-group="kb"><span class="ico">📚</span>База знаний</button>
     <button data-v="team" data-group="team"><span class="ico">👥</span>Команда</button>
   </nav>
-  <div class="side-foot"><div class="motto">Контроль сегодня.<br>Качество завтра.</div><div style="margin-top:12px;font-size:10px;color:var(--muted);line-height:1.5">💾 Данные сохраняются в этом браузере<br><a onclick="bvReset()" style="cursor:pointer;text-decoration:underline">Сбросить к демо</a></div></div>
+  <div class="side-foot"><div class="motto">Контроль сегодня.<br>Качество завтра.</div><div id="bv-store-note" style="margin-top:12px;font-size:10px;color:var(--muted);line-height:1.5">💾 Данные сохраняются в этом браузере<br><a onclick="bvReset()" id="bv-reset-link" style="cursor:pointer;text-decoration:underline">Сбросить к демо</a></div></div>
 </aside>
 
 <div id="menu-overlay" onclick="toggleMenu()"></div>
@@ -6557,7 +6557,7 @@ function bvBootCloud(){
     }
   }).catch(function(e){});
 }
-bvBootCloud();bvLoad();try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
+bvBootCloud();bvLoad();try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} var _sn=document.getElementById('bv-store-note'); var _rl=document.getElementById('bv-reset-link'); if(BV_CLOUD_URL){ if(_sn)_sn.innerHTML='☁️ Данные в общей базе<br><span style="opacity:.8">общие для команды</span>'; if(_rl)_rl.style.display='none'; } bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
 renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderReminders();remNotifs();renderRtest();renderAch();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
 
 calcKalk();calcAkt();calcHidr();calcBP();
