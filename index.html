@@ -90,6 +90,21 @@
   .tag.crit{background:rgba(217,92,92,.18)}
   .tag.ok{background:rgba(126,166,106,.22)}
   .tag.warn{background:var(--yellow)}
+  /* ===== БЕЙДЖИ ===== */
+  .bdgs{display:flex;flex-wrap:wrap;gap:12px 10px;margin-top:4px}
+  .bdg{position:relative;display:inline-flex;flex-direction:column;align-items:center;width:78px;text-align:center}
+  .bdg-m{width:46px;height:46px;border-radius:50%;border:1.5px solid var(--ink);box-shadow:2px 2px 0 var(--ink);display:flex;align-items:center;justify-content:center;font-size:21px;line-height:1;position:relative}
+  .bdg-m::after{content:'';position:absolute;inset:3px;border-radius:50%;border:1.5px dashed rgba(29,29,27,.28);pointer-events:none}
+  .bdg-t{font-size:9.5px;line-height:1.25;margin-top:6px;font-weight:700;letter-spacing:.01em}
+  .bdg-gold{background:var(--yellow)}
+  .bdg-silver{background:#E6E4DA}
+  .bdg-bronze{background:#EBC79B}
+  .bdg-blue{background:var(--accent-soft)}
+  .bdg-auto{position:absolute;top:-4px;left:50%;transform:translateX(14px);font-size:7.5px;font-weight:700;background:var(--ink);color:var(--card);border-radius:99px;padding:1px 4px;letter-spacing:.04em}
+  .bdg-x{position:absolute;top:-5px;right:11px;width:17px;height:17px;border-radius:50%;border:1.5px solid var(--ink);background:var(--card);color:#C0392B;font-size:9px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+  .bdg-lock{opacity:.32;filter:grayscale(1)}
+  .bdg-pick{cursor:pointer;border:1.5px solid transparent;border-radius:10px;padding:7px 3px;transition:background .1s}
+  .bdg-pick:hover{background:var(--yellow-soft);border-color:var(--hair)}
   .row .date{margin-left:auto;color:var(--muted);font-size:12.5px;white-space:nowrap}
   .task{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1.5px dashed var(--hair);cursor:pointer}
   .task:last-child{border-bottom:none}
@@ -5451,8 +5466,82 @@ var ACH_OLD=[
  {n:'Надя',level:4,noErr:0,noLate:0,stable:[0,0],proposed:0,toProd:0,mentored:3,
   badges:['Наставник']}
 ];
-var ACH_MIG={done:false};
-function achOf(p){ if(!p.ach||typeof p.ach!=='object')p.ach={}; if(!p.ach.badges)p.ach.badges=[]; return p.ach; }
+var ACH_MIG={done:false,badges:false};
+/* ===== КАТАЛОГ БЕЙДЖЕЙ =====
+   auto — правило автовыдачи по показателям (null = только вручную)
+   tracks — для каких линеек (null = для всех) */
+var BADGES=[
+  /* — общие — */
+  {id:'year1',   ic:'🥖', t:'Год в BreadVenture',   tier:'silver', tracks:null, rule:'Стаж 1 год',                 auto:function(p,a){ return (tenureMonths(p.started)||0)>=12; }},
+  {id:'year2',   ic:'🥖', t:'2 года в BreadVenture',tier:'gold',   tracks:null, rule:'Стаж 2 года',                auto:function(p,a){ return (tenureMonths(p.started)||0)>=24; }},
+  {id:'year5',   ic:'👑', t:'5 лет в BreadVenture', tier:'gold',   tracks:null, rule:'Стаж 5 лет',                 auto:function(p,a){ return (tenureMonths(p.started)||0)>=60; }},
+  {id:'star45',  ic:'⭐', t:'Оценка 4.5+',          tier:'gold',   tracks:null, rule:'Средняя оценка смен ≥ 4.5 при 5+ оценках', auto:function(p,a){ var v=shiftAvg(p); return v!=null&&(p.shiftScores||[]).length>=5&&v>=4.5; }},
+  {id:'praise5', ic:'🌟', t:'5 похвал',             tier:'silver', tracks:null, rule:'5 похвал в карточке',        auto:function(p,a){ return (p.praises||[]).length>=5; }},
+  {id:'praise15',ic:'🌟', t:'15 похвал',            tier:'gold',   tracks:null, rule:'15 похвал в карточке',       auto:function(p,a){ return (p.praises||[]).length>=15; }},
+  {id:'late30',  ic:'⏰', t:'30 дней без опозданий',tier:'bronze', tracks:null, rule:'30 дней без опозданий',      auto:function(p,a){ return (a.noLate||0)>=30; }},
+  {id:'late100', ic:'⏰', t:'100 дней без опозданий',tier:'gold',  tracks:null, rule:'100 дней без опозданий',     auto:function(p,a){ return (a.noLate||0)>=100; }},
+  {id:'mentor1', ic:'🧑‍🏫', t:'Наставник',          tier:'silver', tracks:null, rule:'Обучил хотя бы одного',      auto:function(p,a){ return (a.mentored||0)>=1; }},
+  {id:'mentor3', ic:'🧑‍🏫', t:'Наставник команды',   tier:'gold',   tracks:null, rule:'Обучил троих и больше',      auto:function(p,a){ return (a.mentored||0)>=3; }},
+  /* — пекарь — */
+  {id:'noerr5',  ic:'🎯', t:'5 смен без ошибок',    tier:'bronze', tracks:['baker'], rule:'5 смен подряд без ошибок',  auto:function(p,a){ return (a.noErr||0)>=5; }},
+  {id:'noerr15', ic:'🎯', t:'15 смен без ошибок',   tier:'silver', tracks:['baker'], rule:'15 смен подряд без ошибок', auto:function(p,a){ return (a.noErr||0)>=15; }},
+  {id:'noerr30', ic:'🏆', t:'30 смен без ошибок',   tier:'gold',   tracks:['baker'], rule:'30 смен подряд без ошибок', auto:function(p,a){ return (a.noErr||0)>=30; }},
+  {id:'noerr100',ic:'💯', t:'100 смен без ошибок',  tier:'gold',   tracks:['baker'], rule:'100 смен подряд без ошибок',auto:function(p,a){ return (a.noErr||0)>=100; }},
+  {id:'stable',  ic:'📐', t:'Стабильная выпечка',   tier:'silver', tracks:['baker'], rule:'≥90% стабильных отпёков при 10+', auto:function(p,a){ return (a.stable1||0)>=10 && (a.stable0||0)/(a.stable1||1)>=0.9; }},
+  {id:'author',  ic:'💡', t:'Автор рецептуры',      tier:'gold',   tracks:['baker'], rule:'Довёл рецептуру до производства', auto:function(p,a){ return (a.toProd||0)>=1; }},
+  {id:'author3', ic:'📖', t:'Три рецептуры',        tier:'gold',   tracks:['baker'], rule:'Довёл 3 рецептуры до производства', auto:function(p,a){ return (a.toProd||0)>=3; }},
+  /* — бар — */
+  {id:'bar100',  ic:'☕', t:'100 смен на баре',     tier:'gold',   tracks:['bar'], rule:'100 смен на баре',        auto:function(p,a){ return (a.shiftsBar||0)>=100; }},
+  {id:'latte',   ic:'🎨', t:'Латте-арт',            tier:'silver', tracks:['bar'], rule:'≥90% удачных при 10+',    auto:function(p,a){ return (a.latte1||0)>=10 && (a.latte0||0)/(a.latte1||1)>=0.9; }},
+  {id:'service', ic:'🤝', t:'Стабильный сервис',    tier:'silver', tracks:['bar'], rule:'≥90% оценок «ок» при 10+',auto:function(p,a){ return (a.serv1||0)>=10 && (a.serv0||0)/(a.serv1||1)>=0.9; }},
+  {id:'upsell',  ic:'📈', t:'Апселлер',             tier:'bronze', tracks:['bar'], rule:'25 удачных апселлов',     auto:function(p,a){ return (a.upsell||0)>=25; }},
+  /* — менеджер — */
+  {id:'improve', ic:'🔧', t:'Внедрил улучшение',    tier:'silver', tracks:['mgr'], rule:'Внедрено хотя бы одно улучшение', auto:function(p,a){ return (a.toProd||0)>=1; }},
+  /* — только вручную — */
+  {id:'hero',    ic:'🦸', t:'Герой недели',         tier:'blue', tracks:null, rule:'Присваивает шеф',  auto:null},
+  {id:'save',    ic:'🚑', t:'Спас смену',           tier:'blue', tracks:null, rule:'Присваивает шеф',  auto:null},
+  {id:'reliable',ic:'🛡', t:'Надёжный пекарь',      tier:'blue', tracks:null, rule:'Присваивает шеф',  auto:null},
+  {id:'shaping', ic:'✋', t:'Мастер формовки',      tier:'blue', tracks:null, rule:'Присваивает шеф',  auto:null},
+  {id:'idea',    ic:'✨', t:'Идея года',            tier:'blue', tracks:null, rule:'Присваивает шеф',  auto:null},
+  {id:'face',    ic:'😊', t:'Лицо пекарни',         tier:'blue', tracks:null, rule:'Присваивает шеф',  auto:null}
+];
+function badgeById(id){ return BADGES.filter(function(b){return b.id===id;})[0]; }
+function badgeEarned(b,p,a){ if(!b.auto)return false; try{ return !!b.auto(p,a); }catch(e){ return false; } }
+function badgeFits(b,tk){ return !b.tracks || b.tracks.indexOf(tk)>=0; }
+/* что показывать у сотрудника: заработанные + присвоенные вручную */
+function achBadges(p){
+  var a=achOf(p), tk=trackOf(p), out=[];
+  BADGES.forEach(function(b){
+    if(!badgeFits(b,tk))return;
+    var auto=badgeEarned(b,p,a);
+    var man=(a.manual||[]).indexOf(b.id)>=0;
+    if(auto||man)out.push({b:b,auto:auto});
+  });
+  return out;
+}
+function badgeHtml(b,auto,pid,rm){
+  return '<span class="bdg" title="'+tkEsc(b.t+' — '+b.rule)+'">'+
+    '<span class="bdg-m bdg-'+b.tier+'">'+b.ic+'</span>'+
+    (auto?'<span class="bdg-auto">авто</span>':'')+
+    (rm?'<button class="bdg-x" onclick="achBadgeOff(\''+pid+'\',\''+b.id+'\')" title="Снять бейдж">✕</button>':'')+
+    '<span class="bdg-t">'+tkEsc(b.t)+'</span></span>';
+}
+/* перенос старых текстовых бейджей в каталог — однократно */
+function badgeMigrate(){
+  if(!ACH_MIG||ACH_MIG.badges)return;
+  if(typeof TEAM==='undefined'||!TEAM.forEach)return;
+  TEAM.forEach(function(p){
+    var a=achOf(p), old=(a.badges||[]).slice();
+    old.forEach(function(t){
+      var b=BADGES.filter(function(x){return x.t===t;})[0];
+      if(b){ if(a.manual.indexOf(b.id)<0)a.manual.push(b.id); }
+      else if(a.custom.indexOf(t)<0)a.custom.push(t);
+    });
+    a.badges=[];
+  });
+  ACH_MIG.badges=true;
+}
+function achOf(p){ if(!p.ach||typeof p.ach!=='object')p.ach={}; if(!p.ach.badges)p.ach.badges=[]; if(!p.ach.manual)p.ach.manual=[]; if(!p.ach.custom)p.ach.custom=[]; return p.ach; }
 /* однократно переносим показатели из старого списка в карточки сотрудников */
 function achMigrate(){
   if(!ACH_MIG||ACH_MIG.done)return;
@@ -5532,9 +5621,11 @@ function renderAch(){
     if(pr)real+=achRow('🌟 Похвал',pr);
     if(iss)real+=achRow('⚠️ Активных замечаний',iss);
     var man=achManual(p);
-    var badges=(a.badges||[]).map(function(b,i){
-      return '<span class="tag ok" style="margin:2px 4px 2px 0;display:inline-flex;align-items:center;gap:4px">🏅 '+tkEsc(b)+
-        (isChef()?'<button onclick="achBadgeDel(\''+p.id+'\','+i+')" title="Убрать" style="border:none;background:none;cursor:pointer;font-size:10px;padding:0 2px;color:var(--ink)">✕</button>':'')+'</span>';
+    var got=achBadges(p);
+    var badges=got.map(function(g){ return badgeHtml(g.b,g.auto,p.id,isChef()&&!g.auto); }).join('');
+    badges+=(a.custom||[]).map(function(c,i){
+      return '<span class="tag" style="margin:2px 4px 2px 0;display:inline-flex;align-items:center;gap:4px">'+tkEsc(c)+
+        (isChef()?'<button onclick="achCustomDel(\''+p.id+'\','+i+')" title="Убрать" style="border:none;background:none;cursor:pointer;font-size:10px;padding:0 2px;color:#C0392B">✕</button>':'')+'</span>';
     }).join('');
     return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">'+
       '<b style="font-size:19px">'+tkEsc(empName(p))+'</b>'+
@@ -5545,22 +5636,60 @@ function renderAch(){
       '<div style="margin-top:10px">'+real+'</div>'+
       (man?('<div style="margin-top:8px;border-top:1.5px dashed var(--hair);padding-top:6px">'+man+'</div>')
           :'<p class="hint" style="margin-top:8px">Показатели пока не заполнены'+(isChef()?' — нажми «✎ Показатели».':'.')+'</p>')+
-      (badges?'<div style="margin-top:10px">'+badges+'</div>':'')+
-      (isChef()?'<div class="btn-row chef-only" style="margin-top:10px;gap:8px"><button class="btn" style="padding:3px 10px;font-size:12px" onclick="achEdit(\''+p.id+'\')">✎ Показатели</button><button class="btn" style="padding:3px 10px;font-size:12px" onclick="achBadgeAdd(\''+p.id+'\')">+ Бейдж</button></div>':'')+
+      (badges?'<div class="bdgs" style="margin-top:12px;border-top:1.5px dashed var(--hair);padding-top:10px">'+badges+'</div>':'')+
+      (isChef()?'<div class="btn-row chef-only" style="margin-top:10px;gap:8px"><button class="btn" style="padding:3px 10px;font-size:12px" onclick="achEdit(\''+p.id+'\')">✎ Показатели</button><button class="btn" style="padding:3px 10px;font-size:12px" onclick="achBadgePick(\''+p.id+'\')">🏅 Бейджи</button></div>':'')+
       '</div>';
   }).join('');
 }
-function achBadgeAdd(id){
+function achCustomDel(id,i){
   if(!isChef())return; var p=empById(id); if(!p)return;
-  var b=prompt('Название бейджа (например: «Наставник»):',''); b=(b||'').trim(); if(!b)return;
-  var a=achOf(p); if(a.badges.indexOf(b)<0)a.badges.push(b);
+  var a=achOf(p); if(!a.custom[i])return;
+  if(!confirm('Убрать старый бейдж «'+a.custom[i]+'» у '+empName(p)+'?'))return;
+  a.custom.splice(i,1); renderAch(); bvSaveNow();
+}
+function achBadgeOff(id,bid){
+  if(!isChef())return; var p=empById(id); if(!p)return;
+  var a=achOf(p), b=badgeById(bid); if(!b)return;
+  if(b.auto){ alert('«'+b.t+'» выдаётся автоматически по показателям — снять его вручную нельзя.\n\nУсловие: '+b.rule); return; }
+  var i=a.manual.indexOf(bid); if(i<0)return;
+  if(!confirm('Снять бейдж «'+b.t+'» у '+empName(p)+'?'))return;
+  a.manual.splice(i,1);
+  var m=document.getElementById('bdg-modal'); if(m)achBadgePick(id);
   renderAch(); bvSaveNow();
 }
-function achBadgeDel(id,i){
+function achBadgeToggle(id,bid){
   if(!isChef())return; var p=empById(id); if(!p)return;
-  var a=achOf(p); if(!a.badges[i])return;
-  if(!confirm('Убрать бейдж «'+a.badges[i]+'» у '+empName(p)+'?'))return;
-  a.badges.splice(i,1); renderAch(); bvSaveNow();
+  var a=achOf(p), b=badgeById(bid); if(!b)return;
+  if(b.auto){ alert('«'+b.t+'» зарабатывается сам — вручную его не выдать и не снять.\n\nУсловие: '+b.rule+'\n\n'+(badgeEarned(b,p,a)?'Сейчас условие выполнено — бейдж есть.':'Условие пока не выполнено. Чтобы бейдж появился, поменяй показатели.')); return; }
+  var i=a.manual.indexOf(bid);
+  if(i>=0)a.manual.splice(i,1); else a.manual.push(bid);
+  achBadgePick(id); renderAch(); bvSaveNow();
+}
+function achBadgePick(id){
+  if(!isChef())return; var p=empById(id); if(!p)return;
+  var a=achOf(p), tk=trackOf(p);
+  var ov=document.getElementById('bdg-modal');
+  if(!ov){ ov=document.createElement('div'); ov.id='bdg-modal'; ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px'; document.body.appendChild(ov); }
+  var list=BADGES.filter(function(b){return badgeFits(b,tk);});
+  function sect(title,arr,note){
+    if(!arr.length)return '';
+    return '<div style="margin-top:14px"><b style="font-size:13px">'+title+'</b>'+(note?'<p class="hint" style="margin:2px 0 6px">'+note+'</p>':'')+
+      '<div class="bdgs">'+arr.map(function(b){
+        var auto=badgeEarned(b,p,a), man=a.manual.indexOf(b.id)>=0, on=auto||man;
+        return '<span class="bdg-pick'+(on?'':' bdg-lock')+'" onclick="achBadgeToggle(\''+p.id+'\',\''+b.id+'\')" title="'+tkEsc(b.rule)+'">'+badgeHtml(b,auto,p.id,false)+'</span>';
+      }).join('')+'</div></div>';
+  }
+  var autoB=list.filter(function(b){return b.auto;});
+  var manB=list.filter(function(b){return !b.auto;});
+  ov.innerHTML='<div style="background:var(--bg);border:1.5px solid var(--ink);border-radius:16px;max-width:560px;width:100%;padding:20px;box-shadow:4px 4px 0 var(--ink)">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">🏅 Бейджи — '+tkEsc(empName(p))+'</b><button onclick="document.getElementById(\'bdg-modal\').remove()" style="border:none;background:none;font-size:20px;cursor:pointer">✕</button></div>'+
+    '<p class="hint" style="margin:4px 0 0">Линейка «'+tkEsc(TRACKS[tk].title.toLowerCase())+'». Наведи на бейдж — увидишь условие.</p>'+
+    sect('Зарабатываются сами',autoB,'Выдаются по показателям. Выдать или снять вручную нельзя — меняй показатели.')+
+    sect('Присваивает шеф',manB,'Нажми, чтобы выдать или снять.')+
+    ((a.custom||[]).length?('<div style="margin-top:14px"><b style="font-size:13px">Старые бейджи</b><p class="hint" style="margin:2px 0 6px">Из прежней системы, вне каталога. Можно убрать.</p>'+
+      a.custom.map(function(c,i){ return '<span class="tag" style="margin:2px 4px 2px 0;display:inline-flex;align-items:center;gap:4px">'+tkEsc(c)+'<button onclick="achCustomDel(\''+p.id+'\','+i+');achBadgePick(\''+p.id+'\')" style="border:none;background:none;cursor:pointer;font-size:10px;padding:0 2px;color:#C0392B">✕</button></span>'; }).join('')+'</div>'):'')+
+    '<div style="display:flex;gap:8px;margin-top:18px"><button class="btn primary" onclick="document.getElementById(\'bdg-modal\').remove()">Готово</button></div>'+
+    '</div>';
 }
 function achEdit(id){
   if(!isChef())return; var p=empById(id); if(!p)return;
@@ -7907,8 +8036,8 @@ function bvBootCloud(){
     }
   }).catch(function(e){});
 }
-bvBootCloud();bvLoad();try{if(typeof rolesBoot==='function')rolesBoot();}catch(e){}try{if(typeof teamBoot==='function')teamBoot();}catch(e){}try{if(typeof coMigrate==='function')coMigrate();}catch(e){}try{if(typeof achMigrate==='function')achMigrate();}catch(e){}try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} var _sn=document.getElementById('bv-store-note'); var _rl=document.getElementById('bv-reset-link'); if(BV_CLOUD_URL){ if(_sn)_sn.innerHTML='☁️ Данные в общей базе<br><span style="opacity:.8">общие для команды</span><br><a onclick="bvPing()" style="cursor:pointer;text-decoration:underline">Проверить базу</a>'; if(_rl)_rl.style.display='none'; } bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
-renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAch();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();rolesBoot();teamBoot();coMigrate();achMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
+bvBootCloud();bvLoad();try{if(typeof rolesBoot==='function')rolesBoot();}catch(e){}try{if(typeof teamBoot==='function')teamBoot();}catch(e){}try{if(typeof coMigrate==='function')coMigrate();}catch(e){}try{if(typeof achMigrate==='function'){achMigrate();badgeMigrate();}}catch(e){}try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} var _sn=document.getElementById('bv-store-note'); var _rl=document.getElementById('bv-reset-link'); if(BV_CLOUD_URL){ if(_sn)_sn.innerHTML='☁️ Данные в общей базе<br><span style="opacity:.8">общие для команды</span><br><a onclick="bvPing()" style="cursor:pointer;text-decoration:underline">Проверить базу</a>'; if(_rl)_rl.style.display='none'; } bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
+renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAch();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();rolesBoot();teamBoot();coMigrate();achMigrate();badgeMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
 
 calcKalk();calcAkt();calcHidr();calcBP();
 
