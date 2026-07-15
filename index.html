@@ -1105,7 +1105,7 @@
 <section class="view" id="v-hr">
   <div class="crumbs"><a onclick="go('dash')">Главная</a> / Личные данные</div>
   <div class="note" style="margin-bottom:16px">🔒 В боевой версии раздел видят только менеджер и сам сотрудник. Документы и зарплаты не будут храниться в общей таблице — отдельное защищённое хранилище. Ниже — демо-данные.</div>
-  <div class="field" style="max-width:280px"><label>Сотрудник</label><select id="hr-emp"><option>Аня · пекарь (хлеб)</option><option>Нико · пекарь</option><option>Андрей · пекарь (сдоба) / бариста</option><option>Надя · менеджер</option></select></div>
+  <div class="field" style="max-width:320px"><label>Сотрудник</label><select id="hr-emp" onchange="hrSelect(this.value)"></select></div>
   <div class="grid g3">
     <div class="card">
       <b style="font-size:15px">📄 Документы</b>
@@ -1128,12 +1128,7 @@
     </div>
     <div class="card">
       <b style="font-size:15px">💼 Условия</b>
-      <div style="margin-top:8px">
-        <div class="pair"><span>Дата начала работы</span><span><b>12.06.2025</b></span></div>
-        <div class="pair"><span>Стаж</span><span><b>почти 1 год 🎉</b></span></div>
-        <div class="pair"><span>Зарплата</span><span class="tag warn">видит менеджер</span></div>
-        <div class="pair"><span>День рождения</span><span><b>03.11</b></span></div>
-      </div>
+      <div id="hr-cond" style="margin-top:8px"></div>
     </div>
   </div>
 </section>
@@ -1166,7 +1161,7 @@
     <button class="on" onclick="tab(this,'team-people')">Команда</button>
     <button onclick="tab(this,'team-ach')">Достижения и рост</button>
   </div>
-  <div class="tabpane active" id="team-people"><div id="team-list-wrap"><div class="btn-row chef-only" style="margin-bottom:14px"><button class="btn primary" onclick="empNew()">+ Добавить сотрудника</button></div><div id="team-grid" class="grid g2"></div><div id="team-archived"></div></div><div id="team-detail" style="display:none"></div></div>
+  <div class="tabpane active" id="team-people"><div id="team-list-wrap"><div id="team-legend"></div><div class="btn-row chef-only" style="margin-bottom:14px"><button class="btn primary" onclick="empNew()">+ Добавить сотрудника</button></div><div id="team-grid" class="grid g2"></div><div id="team-archived"></div></div><div id="team-detail" style="display:none"></div></div>
   <div class="tabpane" id="team-ach">
     <div class="note" style="margin-bottom:16px">🏅 Система оценивает рабочие показатели и вклад, а не личность. Помогает видеть надёжность и рост команды, и снижать зависимость от одного человека.</div>
     <div id="ach-grid" class="grid g2"></div>
@@ -4288,8 +4283,8 @@ function reglAttach(){
 
 /* ===== КОМАНДА ===== */
 var TEAM=[
- {id:'u_sveta',n:'Светлана',first:'Светлана',last:'Васильева',role:'Владелица · технолог · пекарь-кондитер (пт)',pos:'Владелица',dir:'Производство',started:'2025-05-01',mentor:'—',level:5,status:'Активный',phone:'+381 ...',tg:'@sveta',email:'sveta@breadventure.rs',resp:'Рецептуры и качество, финансы, маркетинг, Б2Б',good:'Сладкая выпечка, новые продукты, переговоры',skills:{'Закваска':5,'Формовка':5,'Декор':5,'Начинки':5,'Контроль качества':5,'Организация смены':5},skillMeta:{},history:[['2025-09','Технолог — выводит новые позиции'],['2026-01','Запустила линейку бабок']],issues:[],praises:[],shiftScores:[5,5,4,5]},
- {id:'u_nadya',n:'Надя',first:'Надежда',last:'—',role:'Менеджер',pos:'Менеджер',dir:'Производство',started:'2025-08-01',mentor:'Светлана',level:4,status:'Активный',phone:'+381 ...',tg:'@nadya',email:'',resp:'Закупки, смены, витрина, отчётность',good:'Порядок в процессах, общение с поставщиками',skills:{'Организация смены':5,'Контроль качества':4,'Санитария':4},skillMeta:{},history:[['2025-08','Менеджер пекарни']],issues:[],praises:[],shiftScores:[]},
+ {id:'u_sveta',n:'Светлана',first:'Светлана',last:'Васильева',role:'Владелица · технолог · пекарь-кондитер (пт)',pos:'Владелица',dir:'Управление',started:'2025-05-01',contractStart:'2025-05-01',bday:'12.04',mentor:'—',level:5,status:'Активный',phone:'+381 ...',tg:'@sveta',email:'sveta@breadventure.rs',resp:'Рецептуры и качество, финансы, маркетинг, Б2Б',good:'Сладкая выпечка, новые продукты, переговоры',skills:{'Закваска':5,'Формовка':5,'Декор':5,'Начинки':5,'Контроль качества':5,'Организация смены':5},skillMeta:{},history:[['2025-09','Технолог — выводит новые позиции'],['2026-01','Запустила линейку бабок']],issues:[],praises:[],shiftScores:[5,5,4,5]},
+ {id:'u_nadya',n:'Надя',first:'Надежда',last:'—',role:'Менеджер',pos:'Менеджер',dir:'Производство',started:'2025-08-01',contractStart:'2025-09-01',bday:'27.07',mentor:'Светлана',level:4,status:'Активный',phone:'+381 ...',tg:'@nadya',email:'',resp:'Закупки, смены, витрина, отчётность',good:'Порядок в процессах, общение с поставщиками',skills:{'Организация смены':5,'Контроль качества':4,'Санитария':4},skillMeta:{},history:[['2025-08','Менеджер пекарни']],issues:[],praises:[],shiftScores:[]},
  {id:'u_anya',n:'Аня',first:'Анна',last:'—',role:'Пекарь · хлеб',pos:'Старший пекарь',dir:'Хлеб',started:'2025-11-10',mentor:'Нико',level:3,status:'Активный',phone:'+381 ...',tg:'@anya',email:'',resp:'Хлебные смены, закваска, ретардация',good:'Стабильный тартин, аккуратная формовка',skills:{'Закваска':4,'Замес':4,'Формовка':5,'Расстойка':4,'Выпечка':4,'Санитария':5},skillMeta:{'Формовка':['2026-05','Стабильно ровная затяжка']},history:[['2025-11','Пришла стажёром'],['2026-02','Самостоятельные хлебные смены'],['2026-05','Повышение уровня: Старший пекарь по хлебу']],issues:[{date:'2026-06-08',cat:'Расстойка',text:'Вторая партия пересидела — следить за таймером каждой партии',by:'Светлана',status:'Активно'}],praises:[{date:'2026-05-20',cat:'Высокое качество работы',text:'Идеальная корка всю неделю',by:'Светлана'}],shiftScores:[4,5,4,4,5,4,5,4,5,5]},
  {id:'u_niko',n:'Нико',first:'Нико',last:'—',role:'Пекарь',pos:'Старший пекарь',dir:'Хлеб',started:'2025-06-01',mentor:'—',level:3,status:'Активный',phone:'+381 ...',tg:'@niko',email:'',resp:'Хлебные смены, пиковые дни, Б2Б-отгрузки',good:'Скорость без потери качества, выносливость',skills:{'Закваска':4,'Замес':5,'Формовка':4,'Расстойка':4,'Выпечка':5,'Организация смены':4},skillMeta:{},history:[['2025-06','В команде с открытия'],['2026-03','Наставник для новичков']],issues:[],praises:[{date:'2026-06-06',cat:'Отличная смена',text:'В одиночку закрыл пятничный пик — 53 буханки',by:'Светлана'},{date:'2026-04-01',cat:'Наставничество',text:'Обучил двух новичков',by:'Светлана'}],shiftScores:[5,5,4,5,5,5,4,5]},
  {id:'u_andrey',n:'Андрей',first:'Андрей',last:'—',role:'Пекарь · сдоба / бариста',pos:'Пекарь',dir:'Сдоба',started:'2025-10-01',mentor:'Светлана',level:2,status:'Активный',phone:'+381 ...',tg:'@andrey',email:'',resp:'Бриошь и начинки, кофейная стойка',good:'Ровная сдоба, латте-арт',skills:{'Замес':4,'Начинки':5,'Формовка':4,'Декор':4,'Эспрессо':5,'Молочные напитки':4,'Латте-арт':4,'Настройка помола':4,'Фильтр':3,'Общение с клиентами':4,'Рекомендации продуктов':4,'Апселл':3,'Касса':4,'Витрина':5,'Отчёт дня':4,'Оборудование':5,'Санитария':4},skillMeta:{'Латте-арт':['2026-04','Ровные розетты']},history:[['2025-10','Сдоба и бар'],['2026-04','Отвечает за кофейную стойку']],issues:[],praises:[],shiftScores:[4,4,5,4,4]}
@@ -4331,6 +4326,124 @@ function statusBadge(st){
   var cls={'Активный':'ok','В отпуске':'warn','На больничном':'warn','Архивный':''}[st]||'';
   return '<span class="tag '+cls+'">'+st+'</span>';
 }
+/* ===== КОМАНДА: добавление с должностью, стаж, легенда уровней ===== */
+var POS_LIST=['Стажёр','Пекарь','Старший пекарь','Пекарь-кондитер','Бариста','Менеджер','Технолог','Владелица'];
+var DIR_LIST=['Хлеб','Сдоба','Бар','Производство','Управление'];
+
+function tmDate(d){ if(!d)return ''; var p=String(d).slice(0,10).split('-'); return p.length===3?(p[2]+'.'+p[1]+'.'+p[0]):d; }
+function tenureMonths(from){
+  if(!from)return null;
+  var a=new Date(from); if(isNaN(a))return null;
+  var b=new Date();
+  var m=(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth());
+  if(b.getDate()<a.getDate())m--;
+  return m<0?0:m;
+}
+function tenureText(from){
+  var m=tenureMonths(from);
+  if(m===null)return '—';
+  var y=Math.floor(m/12), mm=m%12;
+  function pl(n,f){ var n10=n%10,n100=n%100; if(n10===1&&n100!==11)return f[0]; if(n10>=2&&n10<=4&&(n100<10||n100>=20))return f[1]; return f[2]; }
+  var parts=[];
+  if(y>0)parts.push(y+' '+pl(y,['год','года','лет']));
+  if(mm>0)parts.push(mm+' '+pl(mm,['месяц','месяца','месяцев']));
+  if(!parts.length)return 'меньше месяца';
+  return parts.join(' ')+(m>=12&&m<13?' 🎉':'');
+}
+
+/* --- добавление сотрудника (модалка) --- */
+function empNew(){
+  if(!isChef()){alert('Добавлять сотрудников может шеф или менеджер.');return;}
+  var ov=document.getElementById('emp-new-modal');
+  if(!ov){ ov=document.createElement('div'); ov.id='emp-new-modal'; ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px'; document.body.appendChild(ov); }
+  var today=new Date().toISOString().slice(0,10);
+  ov.innerHTML='<div style="background:var(--bg);border:1.5px solid var(--ink);border-radius:16px;max-width:520px;width:100%;padding:20px;box-shadow:4px 4px 0 var(--ink)">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b style="font-size:17px">👤 Новый сотрудник</b><button onclick="document.getElementById(\'emp-new-modal\').remove()" style="border:none;background:none;font-size:20px;cursor:pointer">✕</button></div>'+
+    '<div class="grid g2" style="gap:10px">'+
+      '<div class="field" style="margin:0"><label>Имя *</label><input type="text" id="en-name" placeholder="Аня" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
+      '<div class="field" style="margin:0"><label>Фамилия</label><input type="text" id="en-last" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
+    '</div>'+
+    '<div class="grid g2" style="gap:10px;margin-top:8px">'+
+      '<div class="field" style="margin:0"><label>Должность</label><select id="en-pos" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+POS_LIST.map(function(p){return '<option'+(p==='Пекарь'?' selected':'')+'>'+p+'</option>';}).join('')+'</select></div>'+
+      '<div class="field" style="margin:0"><label>Направление</label><select id="en-dir" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+DIR_LIST.map(function(p){return '<option>'+p+'</option>';}).join('')+'</select></div>'+
+    '</div>'+
+    '<div class="field" style="margin:8px 0 0"><label>Описание роли (как показывать в карточке)</label><input type="text" id="en-role" placeholder="Пекарь · хлеб" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
+    '<div class="grid g2" style="gap:10px;margin-top:8px">'+
+      '<div class="field" style="margin:0"><label>Уровень</label><select id="en-level" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+LEVELS.map(function(l,i){return '<option value="'+i+'"'+(i===0?' selected':'')+'>'+l+'</option>';}).join('')+'</select></div>'+
+      '<div class="field" style="margin:0"><label>Наставник</label><input type="text" id="en-mentor" placeholder="Светлана" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
+    '</div>'+
+    '<div class="grid g2" style="gap:10px;margin-top:8px">'+
+      '<div class="field" style="margin:0"><label>Дата начала работы</label><input type="date" id="en-started" value="'+today+'" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
+      '<div class="field" style="margin:0"><label>Дата начала контракта</label><input type="date" id="en-contract" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn primary" onclick="empNewSave()">Добавить</button><button class="btn" onclick="document.getElementById(\'emp-new-modal\').remove()">Отмена</button></div>'+
+    '</div>';
+}
+function empNewSave(){
+  function v(id){ var el=document.getElementById(id); return el?el.value:''; }
+  var name=(v('en-name')||'').trim();
+  if(!name){ alert('Впиши имя сотрудника.'); return; }
+  var pos=v('en-pos'), dir=v('en-dir');
+  var role=(v('en-role')||'').trim() || (pos + (dir&&dir!=='Управление'?(' · '+dir.toLowerCase()):''));
+  TEAM.push({id:'u_'+Date.now(),n:name,first:name,last:(v('en-last')||'—'),role:role,pos:pos,dir:dir,
+    started:v('en-started')||new Date().toISOString().slice(0,10), contractStart:v('en-contract')||'',
+    mentor:(v('en-mentor')||'—'),level:parseInt(v('en-level'))||0,status:'Активный',
+    phone:'',tg:'',email:'',resp:'',good:'',skills:{},skillMeta:{},
+    history:[[new Date().toISOString().slice(0,7),'Принят(а) в команду']],issues:[],praises:[],shiftScores:[]});
+  var ov=document.getElementById('emp-new-modal'); if(ov)ov.remove();
+  renderTeam(); renderHR();
+}
+
+/* --- легенда уровней --- */
+function renderLevelLegend(){
+  var box=document.getElementById('team-legend'); if(!box)return;
+  var rows=LEVELS.map(function(l,i){
+    var desc=['Учится, работает под присмотром наставника','Работает самостоятельно по техкарте','Стабильно держит качество, помогает другим','Ведёт смену, отвечает за результат','Обучает, ставит процессы, принимает смену','Разрабатывает рецептуры и стандарты'][i]||'';
+    return '<div style="display:flex;gap:10px;padding:5px 0;border-top:1.5px dashed var(--hair);font-size:12.5px"><b style="min-width:130px">'+l+'</b><span style="color:var(--muted)">'+desc+'</span></div>';
+  }).join('');
+  var bar=LEVELS_BAR.map(function(l){return l;}).join(' → ');
+  box.innerHTML='<details style="margin-bottom:14px"><summary style="cursor:pointer;font-weight:600;font-size:13px">❓ Что значат уровни и оценки</summary>'+
+    '<div style="border:1.5px solid var(--hair);border-radius:12px;padding:12px;margin-top:8px;background:var(--card)">'+
+    '<b style="font-size:13px">Ур. — уровень мастерства</b><p class="hint" style="margin:2px 0 6px">Ставит шеф вручную в карточке сотрудника — по факту навыков, а не автоматически. Растёт, когда человек стабильно тянет следующую ступень.</p>'+
+    rows+
+    '<div style="margin-top:10px"><b style="font-size:13px">Для бара:</b> <span style="color:var(--muted);font-size:12.5px">'+bar+'</span></div>'+
+    '<div style="margin-top:12px;border-top:1.5px solid var(--hair);padding-top:8px"><b style="font-size:13px">★ смены</b><p class="hint" style="margin:2px 0 0">Средняя оценка за <b>последние 10 смен</b> (шеф ставит оценку при приёмке смены, от 1 до 5). Считается автоматически.</p></div>'+
+    '<div style="margin-top:8px"><b style="font-size:13px">⚠️ замечаний</b><p class="hint" style="margin:2px 0 0">Сколько открытых (неисправленных) замечаний у сотрудника. Закрываются в карточке.</p></div>'+
+    '</div></details>';
+}
+
+/* --- Личные данные: условия и стаж --- */
+var HR_EMP=null;
+function renderHR(){
+  var sel=document.getElementById('hr-emp'); if(!sel)return;
+  var active=TEAM.filter(function(p){return p.status!=='Архивный';});
+  if(!HR_EMP||!active.some(function(p){return p.id===HR_EMP;})) HR_EMP=(active[0]||{}).id;
+  sel.innerHTML=active.map(function(p){ return '<option value="'+p.id+'"'+(p.id===HR_EMP?' selected':'')+'>'+p.n+' · '+p.role+'</option>'; }).join('');
+  renderHRCond();
+}
+function hrSelect(id){ HR_EMP=id; renderHRCond(); }
+function renderHRCond(){
+  var box=document.getElementById('hr-cond'); if(!box)return;
+  var p=TEAM.filter(function(x){return x.id===HR_EMP;})[0];
+  if(!p){ box.innerHTML='<p class="hint">Выбери сотрудника.</p>'; return; }
+  var chef=isChef();
+  function dfield(label,key){
+    return '<div class="pair"><span>'+label+'</span><span>'+
+      (chef?('<input type="date" value="'+(p[key]||'')+'" onchange="hrSetDate(\''+key+'\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px">')
+           :('<b>'+(tmDate(p[key])||'—')+'</b>'))+'</span></div>';
+  }
+  box.innerHTML=
+    dfield('Дата начала работы','started')+
+    '<div class="pair"><span>Общий стаж</span><span><b>'+tenureText(p.started)+'</b></span></div>'+
+    dfield('Дата начала контракта','contractStart')+
+    '<div class="pair"><span>Стаж по контракту</span><span><b>'+(p.contractStart?tenureText(p.contractStart):'— контракт не указан')+'</b></span></div>'+
+    '<div class="pair"><span>Зарплата</span><span class="tag warn">видит менеджер</span></div>'+
+    '<div class="pair"><span>День рождения</span><span>'+(chef?('<input type="text" value="'+(p.bday||'')+'" placeholder="03.11" oninput="hrSetField(\'bday\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px;width:80px">'):('<b>'+(p.bday||'—')+'</b>'))+'</span></div>'+
+    '<p class="hint" style="margin:8px 0 0">Общий стаж — с первого дня работы. Стаж по контракту — с даты оформления рабочего контракта.</p>';
+}
+function hrSetDate(key,val){ var p=TEAM.filter(function(x){return x.id===HR_EMP;})[0]; if(p){ p[key]=val; renderHRCond(); } }
+function hrSetField(key,val){ var p=TEAM.filter(function(x){return x.id===HR_EMP;})[0]; if(p)p[key]=val; }
+
 function renderTeam(){
   var active=TEAM.filter(function(p){return p.status!=='Архивный';});
   document.getElementById('team-grid').innerHTML=active.map(function(p){
@@ -5225,12 +5338,7 @@ function empArchive(id){
   p.status='Архивный'; empBack();
 }
 function empRestore(id){ if(!isChef())return; empById(id).status='Активный'; renderTeam(); }
-function empNew(){
-  if(!isChef()){alert('Добавлять сотрудников может шеф.');return;}
-  var n=prompt('Имя сотрудника:'); if(!n||!n.trim())return;
-  TEAM.push({id:'u_'+Date.now(),n:n.trim(),first:n.trim(),last:'—',role:'Пекарь',pos:'Стажёр',dir:'Хлеб',started:new Date().toISOString().slice(0,10),mentor:'—',level:0,status:'Активный',phone:'',tg:'',email:'',resp:'',good:'',skills:{},skillMeta:{},history:[[new Date().toISOString().slice(0,7),'Принят(а) в команду']],issues:[],praises:[],shiftScores:[]});
-  renderTeam();
-}
+
 
 
 /* ===== ОТЧЁТ ДНЯ БАРИСТА ===== */
@@ -6849,7 +6957,7 @@ function bvBootCloud(){
   }).catch(function(e){});
 }
 bvBootCloud();bvLoad();try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} var _sn=document.getElementById('bv-store-note'); var _rl=document.getElementById('bv-reset-link'); if(BV_CLOUD_URL){ if(_sn)_sn.innerHTML='☁️ Данные в общей базе<br><span style="opacity:.8">общие для команды</span>'; if(_rl)_rl.style.display='none'; } bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
-renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderReminders();remNotifs();renderRtest();renderAch();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
+renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAch();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
 
 calcKalk();calcAkt();calcHidr();calcBP();
 
