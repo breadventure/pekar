@@ -1181,7 +1181,7 @@
 <!-- ===== НАПОМИНАНИЯ ШЕФА ===== -->
 <section class="view" id="v-remind">
   <div class="crumbs"><a onclick="go('dash')">Главная</a> / Регулярные работы</div>
-  <div class="note" style="margin-bottom:16px">⏰ Регулярные работы и сроки. Система считает следующий срок от даты последнего выполнения и шлёт автонапоминания по лестнице: <b>на половине срока → за месяц → за 3 / 2 / 1 неделю → за 3 / 2 / 1 день → в день срока</b>. В прототипе они появляются в колокольчике; в боевой версии — ещё и в Telegram шефу.</div>
+  <div class="note" style="margin-bottom:16px">⏰ Регулярные работы и сроки. Система считает следующий срок от даты последнего выполнения и шлёт автонапоминания по лестнице: <b>на половине срока → за месяц → за 3 / 2 / 1 неделю → за 3 / 2 / 1 день → в день срока</b>. В прототипе они появляются в колокольчике; в боевой версии — ещё и в Telegram шефу.<br><span style="font-size:12px">👆 <b>Нажми на название работы</b> — откроются детали: дата последнего выполнения, исполнитель, телефон, адрес, что и зачем делаем, комментарии.</span></div>
   <div class="btn-row" style="margin-bottom:16px"><button class="btn primary" onclick="var f=document.getElementById('rem-form');f.style.display=(f.style.display==='none')?'':'none'">+ Добавить напоминание</button></div>
   <div class="card" id="rem-form" style="display:none;margin-bottom:16px">
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
@@ -1709,10 +1709,11 @@ function renderSubnav(name){
 
 /* ===== РОЛЕВАЯ МОДЕЛЬ ===== */
 var ROLES={
-  chef:{label:'Шеф-пекарь',edit:true,prod:true,recipes:true,tests:true,cost:true,baronly:true,bar:true,permsView:true,permsEdit:true},
-  manager:{label:'Менеджер',edit:true,prod:true,recipes:false,tests:false,cost:true,baronly:true,bar:true,permsView:true,permsEdit:false},
-  baker:{label:'Пекарь',edit:false,prod:true,recipes:true,tests:true,cost:false,baronly:false,bar:false,permsView:false,permsEdit:false},
-  barista:{label:'Бариста',edit:false,prod:false,recipes:false,tests:false,cost:false,baronly:true,bar:true,permsView:false,permsEdit:false}
+  owner:  {label:'Владелец',  prod:true, sched:true, recipes:true, tests:true, cost:true, bar:true, baronly:true, vitcon:true, partners:true, kb:true, remind:true, team:true, train:true, onboard:true, hr:true, company:true, edit:true, permsView:true, permsEdit:true},
+  chef:   {label:'Шеф-пекарь',prod:true, sched:true, recipes:true, tests:true, cost:true, bar:true, baronly:true, vitcon:true, partners:true, kb:true, remind:true, team:true, train:true, onboard:true, hr:true, company:true, edit:true, permsView:true, permsEdit:true},
+  manager:{label:'Менеджер',  prod:true, sched:true, recipes:false,tests:false,cost:true, bar:true, baronly:true, vitcon:true, partners:true, kb:true, remind:true, team:true, train:true, onboard:true, hr:true, company:true, edit:true, permsView:true, permsEdit:false},
+  baker:  {label:'Пекарь',    prod:true, sched:true, recipes:true, tests:true, cost:false,bar:false,baronly:false,vitcon:false,partners:false,kb:true, remind:false,team:true, train:true, onboard:true, hr:false,company:false,edit:false,permsView:false,permsEdit:false},
+  barista:{label:'Бариста',   prod:false,sched:true, recipes:false,tests:false,cost:false,bar:true, baronly:true, vitcon:false,partners:false,kb:true, remind:false,team:true, train:true, onboard:true, hr:false,company:false,edit:false,permsView:false,permsEdit:false}
 };
 var ROLES_BASE=JSON.parse(JSON.stringify(ROLES));
 var CUR_ROLE='chef';
@@ -1733,11 +1734,11 @@ function setCurrentPerson(r){
   var rl=document.getElementById('cur-role'); if(rl)rl.textContent=p.role+' \u00B7 '+p.shift;
 }
 var PIN_MAP={
-  '6145':{name:'\u0421\u0432\u0435\u0442\u043B\u0430\u043D\u0430',ava:'\u0421',role:'\u0428\u0435\u0444-\u043F\u0435\u043A\u0430\u0440\u044C',shift:'\u0443\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u00B7 \u043F\u044F\u0442\u043D\u0438\u0446\u044B \u0443 \u043F\u0435\u0447\u0438',roleKey:'chef'},
-  '2970':{name:'\u041D\u0430\u0434\u044F',ava:'\u041D',role:'\u041C\u0435\u043D\u0435\u0434\u0436\u0435\u0440',shift:'09:00\u201318:00',roleKey:'manager'},
-  '6495':{name:'\u0410\u043D\u044F',ava:'\u0410',role:'\u041F\u0435\u043A\u0430\u0440\u044C',shift:'05:00\u201314:00',roleKey:'baker'},
-  '2552':{name:'\u041D\u0438\u043A\u043E',ava:'\u041D',role:'\u041F\u0435\u043A\u0430\u0440\u044C',shift:'05:00\u201314:00',roleKey:'baker'},
-  '8086':{name:'\u0410\u043D\u0434\u0440\u0435\u0439',ava:'\u0410',role:'\u041F\u0435\u043A\u0430\u0440\u044C',shift:'05:00\u201314:00',roleKey:'baker'},
+  '6145':{name:'\u0421\u0432\u0435\u0442\u043B\u0430\u043D\u0430',ava:'\u0421',role:'\u0428\u0435\u0444-\u043F\u0435\u043A\u0430\u0440\u044C',shift:'\u0443\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u00B7 \u043F\u044F\u0442\u043D\u0438\u0446\u044B \u0443 \u043F\u0435\u0447\u0438',roleKey:'chef',empId:'u_sveta'},
+  '2970':{name:'\u041D\u0430\u0434\u044F',ava:'\u041D',role:'\u041C\u0435\u043D\u0435\u0434\u0436\u0435\u0440',shift:'09:00\u201318:00',roleKey:'manager',empId:'u_nadya'},
+  '6495':{name:'\u0410\u043D\u044F',ava:'\u0410',role:'\u041F\u0435\u043A\u0430\u0440\u044C',shift:'05:00\u201314:00',roleKey:'baker',empId:'u_anya'},
+  '2552':{name:'\u041D\u0438\u043A\u043E',ava:'\u041D',role:'\u041F\u0435\u043A\u0430\u0440\u044C',shift:'05:00\u201314:00',roleKey:'baker',empId:'u_niko'},
+  '8086':{name:'\u0410\u043D\u0434\u0440\u0435\u0439',ava:'\u0410',role:'\u041F\u0435\u043A\u0430\u0440\u044C',shift:'05:00\u201314:00',roleKey:'baker',empId:'u_andrey'},
   '8442':{name:'\u0410\u043D\u0434\u0440\u0435\u0439',ava:'\u0410',role:'\u0411\u0430\u0440\u0438\u0441\u0442\u0430',shift:'07:00\u201316:00',roleKey:'barista'}
 };
 var PIN_MAP_BASE=JSON.parse(JSON.stringify(PIN_MAP));
@@ -1793,22 +1794,23 @@ function applyBreportOrder(){
 function goGroup(g){
   if(typeof GROUPS!=='undefined'&&GROUPS[g]&&GROUPS[g].views.length)go(GROUPS[g].views[0][1]);
 }
+/* карта: раздел -> право. Меняется галочками в «Правах доступа». */
+var VIEW_PERM={
+  recipes:'recipes', tk:'recipes', rarch:'recipes', plan:'recipes', bakeplan:'recipes', mixplan:'recipes',
+  rtest:'tests',
+  drinks:'bar', products:'bar',
+  vitrina:'baronly', vitcon:'vitcon', partners:'partners',
+  regl:'kb', san:'kb', oborud:'kb', err:'kb', scripts:'kb', faq:'kb',
+  remind:'remind',
+  team:'team', train:'train', onboard:'onboard', hr:'hr', company:'company',
+  sched:'sched'
+};
 function viewAllowed(name){
   var R=role();
-  if((name==='recipes'||name==='tk'||name==='rarch')&&!R.recipes)return false;
-  if(name==='rtest'&&!R.tests)return false;
-  if((name==='drinks'||name==='products')&&!R.bar)return false;
-  if(name==='plan'&&!R.recipes)return false;           /* план замеса — только пекарские роли */
-  if(name==='bakeplan'&&!R.recipes)return false;        /* планировщик печи — пекарские роли */
-  if(name==='mixplan'&&!R.recipes)return false;         /* планировщик замесов — пекарские роли */
-  if(name==='vitrina'&&!R.baronly)return false;        /* витрина — бариста/шеф/менеджер (не рядовой пекарь) */
-  if(name==='vitcon'&&!R.edit)return false;             /* конструктор витрины — шеф/менеджер */
-  if(name==='partners'&&!R.edit)return false;          /* партнёры — только шеф/менеджер */
-  if(name==='hr'&&!R.edit)return false;                /* личные данные — только шеф/менеджер */
-  if(name==='company'&&!R.edit)return false;            /* данные компании — шеф/менеджер */
-  if(name==='roles'&&!R.permsView)return false;        /* права доступа — по флагу permsView */
-  if(name==='remind'&&CUR_ROLE!=='chef')return false; /* регулярные работы — только шеф */
-  if((name==='handoff'||name==='breport'||name==='check'||name==='sched')&&!R.prod&&!R.baronly)return false;
+  var f=VIEW_PERM[name];
+  if(f&&!R[f])return false;
+  if(name==='roles'&&!R.permsView)return false;
+  if((name==='handoff'||name==='breport'||name==='check')&&!R.prod&&!R.baronly)return false;
   return true;
 }
 /* перестроить субнавигацию групп под роль */
@@ -1845,10 +1847,13 @@ function applyRoleNav(){
     GROUPS.prod.views=pv;
   }
   /* личные данные — только шеф/менеджер */
-  GROUPS.team.views=GROUPS.team.views.filter(function(v){return v[1]!=='hr'&&v[1]!=='roles'&&v[1]!=='company'&&v[1]!=='badges';});
+  GROUPS.team.views=GROUPS.team.views.filter(function(v){ return ['hr','roles','company','badges','team','train','onboard'].indexOf(v[1])<0; });
+  if(R.team)GROUPS.team.views.push(['Сотрудники','team']);
+  if(R.train)GROUPS.team.views.push(['Обучение','train']);
+  if(R.onboard)GROUPS.team.views.push(['Онбординг','onboard']);
   GROUPS.team.views.push(['Бейджи','badges']);
-  if(R.edit)GROUPS.team.views.push(['Личные данные','hr']);
-  if(R.edit)GROUPS.team.views.push(['Данные компании','company']);
+  if(R.hr)GROUPS.team.views.push(['Личные данные','hr']);
+  if(R.company)GROUPS.team.views.push(['Данные компании','company']);
   if(R.permsView)GROUPS.team.views.push(['Права доступа','roles']);
   /* регулярные работы — только шеф */
   GROUPS.kb.views=GROUPS.kb.views.filter(function(v){return v[1]!=='remind';});
@@ -4474,6 +4479,15 @@ function empNew(){
     '</div>';
   _ROLE_SEL['en']=[]; renderRoleChips('en'); enLevels();
 }
+function teamChanged(){
+  try{ renderTeam(); }catch(e){}
+  try{ renderHR(); }catch(e){}
+  try{ if(typeof obFillPeople==='function')obFillPeople(); if(typeof renderOnboard==='function')renderOnboard(); }catch(e){}
+  try{ renderAch(); renderBadgeBook(); }catch(e){}
+  try{ renderRolesMatrix(); }catch(e){}
+  try{ renderReminders(); }catch(e){}
+  try{ bvSaveNow(); }catch(e){}
+}
 function empNewSave(){
   function v(id){ var el=document.getElementById(id); return el?el.value:''; }
   var name=(v('en-name')||'').trim();
@@ -4487,7 +4501,7 @@ function empNewSave(){
     phone:v('en-phone'),tg:v('en-tg'),email:'',resp:'',good:'',skills:{},skillMeta:{},docs:[],san:{},
     history:[[new Date().toISOString().slice(0,7),'Принят(а) в команду']],issues:[],praises:[],shiftScores:[]});
   var ov=document.getElementById('emp-new-modal'); if(ov)ov.remove();
-  renderTeam(); renderHR();
+  teamChanged();
 }
 
 function levelSelHtml(L,cur){
@@ -4769,7 +4783,7 @@ function empDelete(id){
   var pins=Object.keys(PIN_MAP).filter(function(x){return PIN_MAP[x].empId===p.id;});
   var i=TEAM.indexOf(p); if(i>=0)TEAM.splice(i,1);
   if(pins.length){ pinDropFor(id); alert('Вход закрыт: PIN '+pins.join(', ')+' больше не работает.'); }
-  empBack(); renderTeam(); renderHR(); renderAch(); renderBadgeBook(); renderRolesMatrix(); bvSaveNow();
+  empBack(); teamChanged();
 }
 
 /* --- фото сотрудника --- */
@@ -4975,7 +4989,7 @@ function empEditSave(id){
   p.started=v('started'); p.contractStart=v('contractStart');
   p.resp=v('resp'); p.good=v('good');
   var ov=document.getElementById('emp-edit-modal'); if(ov)ov.remove();
-  empOpen(id); renderTeam(); renderHR(); bvSaveNow();
+  empOpen(id,true); teamChanged();
 }
 
 function renderTeam(){
@@ -5153,12 +5167,13 @@ function renderReminders(){
       '<div class="field" style="margin:0"><label>Исполнитель</label><input type="text" value="'+ev(r.who)+'" oninput="remField('+i+',\'who\',this.value)" placeholder="Кто выполняет"></div>'+
       '<div class="field" style="margin:0"><label>Телефон</label><input type="text" value="'+ev(r.phone)+'" oninput="remField('+i+',\'phone\',this.value)" placeholder="+381…"></div>'+
       '</div>'+
+      '<div class="field" style="margin:10px 0 0"><label>Когда делали в последний раз</label><input type="date" value="'+ev(r.last)+'" onchange="remField('+i+',\'last\',this.value);renderReminders()"><p class="hint" style="margin:3px 0 0">От этой даты считается следующий срок.</p></div>'+
       '<div class="field" style="margin:10px 0 0"><label>Адрес / где</label><input type="text" value="'+ev(r.addr)+'" oninput="remField('+i+',\'addr\',this.value)" placeholder="Адрес сервиса или объекта"></div>'+
       '<div class="field" style="margin:10px 0 0"><label>Описание — что / зачем / почему</label><textarea rows="3" oninput="remField('+i+',\'desc\',this.value)" placeholder="Что именно делаем, зачем и почему это важно">'+ev(r.desc)+'</textarea></div>'+
       '<div class="field" style="margin:10px 0 0"><label>Комментарии</label><textarea rows="2" oninput="remField('+i+',\'comments\',this.value)" placeholder="Заметки, история, нюансы">'+ev(r.comments)+'</textarea></div>'+
       '</div>';
     return {html:'<div class="card" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">'+
-      '<div style="min-width:200px;cursor:pointer" onclick="remToggle('+i+')"><b style="font-size:15px">'+r.name+' <span class="chev" id="rem-chev-'+i+'" style="font-size:12px">▾</span></b><br><span style="color:var(--muted);font-size:12.5px">каждые '+unitName(r.n,r.u)+(r.note?' · '+r.note:'')+' · последний раз '+fmtD(new Date(r.last))+'</span></div>'+
+      '<div style="min-width:200px;cursor:pointer" onclick="remToggle('+i+')"><b style="font-size:15px">'+r.name+' <span class="chev" id="rem-chev-'+i+'" style="font-size:12px">▾</span></b> <span style="font-size:11px;color:var(--accent)">нажми, чтобы открыть детали</span><br><span style="color:var(--muted);font-size:12.5px">каждые '+unitName(r.n,r.u)+(r.note?' · '+r.note:'')+' · последний раз '+fmtD(new Date(r.last))+'</span></div>'+
       '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="font-size:14px"><b>'+fmtD(next)+'</b></span>'+remTag(days)+
       '<button class="btn" onclick="remPlan('+i+')">📅 В график</button><button class="btn" onclick="remDone('+i+')">Сделано сегодня</button></div></div>'+det+'</div>',days:days};
   });
@@ -6625,7 +6640,27 @@ function brArchComment(i){
 
 
 /* ===== НАСТРОЙКИ ПРАВ (матрица) ===== */
-var PERM_FLAGS=[['prod','Производство'],['recipes','Рецептуры (техкарты)'],['tests','Тесты рецептур'],['cost','Себестоимость · зарплаты'],['baronly','Бар: напитки, скрипты, Njuppa'],['edit','Редактирование · личные данные · компания'],['permsView','Права доступа: смотреть'],['permsEdit','Права доступа: настраивать']];
+var PERM_FLAGS=[
+  ['prod','Производство: планирование, чек-листы, передача смены'],
+  ['sched','График смен'],
+  ['recipes','Рецептуры (техкарты) и планировщики'],
+  ['tests','Тесты рецептур'],
+  ['cost','Себестоимость · зарплаты'],
+  ['bar','Бар: напитки и продукты'],
+  ['baronly','Витрина дня'],
+  ['vitcon','Конструктор витрины'],
+  ['partners','Партнёры'],
+  ['kb','База знаний: регламенты, санитария, оборудование, FAQ'],
+  ['remind','Регулярные работы и санкнижки'],
+  ['team','Команда: карточки сотрудников'],
+  ['train','Обучение и тесты'],
+  ['onboard','Онбординг'],
+  ['hr','Личные данные'],
+  ['company','Данные компании'],
+  ['edit','Редактирование (правка данных, а не только просмотр)'],
+  ['permsView','Права доступа: смотреть'],
+  ['permsEdit','Права доступа: настраивать']
+];
 function rolesBoot(){
   var k,i;
   for(k in ROLES_BASE){ if(!ROLES[k]) ROLES[k]=JSON.parse(JSON.stringify(ROLES_BASE[k])); }
@@ -6714,10 +6749,13 @@ function pinName(pn){ var e=PIN_MAP[pn]; if(!e)return '?'; var p=pinEmp(pn); ret
 function pinPos(pn){ var p=pinEmp(pn); return p?(p.pos||''):''; }
 /* однократно связываем существующие входы с карточками по имени */
 function pinLink(){
-  if(!ACH_MIG||ACH_MIG.pins)return;
+  if(!ACH_MIG||ACH_MIG.pins2)return;
   if(typeof TEAM==='undefined'||!TEAM.forEach)return;
   Object.keys(PIN_MAP).forEach(function(pn){
-    var e=PIN_MAP[pn]; if(e.empId)return;
+    var e=PIN_MAP[pn];
+    if(e.empId&&empById(e.empId))return;
+    /* базовые входы знают своего сотрудника напрямую — имя могли переименовать */
+    if(PIN_MAP_BASE[pn]&&PIN_MAP_BASE[pn].empId&&empById(PIN_MAP_BASE[pn].empId)){ e.empId=PIN_MAP_BASE[pn].empId; return; }
     var nm=String(e.name||'').trim().toLowerCase();
     var hit=TEAM.filter(function(p){
       return String(p.n||'').trim().toLowerCase()===nm || String(empName(p)).trim().toLowerCase()===nm;
@@ -6729,7 +6767,7 @@ function pinLink(){
       if(byTrack.length===1) e.empId=byTrack[0].id;
     }
   });
-  ACH_MIG.pins=true;
+  ACH_MIG.pins2=true;
 }
 function pinGuard(){
   if(!can('permsEdit')){ alert('Управлять входами может только роль с правом «Права доступа: настраивать».'); return false; }
