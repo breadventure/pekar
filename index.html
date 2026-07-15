@@ -1233,10 +1233,27 @@
   </div>
 </section>
 
+<!-- ===== ДАННЫЕ КОМПАНИИ ===== -->
+<section class="view" id="v-company">
+  <div class="crumbs"><a onclick="go('dash')">Главная</a> / Команда / Данные компании</div>
+  <div class="note" style="margin-bottom:16px">🏢 Реквизиты и документы фирмы. Видят только шеф и менеджер. Документы лежат на Google Диске — доступны с любого устройства.</div>
+  <div class="grid g2">
+    <div class="card">
+      <b style="font-size:15px">🧾 Реквизиты</b>
+      <div id="co-fields" style="margin-top:8px"></div>
+      <div class="btn-row chef-only" style="margin-top:14px"><button class="btn primary" onclick="bvSaveNow()">💾 Сохранить</button></div>
+    </div>
+    <div class="card">
+      <b style="font-size:15px">📁 Документы компании</b>
+      <div id="co-docs" style="margin-top:8px"></div>
+    </div>
+  </div>
+</section>
+
 <!-- ===== ПРАВА ДОСТУПА ===== -->
 <section class="view" id="v-roles">
   <div class="crumbs"><a onclick="go('dash')">Главная</a> / Команда / Права доступа</div>
-  <div class="note" style="margin-bottom:16px">🔐 Одна система, одна база — разные представления по роли. Владелец настраивает права; нажмите на ячейку, чтобы переключить. В прототипе изменения держатся до перезагрузки.</div>
+  <div class="note" style="margin-bottom:16px">🔐 Одна система, одна база — разные представления по роли. Нажми на ячейку, чтобы переключить право. Изменения сохраняются в общую базу и действуют для всей команды.</div>
   <div id="roles-matrix"></div>
 </section>
 
@@ -1640,7 +1657,7 @@
 
 /* ===== РЕЖИМ ШЕФА ===== */
 
-var TITLES={dash:['Пекарь','Все стандарты и знания в одном месте.'],recipes:['Рецептуры','Все рецепты и формулы наших продуктов.'],tk:['Рецептура','Раскладка, шаги, версии и экономика продукта.'],regl:['Регламенты работы','Правила и процедуры ежедневной работы.'],err:['Критические ошибки','Частые ошибки производства и как их избежать.'],san:['Санитарные правила','Гигиена, защита и поддержание чистоты.'],oborud:['Оборудование','Настройка, обслуживание и правила безопасности.'],check:['Чек-листы смен','Открытие и закрытие смены с отчётом в чат.'],plan:['Планирование','План замеса на день и отпёки на неделю.'],hr:['Личные данные','Документы, сан.книжки и условия работы.'],updates:['Обновления','Что изменилось в базе знаний.'],fails:['Жёсткие факапы','Истории провалов, решения и выводы.'],team:['Наша команда','Кто за что отвечает и в чём хорош.'],rarch:['Архив рецептур','Снятые с производства рецепты.'],scripts:['Скрипты сервиса','Что говорить клиентам в разных ситуациях.'],drinks:['Напитки','Карта бара: состав, технология, подача.'],handoff:['Передача смены','Что предыдущая смена оставила следующей.'],breport:['Отчёт дня','Закрытие дня бариста: продажи, остатки, Njuppa.'],roles:['Права доступа','Кто что видит и редактирует. Настраивает шеф.'],products:['Карточки продукта','Что говорить клиенту о каждом изделии.'],vitrina:['Витрина дня','Что на продажу, что в ресторан и когда.'],vitcon:['Конструктор витрины','Состав витрины по формуле, вкусы без повторов.'],bakeplan:['Планировщик печи','Загрузка печи, последовательность отпёков и тайминг.'],mixplan:['Планировщик замесов','Распределение замесов по тестомесу и планетарке.'],partners:['Партнёры','Профиль заведений, история отгрузок и статистика.'],remind:['Регулярные работы','Сервисы, сан.книжки и сроки обслуживания. Доступно только шефу.'],rtest:['Тесты рецептур','Разработка: итерации, оценки, перевод в производство.'],onboard:['Онбординг','Путь нового пекаря от первого дня до самостоятельной смены.'],news:['Новости пекарни','Кто чем отличился и что мы внедрили.'],calc:['Калькуляторы','Расчёты заквасок и рецептур.'],sched:['График смен','Смены команды на текущую неделю.'],train:['Обучение и тесты','Проверь знания и прокачай навыки.'],faq:['FAQ','Знания пекарни — кратко и ясно.']};
+var TITLES={dash:['Пекарь','Все стандарты и знания в одном месте.'],recipes:['Рецептуры','Все рецепты и формулы наших продуктов.'],tk:['Рецептура','Раскладка, шаги, версии и экономика продукта.'],regl:['Регламенты работы','Правила и процедуры ежедневной работы.'],err:['Критические ошибки','Частые ошибки производства и как их избежать.'],san:['Санитарные правила','Гигиена, защита и поддержание чистоты.'],oborud:['Оборудование','Настройка, обслуживание и правила безопасности.'],check:['Чек-листы смен','Открытие и закрытие смены с отчётом в чат.'],plan:['Планирование','План замеса на день и отпёки на неделю.'],hr:['Личные данные','Документы, сан.книжки и условия работы.'],updates:['Обновления','Что изменилось в базе знаний.'],fails:['Жёсткие факапы','Истории провалов, решения и выводы.'],team:['Наша команда','Кто за что отвечает и в чём хорош.'],rarch:['Архив рецептур','Снятые с производства рецепты.'],scripts:['Скрипты сервиса','Что говорить клиентам в разных ситуациях.'],drinks:['Напитки','Карта бара: состав, технология, подача.'],handoff:['Передача смены','Что предыдущая смена оставила следующей.'],breport:['Отчёт дня','Закрытие дня бариста: продажи, остатки, Njuppa.'],roles:['Права доступа','Кто что видит и редактирует. Настраивает шеф.'],company:['Данные компании','Реквизиты и документы BreadVenture.'],products:['Карточки продукта','Что говорить клиенту о каждом изделии.'],vitrina:['Витрина дня','Что на продажу, что в ресторан и когда.'],vitcon:['Конструктор витрины','Состав витрины по формуле, вкусы без повторов.'],bakeplan:['Планировщик печи','Загрузка печи, последовательность отпёков и тайминг.'],mixplan:['Планировщик замесов','Распределение замесов по тестомесу и планетарке.'],partners:['Партнёры','Профиль заведений, история отгрузок и статистика.'],remind:['Регулярные работы','Сервисы, сан.книжки и сроки обслуживания. Доступно только шефу.'],rtest:['Тесты рецептур','Разработка: итерации, оценки, перевод в производство.'],onboard:['Онбординг','Путь нового пекаря от первого дня до самостоятельной смены.'],news:['Новости пекарни','Кто чем отличился и что мы внедрили.'],calc:['Калькуляторы','Расчёты заквасок и рецептур.'],sched:['График смен','Смены команды на текущую неделю.'],train:['Обучение и тесты','Проверь знания и прокачай навыки.'],faq:['FAQ','Знания пекарни — кратко и ясно.']};
 var NAV_STACK=[];var CURRENT_VIEW='dash';
 
 var GROUPS={
@@ -1665,11 +1682,12 @@ function renderSubnav(name){
 
 /* ===== РОЛЕВАЯ МОДЕЛЬ ===== */
 var ROLES={
-  chef:{label:'Шеф-пекарь',edit:true,prod:true,recipes:true,tests:true,cost:true,baronly:true,bar:true},
-  manager:{label:'Менеджер',edit:true,prod:true,recipes:false,tests:false,cost:true,baronly:true,bar:true},
-  baker:{label:'Пекарь',edit:false,prod:true,recipes:true,tests:true,cost:false,baronly:false,bar:false},
-  barista:{label:'Бариста',edit:false,prod:false,recipes:false,tests:false,cost:false,baronly:true,bar:true}
+  chef:{label:'Шеф-пекарь',edit:true,prod:true,recipes:true,tests:true,cost:true,baronly:true,bar:true,permsView:true,permsEdit:true},
+  manager:{label:'Менеджер',edit:true,prod:true,recipes:false,tests:false,cost:true,baronly:true,bar:true,permsView:true,permsEdit:false},
+  baker:{label:'Пекарь',edit:false,prod:true,recipes:true,tests:true,cost:false,baronly:false,bar:false,permsView:false,permsEdit:false},
+  barista:{label:'Бариста',edit:false,prod:false,recipes:false,tests:false,cost:false,baronly:true,bar:true,permsView:false,permsEdit:false}
 };
+var ROLES_BASE=JSON.parse(JSON.stringify(ROLES));
 var CUR_ROLE='chef';
 function role(){return ROLES[CUR_ROLE];}
 function isChef(){return role().edit;}  /* «право редактирования» = старый chef */
@@ -1695,6 +1713,7 @@ var PIN_MAP={
   '8086':{name:'\u0410\u043D\u0434\u0440\u0435\u0439',ava:'\u0410',role:'\u041F\u0435\u043A\u0430\u0440\u044C',shift:'05:00\u201314:00',roleKey:'baker'},
   '8442':{name:'\u0410\u043D\u0434\u0440\u0435\u0439',ava:'\u0410',role:'\u0411\u0430\u0440\u0438\u0441\u0442\u0430',shift:'07:00\u201316:00',roleKey:'barista'}
 };
+var PIN_MAP_BASE=JSON.parse(JSON.stringify(PIN_MAP));
 var CURRENT_USER=null;
 function loginAs(pin){var u=PIN_MAP[pin];if(!u)return false;CURRENT_USER=u;setRole(u.roleKey);var w=document.getElementById('who-mini');if(w)w.textContent='\uD83D\uDC64 '+u.name;return true;}
 function pinSubmit(){var inp=document.getElementById('pin-input');var v=(inp.value||'').trim();var err=document.getElementById('pin-err');if(loginAs(v)){var g=document.getElementById('pin-gate');if(g)g.style.display='none';inp.value='';if(err)err.textContent='';window.scrollTo(0,0);}else{if(err)err.textContent='\u041D\u0435\u0432\u0435\u0440\u043D\u044B\u0439 PIN';inp.value='';inp.focus();}}
@@ -1759,7 +1778,8 @@ function viewAllowed(name){
   if(name==='vitcon'&&!R.edit)return false;             /* конструктор витрины — шеф/менеджер */
   if(name==='partners'&&!R.edit)return false;          /* партнёры — только шеф/менеджер */
   if(name==='hr'&&!R.edit)return false;                /* личные данные — только шеф/менеджер */
-  if(name==='roles'&&!role().edit)return false;        /* права доступа — шеф и менеджер */
+  if(name==='company'&&!R.edit)return false;            /* данные компании — шеф/менеджер */
+  if(name==='roles'&&!R.permsView)return false;        /* права доступа — по флагу permsView */
   if(name==='remind'&&CUR_ROLE!=='chef')return false; /* регулярные работы — только шеф */
   if((name==='handoff'||name==='breport'||name==='check'||name==='sched')&&!R.prod&&!R.baronly)return false;
   return true;
@@ -1798,9 +1818,10 @@ function applyRoleNav(){
     GROUPS.prod.views=pv;
   }
   /* личные данные — только шеф/менеджер */
-  GROUPS.team.views=GROUPS.team.views.filter(function(v){return v[1]!=='hr'&&v[1]!=='roles';});
+  GROUPS.team.views=GROUPS.team.views.filter(function(v){return v[1]!=='hr'&&v[1]!=='roles'&&v[1]!=='company';});
   if(R.edit)GROUPS.team.views.push(['Личные данные','hr']);
-  if(role().edit)GROUPS.team.views.push(['Права доступа','roles']);
+  if(R.edit)GROUPS.team.views.push(['Данные компании','company']);
+  if(R.permsView)GROUPS.team.views.push(['Права доступа','roles']);
   /* регулярные работы — только шеф */
   GROUPS.kb.views=GROUPS.kb.views.filter(function(v){return v[1]!=='remind';});
   if(CUR_ROLE==='chef')GROUPS.kb.views.push(['Регулярные работы','remind']);
@@ -1849,8 +1870,50 @@ var NOTIFS=[
 ];
 function notifRole(){return isChef()?'chef':'baker';}
 function notifVisible(n){var r=n.role||'all';return r==='all'||r===notifRole()||(n._rem&&isChef());}
+/* --- автонапоминания: дни рождения и годовщины работы --- */
+var NOTIF_SEEN={};
+var BDAY_AHEAD=14, ANNIV_AHEAD=7;
+function plu(n,a1,a2,a5){ n=Math.abs(n)%100; var n1=n%10; if(n>10&&n<20)return a5; if(n1>1&&n1<5)return a2; if(n1===1)return a1; return a5; }
+function daysToAnniv(iso){
+  iso=String(iso||'').slice(0,10); if(!/^\d{4}-\d{2}-\d{2}$/.test(iso))return null;
+  var d=new Date(iso+'T00:00:00'); if(isNaN(d.getTime()))return null;
+  var now=new Date(); now.setHours(0,0,0,0);
+  var nx=new Date(now.getFullYear(),d.getMonth(),d.getDate()); nx.setHours(0,0,0,0);
+  if(nx.getTime()<now.getTime()) nx=new Date(now.getFullYear()+1,d.getMonth(),d.getDate());
+  return Math.round((nx.getTime()-now.getTime())/86400000);
+}
+function annivYears(iso){
+  iso=String(iso||'').slice(0,10); if(!/^\d{4}-\d{2}-\d{2}$/.test(iso))return 0;
+  var d=new Date(iso+'T00:00:00'); if(isNaN(d.getTime()))return 0;
+  var now=new Date(); now.setHours(0,0,0,0);
+  var y=now.getFullYear();
+  var nx=new Date(y,d.getMonth(),d.getDate()); nx.setHours(0,0,0,0);
+  if(nx.getTime()<now.getTime())y++;
+  return y-d.getFullYear();
+}
+function autoNotifs(){
+  var out=[], yr=new Date().getFullYear();
+  if(typeof TEAM==='undefined'||!TEAM.forEach)return out;
+  TEAM.filter(function(p){return p.status!=='Архивный';}).forEach(function(p){
+    var bi=bdayISO(p.bday), db=daysToAnniv(bi);
+    if(db!==null && db<=BDAY_AHEAD){
+      var k='bd:'+p.id+':'+yr;
+      out.push({icon:'🎂',key:k,unread:!NOTIF_SEEN[k],role:'all',go:'team',
+        t:(db===0?'Сегодня день рождения: '+empName(p):'Скоро день рождения: '+empName(p)),
+        d:(db===0?'поздравляем! 🎉':'через '+db+' '+plu(db,'день','дня','дней')+' · '+tmDate(bi).slice(0,5))});
+    }
+    var st=String(p.started||'').slice(0,10), ds=daysToAnniv(st), ys=annivYears(st);
+    if(ds!==null && ds<=ANNIV_AHEAD && ys>=1){
+      var k2='an:'+p.id+':'+yr;
+      out.push({icon:'🏅',key:k2,unread:!NOTIF_SEEN[k2],role:'all',go:'team',
+        t:(ds===0?'Сегодня годовщина: '+empName(p):'Скоро годовщина работы: '+empName(p)),
+        d:(ds===0?ys+' '+plu(ys,'год','года','лет')+' в BreadVenture':'через '+ds+' '+plu(ds,'день','дня','дней')+' — '+ys+' '+plu(ys,'год','года','лет')+' в BreadVenture')});
+    }
+  });
+  return out;
+}
 function renderNotifs(){
-  var vis=NOTIFS.filter(notifVisible);
+  var vis=autoNotifs().concat(NOTIFS).filter(notifVisible);
   document.getElementById('notif-list').innerHTML=vis.map(function(n,i){
     return '<div onclick="document.getElementById(\'notif-panel\').style.display=\'none\';go(\''+n.go+'\')" style="display:flex;gap:9px;padding:9px 0;border-top:1.5px dashed var(--hair);cursor:pointer;'+(n.unread?'':'opacity:.55')+'"><span>'+n.icon+'</span><span style="font-size:13px"><b>'+n.t+'</b><br><span style="color:var(--muted);font-size:12px">'+n.d+'</span></span></div>';
   }).join('')||'<p class="hint" style="padding:10px 0">Новых уведомлений нет.</p>';
@@ -1863,7 +1926,7 @@ function toggleNotif(){
   p.style.display=(p.style.display==='none')?'':'none';
   renderNotifs();
 }
-function notifRead(){NOTIFS.forEach(function(n){n.unread=false;});renderNotifs();}
+function notifRead(){NOTIFS.forEach(function(n){n.unread=false;});autoNotifs().forEach(function(n){if(n.key)NOTIF_SEEN[n.key]=true;});renderNotifs();bvSaveNow();}
 function toggleMenu(){document.body.classList.toggle('menu-open');}
 function goBack(){
   var prev=NAV_STACK.pop()||'dash';
@@ -2461,9 +2524,7 @@ function tkDeclOpen(){
     '<p class="hint" style="margin:0 0 14px">Название, состав и аллергены подтягиваются автоматически. Проверь перевод и отметь аллергены.</p>'+
 
     '<div class="lbl" style="font-size:11px;margin:0 0 6px;color:var(--accent)">🏢 Данные пекарни — один раз для всех изделий</div>'+
-    gfld('Производитель / Proizvođač','producer')+
-    gfld('Адрес / Adresa','address')+
-    gfld('Страна происхождения / Zemlja porekla','origin')+
+    declCoBlock()+
 
     '<div class="lbl" style="font-size:11px;margin:14px 0 6px;color:var(--accent)">🥖 Это изделие</div>'+
     '<div class="field" style="margin:0 0 8px"><label>Название RU (из системы)</label><input type="text" value="'+tkEsc(r.name)+'" disabled style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box;opacity:.6;background:#f0efe5"></div>'+
@@ -4370,7 +4431,7 @@ function empNew(){
     '</div>'+
     '<div class="field" style="margin:8px 0 0"><label>Роли (как показывать в карточке)</label><div id="en-roles" style="border:1.5px solid var(--hair);border-radius:10px;padding:9px;background:#fff"></div></div>'+
     '<div class="grid g2" style="gap:10px;margin-top:8px">'+
-      '<div class="field" style="margin:0"><label>Уровень</label><select id="en-level" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+LEVELS.map(function(l,i){return '<option value="'+i+'"'+(i===0?' selected':'')+'>'+l+'</option>';}).join('')+'</select><p class="hint" id="en-lvl-hint" style="margin:3px 0 0;font-size:11px">линейка пекаря</p></div>'+
+      '<div class="field" id="en-lvl-box" style="margin:0"><label>Уровень <a onclick="posTrackEdit(\'en\')" style="color:var(--accent);cursor:pointer;font-size:11px;text-decoration:underline">✎ линейка</a></label><select id="en-level" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></select><p class="hint" id="en-lvl-hint" style="margin:3px 0 0;font-size:11px"></p></div>'+
       '<div class="field" style="margin:0"><label>Наставник</label><input type="text" id="en-mentor" placeholder="Светлана" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
     '</div>'+
     '<div class="grid g2" style="gap:10px;margin-top:8px">'+
@@ -4383,7 +4444,7 @@ function empNew(){
     '</div>'+
     '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn primary" onclick="empNewSave()">Добавить</button><button class="btn" onclick="document.getElementById(\'emp-new-modal\').remove()">Отмена</button></div>'+
     '</div>';
-  _ROLE_SEL['en']=[]; renderRoleChips('en');
+  _ROLE_SEL['en']=[]; renderRoleChips('en'); enLevels();
 }
 function empNewSave(){
   function v(id){ var el=document.getElementById(id); return el?el.value:''; }
@@ -4401,17 +4462,31 @@ function empNewSave(){
   renderTeam(); renderHR();
 }
 
+function levelSelHtml(L,cur){
+  return L.map(function(l,i){ return '<option value="'+i+'"'+(i===cur?' selected':'')+'>'+tkEsc(l)+'</option>'; }).join('');
+}
 function enLevels(){
-  var pos=(document.getElementById('en-pos')||{}).value||'', dir=(document.getElementById('en-dir')||{}).value||'';
-  var bar=(dir==='Бар')||/барист/i.test(pos);
-  var L=bar?LEVELS_BAR:LEVELS;
-  var sel=document.getElementById('en-level'); if(sel)sel.innerHTML=L.map(function(l,i){return '<option value="'+i+'">'+l+'</option>';}).join('');
-  var h=document.getElementById('en-lvl-hint'); if(h)h.textContent=bar?'линейка бара':'линейка пекаря';
+  var pos=(document.getElementById('en-pos')||{}).value||'';
+  var T=TRACKS[trackKey(pos)];
+  var box=document.getElementById('en-lvl-box'); if(box)box.style.display=T.levels.length?'':'none';
+  var sel=document.getElementById('en-level'); if(sel)sel.innerHTML=levelSelHtml(T.levels,0);
+  var h=document.getElementById('en-lvl-hint'); if(h)h.textContent=T.levels.length?('линейка: '+T.title.toLowerCase()):'у этой должности грейдов нет';
+}
+function eeLevels(){
+  var pos=(document.getElementById('ee-pos')||{}).value||'';
+  var T=TRACKS[trackKey(pos)];
+  var sel=document.getElementById('ee-level');
+  var cur=sel?(parseInt(sel.value)||0):0;
+  if(cur>=T.levels.length)cur=Math.max(0,T.levels.length-1);
+  var box=document.getElementById('ee-lvl-box'); if(box)box.style.display=T.levels.length?'':'none';
+  if(sel)sel.innerHTML=levelSelHtml(T.levels,cur);
+  var h=document.getElementById('ee-lvl-hint'); if(h)h.textContent=T.levels.length?('линейка: '+T.title.toLowerCase()):'у этой должности грейдов нет';
 }
 function empLevel(id){
   var p=empById(id); if(!p||!isChef())return;
   var L=levelsFor(p);
-  var v=prompt('Уровень для «'+p.n+'»:\n'+L.map(function(l,i){return i+' — '+l;}).join('\n')+'\n\nВведи номер:', p.level);
+  if(!L.length){ alert('У должности «'+(p.pos||'—')+'» грейдов нет.\n\nЕсли это неверно — открой «✎ Редактировать» и поменяй линейку рядом с полем «Уровень».'); return; }
+  var v=prompt('Уровень для «'+empName(p)+'» (линейка: '+TRACKS[trackOf(p)].title.toLowerCase()+'):\n'+L.map(function(l,i){return i+' — '+l;}).join('\n')+'\n\nВведи номер:', p.level);
   if(v===null)return;
   var n=parseInt(v);
   if(isNaN(n)||n<0||n>=L.length){ alert('Нужен номер от 0 до '+(L.length-1)); return; }
@@ -4424,12 +4499,16 @@ function renderLevelLegend(){
     var desc=['Учится, работает под присмотром наставника','Работает самостоятельно по техкарте','Стабильно держит качество, помогает другим','Ведёт смену, отвечает за результат','Обучает, ставит процессы, принимает смену','Разрабатывает рецептуры и стандарты'][i]||'';
     return '<div style="display:flex;gap:10px;padding:5px 0;border-top:1.5px dashed var(--hair);font-size:12.5px"><b style="min-width:130px">'+l+'</b><span style="color:var(--muted)">'+desc+'</span></div>';
   }).join('');
-  var bar=LEVELS_BAR.map(function(l){return l;}).join(' → ');
+  var bar=LEVELS_BAR.join(' → ');
+  var mgr=LEVELS_MGR.join(' → ');
   box.innerHTML='<details style="margin-bottom:14px"><summary style="cursor:pointer;font-weight:600;font-size:13px">❓ Что значат уровни и оценки</summary>'+
     '<div style="border:1.5px solid var(--hair);border-radius:12px;padding:12px;margin-top:8px;background:var(--card)">'+
     '<b style="font-size:13px">Ур. — уровень мастерства</b><p class="hint" style="margin:2px 0 6px">Ставит шеф вручную в карточке сотрудника — по факту навыков, а не автоматически. Растёт, когда человек стабильно тянет следующую ступень.</p>'+
     rows+
     '<div style="margin-top:10px"><b style="font-size:13px">Для бара:</b> <span style="color:var(--muted);font-size:12.5px">'+bar+'</span></div>'+
+    '<div style="margin-top:6px"><b style="font-size:13px">Для менеджера:</b> <span style="color:var(--muted);font-size:12.5px">'+mgr+'</span></div>'+
+    '<div style="margin-top:6px"><b style="font-size:13px">Владелец / фаундер:</b> <span style="color:var(--muted);font-size:12.5px">грейдов нет — уровень не показывается.</span></div>'+
+    '<p class="hint" style="margin:6px 0 0">Линейка выбирается по должности. Поменять её можно в «✎ Редактировать» → ссылка «✎ линейка» рядом с полем «Уровень».</p>'+
     '<div style="margin-top:12px;border-top:1.5px solid var(--hair);padding-top:8px"><b style="font-size:13px">★ смены</b><p class="hint" style="margin:2px 0 0">Средняя оценка за <b>последние 10 смен</b> (шеф ставит оценку при приёмке смены, от 1 до 5). Считается автоматически.</p></div>'+
     '<div style="margin-top:8px"><b style="font-size:13px">⚠️ замечаний</b><p class="hint" style="margin:2px 0 0">Сколько открытых (неисправленных) замечаний у сотрудника. Закрываются в карточке.</p></div>'+
     '</div></details>';
@@ -4441,7 +4520,7 @@ function renderHR(){
   var sel=document.getElementById('hr-emp'); if(!sel)return;
   var active=TEAM.filter(function(p){return p.status!=='Архивный';});
   if(!HR_EMP||!active.some(function(p){return p.id===HR_EMP;})) HR_EMP=(active[0]||{}).id;
-  sel.innerHTML=active.map(function(p){ return '<option value="'+p.id+'"'+(p.id===HR_EMP?' selected':'')+'>'+p.n+' · '+tkEsc(roleLine(p))+'</option>'; }).join('');
+  sel.innerHTML=active.map(function(p){ return '<option value="'+p.id+'"'+(p.id===HR_EMP?' selected':'')+'>'+tkEsc(empName(p))+' · '+tkEsc(roleLine(p))+'</option>'; }).join('');
   renderHRCond(); renderHRSan(); renderHRDocs();
 }
 function hrSelect(id){ HR_EMP=id; renderHRCond(); renderHRSan(); renderHRDocs(); }
@@ -4462,11 +4541,62 @@ function renderHRCond(){
     '<div class="pair"><span>Стаж по контракту</span><span><b>'+(p.contractStart?tenureText(p.contractStart):'— контракт не указан')+'</b></span></div>'+
     '<div class="pair"><span>Телефон</span><span>'+(chef?('<input type="text" value="'+tkEsc(p.phone||'')+'" placeholder="+381 60 123 4567" oninput="hrSetField(\'phone\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px;width:150px">'):telLink(p.phone))+'</span></div>'+
     '<div class="pair"><span>Telegram</span><span>'+(chef?('<input type="text" value="'+tkEsc(p.tg||'')+'" placeholder="@nickname" oninput="hrSetField(\'tg\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px;width:150px">'):tgLink(p.tg))+'</span></div>'+
-    '<div class="pair"><span>Зарплата</span><span class="tag warn">видит менеджер</span></div>'+
-    '<div class="pair"><span>День рождения</span><span>'+(chef?('<input type="text" value="'+(p.bday||'')+'" placeholder="03.11" oninput="hrSetField(\'bday\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px;width:80px">'):('<b>'+(p.bday||'—')+'</b>'))+'</span></div>'+
-    '<p class="hint" style="margin:8px 0 0">Общий стаж — с первого дня работы. Стаж по контракту — с даты оформления рабочего контракта.</p>';
+    salaryHtml(p,chef)+
+    bdayHtml(p,chef)+
+    '<p class="hint" style="margin:8px 0 0">Общий стаж — с первого дня работы. Стаж по контракту — с даты оформления рабочего контракта. Напоминания о годовщине считаются по общему стажу.</p>';
 }
 function hrSetDate(key,val){ var p=TEAM.filter(function(x){return x.id===HR_EMP;})[0]; if(p){ p[key]=val; renderHRCond(); } }
+
+/* ===== ЗАРПЛАТА ===== */
+var SAL_TYPES={fix:'Фиксированная',hour:'Почасовая'};
+function salOf(p){ if(!p.sal||typeof p.sal!=='object')p.sal={type:'fix',fix:0,rate:0,hours:0}; if(!SAL_TYPES[p.sal.type])p.sal.type='fix'; return p.sal; }
+function salMonth(p){ var s=salOf(p); return s.type==='hour' ? (parseFloat(s.rate)||0)*(parseFloat(s.hours)||0) : (parseFloat(s.fix)||0); }
+function hrSalSet(key,val){
+  var p=TEAM.filter(function(x){return x.id===HR_EMP;})[0]; if(!p)return;
+  var s=salOf(p);
+  s[key]=(key==='type')?val:(parseFloat(String(val).replace(',','.'))||0);
+  renderHRCond();
+}
+function salNum(label,key,val,chef,suffix){
+  return '<div class="pair"><span>'+label+'</span><span>'+
+    (chef?('<input type="number" min="0" step="1" value="'+(val||0)+'" onchange="hrSalSet(\''+key+'\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px;width:110px;text-align:right"> '+(suffix||''))
+         :('<b>'+fmt(val||0)+' '+(suffix||'')+'</b>'))+'</span></div>';
+}
+function salaryHtml(p,chef){
+  if(!can('cost')) return '<div class="pair"><span>Зарплата</span><span class="tag warn">нет доступа</span></div>';
+  var s=salOf(p);
+  var sel=chef
+    ? '<select onchange="hrSalSet(\'type\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px">'+
+      Object.keys(SAL_TYPES).map(function(t){ return '<option value="'+t+'"'+(s.type===t?' selected':'')+'>'+SAL_TYPES[t]+'</option>'; }).join('')+'</select>'
+    : '<b>'+SAL_TYPES[s.type]+'</b>';
+  var out='<div class="pair" style="border-top:1.5px solid var(--hair);padding-top:8px;margin-top:4px"><span><b>💰 Зарплата</b></span><span>'+sel+'</span></div>';
+  if(s.type==='hour'){
+    out+=salNum('Ставка в час','rate',s.rate,chef,'RSD/ч');
+    out+=salNum('Часов в месяц','hours',s.hours,chef,'ч');
+    out+='<div class="pair"><span>≈ в месяц</span><span><b>'+fmt(salMonth(p))+' RSD</b></span></div>';
+  } else {
+    out+=salNum('Ставка','fix',s.fix,chef,'RSD/мес');
+  }
+  return out;
+}
+
+/* ===== ДЕНЬ РОЖДЕНИЯ (дата) ===== */
+function bdayISO(v){
+  v=String(v==null?'':v).trim(); if(!v)return '';
+  if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v;
+  var m=v.match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/);
+  if(m)return m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2);
+  return '';
+}
+function bdayOld(v){ v=String(v==null?'':v).trim(); return (v&&!bdayISO(v))?v:''; }
+function bdayHtml(p,chef){
+  var iso=bdayISO(p.bday), old=bdayOld(p.bday);
+  var out='<div class="pair"><span>День рождения</span><span>'+
+    (chef?('<input type="date" value="'+iso+'" onchange="hrSetDate(\'bday\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px">')
+         :('<b>'+(iso?tmDate(iso):(old||'—'))+'</b>'))+'</span></div>';
+  if(old&&chef) out+='<p class="hint" style="margin:2px 0 0;color:#C0392B">Старая запись «'+tkEsc(old)+'» без года — впиши дату целиком, иначе напоминание не сработает.</p>';
+  return out;
+}
 function hrSetField(key,val){ var p=TEAM.filter(function(x){return x.id===HR_EMP;})[0]; if(p)p[key]=val; }
 
 /* ===== КОМАНДА v2: удаление, уровни по треку, легенда навыков, санкнижка, документы, фото ===== */
@@ -4496,6 +4626,7 @@ function dictNew(which,selId){
   var L=(which==='pos')?POS_LIST:DIR_LIST, base=(which==='pos')?POS_LIST_BASE:DIR_LIST_BASE;
   var t=prompt(which==='pos'?'Новая должность:':'Новое направление:',''); t=(t||'').trim(); if(!t)return;
   if(L.indexOf(t)<0)L.push(t);
+  if(which==='pos'){ var tr=trackAsk(t,trackGuess(t)); POS_TRACK[t]=tr||trackGuess(t); }
   var el=document.getElementById(selId);
   if(el){ el.innerHTML=selOpts(L,base,t); el.value=t; if(typeof el.onchange==='function')el.onchange(); }
   bvSaveNow();
@@ -4540,21 +4671,52 @@ function roleTagNew(pref){
 function roleTagKill(i,pref){
   var t=ROLE_TAGS[i]; if(!t)return;
   var used=TEAM.filter(function(p){ return roleTagsOf(p).indexOf(t)>=0; });
-  if(used.length){ alert('Роль \u00AB'+t+'\u00BB стоит у: '+used.map(function(p){return p.n;}).join(', ')+'.\n\nСначала убери её у них, потом можно удалить из списка.'); return; }
+  if(used.length){ alert('Роль \u00AB'+t+'\u00BB стоит у: '+used.map(function(p){return empName(p);}).join(', ')+'.\n\nСначала убери её у них, потом можно удалить из списка.'); return; }
   if(!confirm('Убрать \u00AB'+t+'\u00BB из списка ролей совсем?'))return;
   ROLE_TAGS.splice(i,1); renderRoleChips(pref); bvSaveNow();
 }
 
 /* --- уровни по треку (пекарь / бар) --- */
-function empIsBar(p){ return (p.dir==='Бар') || /барист/i.test(p.pos||''); }
-function levelsFor(p){ return empIsBar(p)?LEVELS_BAR:LEVELS; }
-function levelName(p){ var L=levelsFor(p); return L[p.level]!==undefined?L[p.level]:(p.level||'—'); }
+/* --- переименование: тащим за собой историю, привязанную к старому имени --- */
+function empRenameKeys(oldN,newN){
+  if(!oldN||!newN||oldN===newN)return;
+  try{ if(typeof SHIFT_AVG!=='undefined'&&SHIFT_AVG&&SHIFT_AVG[oldN]&&!SHIFT_AVG[newN]){ SHIFT_AVG[newN]=SHIFT_AVG[oldN]; delete SHIFT_AVG[oldN]; } }catch(e){}
+  try{ if(typeof SHIFT_CRIT!=='undefined'&&SHIFT_CRIT&&SHIFT_CRIT[oldN]&&!SHIFT_CRIT[newN]){ SHIFT_CRIT[newN]=SHIFT_CRIT[oldN]; delete SHIFT_CRIT[oldN]; } }catch(e){}
+  try{ if(typeof CHK_EMP!=='undefined'&&CHK_EMP===oldN)CHK_EMP=newN; }catch(e){}
+  try{ if(typeof STAFF!=='undefined'&&STAFF&&STAFF.forEach)STAFF.forEach(function(x){ if(x&&x.n===oldN)x.n=newN; }); }catch(e){}
+  try{ if(typeof SCHED_OVR!=='undefined'&&SCHED_OVR){ Object.keys(SCHED_OVR).forEach(function(k){ var i=k.indexOf('|'); if(i>0&&k.slice(i+1)===oldN){ SCHED_OVR[k.slice(0,i)+'|'+newN]=SCHED_OVR[k]; delete SCHED_OVR[k]; } }); } }catch(e){}
+  try{ if(typeof TEAM!=='undefined'&&TEAM&&TEAM.forEach)TEAM.forEach(function(x){ if(x&&x.mentor===oldN)x.mentor=newN; }); }catch(e){}
+}
+
+/* --- на старте: «Имя» из карточки становится единственным именем везде --- */
+function teamBoot(){
+  if(typeof TEAM==='undefined'||!TEAM||!TEAM.forEach)return;
+  TEAM.forEach(function(p){
+    if(!p||typeof p!=='object')return;
+    if(!p.first)p.first=p.n||'';
+    if(!p.last)p.last='\u2014';
+    var f=String(p.first||'').trim();
+    if(f&&p.n!==f){ empRenameKeys(p.n,f); p.n=f; }
+  });
+}
+
+/* --- имя сотрудника: одно на всё приложение --- */
+function empName(p){
+  if(!p)return '\u2014';
+  var f=String(p.first||p.n||'').trim();
+  var l=String(p.last||'').trim(); if(l==='\u2014')l='';
+  return (f+(l?' '+l:'')).trim()||'\u2014';
+}
+function empIsBar(p){ return trackOf(p)==='bar'; }
+function levelsFor(p){ return TRACKS[trackOf(p)].levels; }
+function hasLevels(p){ return levelsFor(p).length>0; }
+function levelName(p){ var L=levelsFor(p); if(!L.length)return '—'; return L[p.level]!==undefined?L[p.level]:'—'; }
 
 /* --- удаление сотрудника --- */
 function empDelete(id){
   if(!isChef()){alert('Удалять сотрудников может шеф или менеджер.');return;}
   var p=empById(id); if(!p)return;
-  if(!confirm('Удалить «'+p.n+'» навсегда?\n\nВся история, замечания и навыки будут стёрты без возможности вернуть.\nЕсли сотрудник просто уволился — лучше «В архив».'))return;
+  if(!confirm('Удалить «'+empName(p)+'» навсегда?\n\nВся история, замечания и навыки будут стёрты без возможности вернуть.\nЕсли сотрудник просто уволился — лучше «В архив».'))return;
   if(!confirm('Точно удалить? Это действие необратимо.'))return;
   var i=TEAM.indexOf(p); if(i>=0)TEAM.splice(i,1);
   empBack(); renderTeam(); renderHR();
@@ -4725,18 +4887,18 @@ function empEdit(id){
   var p=empById(id); if(!p||!isChef())return;
   var ov=document.getElementById('emp-edit-modal');
   if(!ov){ ov=document.createElement('div'); ov.id='emp-edit-modal'; ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px'; document.body.appendChild(ov); }
-  var bar=empIsBar(p), L=bar?LEVELS_BAR:LEVELS;
+  var _T=TRACKS[trackOf(p)];
   function f(label,key,ph,type){ return '<div class="field" style="margin:0"><label>'+label+'</label><input type="'+(type||'text')+'" id="ee-'+key+'" value="'+tkEsc(p[key]||'')+'" placeholder="'+(ph||'')+'" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'; }
   ov.innerHTML='<div style="background:var(--bg);border:1.5px solid var(--ink);border-radius:16px;max-width:560px;width:100%;padding:20px;box-shadow:4px 4px 0 var(--ink)">'+
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b style="font-size:17px">✎ Карточка сотрудника</b><button onclick="document.getElementById(\'emp-edit-modal\').remove()" style="border:none;background:none;font-size:20px;cursor:pointer">✕</button></div>'+
     '<div class="grid g2" style="gap:10px">'+f('Имя','first')+f('Фамилия','last')+'</div>'+
     '<div class="grid g2" style="gap:10px;margin-top:8px">'+
-      '<div class="field" style="margin:0"><label>Должность <a onclick="dictNew(\'pos\',\'ee-pos\')" style="color:var(--accent);cursor:pointer;font-size:11px;text-decoration:underline">+ своя</a></label><select id="ee-pos" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+selOpts(POS_LIST,POS_LIST_BASE,p.pos)+'</select></div>'+
+      '<div class="field" style="margin:0"><label>Должность <a onclick="dictNew(\'pos\',\'ee-pos\')" style="color:var(--accent);cursor:pointer;font-size:11px;text-decoration:underline">+ своя</a></label><select id="ee-pos" onchange="eeLevels()" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+selOpts(POS_LIST,POS_LIST_BASE,p.pos)+'</select></div>'+
       '<div class="field" style="margin:0"><label>Направление <a onclick="dictNew(\'dir\',\'ee-dir\')" style="color:var(--accent);cursor:pointer;font-size:11px;text-decoration:underline">+ своё</a></label><select id="ee-dir" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+selOpts(DIR_LIST,DIR_LIST_BASE,p.dir)+'</select></div>'+
     '</div>'+
     '<div class="field" style="margin:8px 0 0"><label>Роли (строка под именем)</label><div id="ee-roles" style="border:1.5px solid var(--hair);border-radius:10px;padding:9px;background:#fff"></div></div>'+
     '<div class="grid g2" style="gap:10px;margin-top:8px">'+
-      '<div class="field" style="margin:0"><label>Уровень ('+(bar?'бар':'пекарь')+')</label><select id="ee-level" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+L.map(function(l,i){return '<option value="'+i+'"'+(p.level===i?' selected':'')+'>'+l+'</option>';}).join('')+'</select></div>'+
+      '<div class="field" id="ee-lvl-box" style="margin:0'+(_T.levels.length?'':';display:none')+'"><label>Уровень <a onclick="posTrackEdit(\'ee\')" style="color:var(--accent);cursor:pointer;font-size:11px;text-decoration:underline">✎ линейка</a></label><select id="ee-level" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+levelSelHtml(_T.levels,p.level)+'</select><p class="hint" id="ee-lvl-hint" style="margin:3px 0 0;font-size:11px">'+(_T.levels.length?('линейка: '+_T.title.toLowerCase()):'у этой должности грейдов нет')+'</p></div>'+
       f('Наставник','mentor')+
     '</div>'+
     '<div class="grid g2" style="gap:10px;margin-top:8px">'+f('Телефон','phone','+381 60 123 4567')+f('Telegram','tg','@nickname')+'</div>'+
@@ -4752,7 +4914,8 @@ function empEditSave(id){
   function v(k){ var el=document.getElementById('ee-'+k); return el?el.value:''; }
   var first=(v('first')||'').trim();
   if(!first){ alert('Имя не может быть пустым.'); return; }
-  p.first=first; p.n=first; p.last=v('last')||'—';
+  p.first=first; p.last=(v('last')||'').trim()||'—';
+  if(p.n!==first){ empRenameKeys(p.n,first); p.n=first; }
   p.pos=v('pos'); p.dir=v('dir');
   p.roleTags=(_ROLE_SEL['ee']||[]).slice();
   p.role=p.roleTags.join(' · ') || (p.pos+(p.dir&&p.dir!=='Управление'?(' · '+p.dir.toLowerCase()):''));
@@ -4771,19 +4934,19 @@ function renderTeam(){
     var openIss=(p.issues||[]).filter(function(x){return x.status!=='Закрыто';}).length;
     var avg=shiftAvg(p);
     return '<div class="card click" onclick="empOpen(\''+p.id+'\')"><div style="display:flex;gap:14px;align-items:flex-start">'+
-      ''+(p.photo?('<img src="'+p.photo+'" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:50%;border:1.5px solid var(--ink);flex-shrink:0">'):'<div class="photo" style="width:64px;height:64px;flex-shrink:0;border-radius:50%">фото</div>')+''+
-      '<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="card-t" style="font-size:19px">'+p.n+'</h3>'+statusBadge(p.status)+'</div>'+
+      ''+(p.photo?('<img src="'+p.photo+'" alt="" style="width:128px;height:128px;object-fit:cover;border-radius:50%;border:1.5px solid var(--ink);flex-shrink:0">'):'<div class="photo" style="width:128px;height:128px;flex-shrink:0;border-radius:50%">фото</div>')+''+
+      '<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="card-t" style="font-size:19px">'+tkEsc(empName(p))+'</h3>'+statusBadge(p.status)+'</div>'+
       '<p style="color:var(--muted);font-size:13px;margin:2px 0 8px">'+tkEsc(roleLine(p))+'</p>'+
       '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
       (openIss?'<span class="tag crit">⚠️ замечаний: '+openIss+'</span>':'')+
       (avg!=null?'<span class="tag">★ смены '+avg+'</span>':'')+
-      '<span class="tag warn">Ур. '+levelName(p)+'</span></div>'+
+      (hasLevels(p)?'<span class="tag warn">Ур. '+levelName(p)+'</span>':'')+'</div>'+
       '<div style="text-align:right;margin-top:8px;font-size:13px;color:var(--accent)"><b>Открыть карточку ›</b></div>'+
       '</div></div></div>';
   }).join('');
   var archd=TEAM.filter(function(p){return p.status==='Архивный';});
   var ag=document.getElementById('team-archived');
-  if(ag)ag.innerHTML=archd.length?('<p class="hint" style="margin:10px 0 6px">Архив сотрудников:</p>'+archd.map(function(p){return '<div class="card" style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>'+p.n+'</b><span style="display:flex;gap:8px"><span class="tag">'+tkEsc(roleLine(p))+'</span>'+(isChef()?'<button class="btn" style="padding:3px 10px;font-size:12px" onclick="empRestore(\''+p.id+'\')">Вернуть</button>':'')+'</span></div></div>';}).join('')):'';
+  if(ag)ag.innerHTML=archd.length?('<p class="hint" style="margin:10px 0 6px">Архив сотрудников:</p>'+archd.map(function(p){return '<div class="card" style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>'+tkEsc(empName(p))+'</b><span style="display:flex;gap:8px"><span class="tag">'+tkEsc(roleLine(p))+'</span>'+(isChef()?'<button class="btn" style="padding:3px 10px;font-size:12px" onclick="empRestore(\''+p.id+'\')">Вернуть</button>':'')+'</span></div></div>';}).join('')):'';
 }
 function shiftAvg(p){
   if(!p.shiftScores||!p.shiftScores.length)return null;
@@ -5232,6 +5395,40 @@ function rtMakeMain(){
 /* ===== ДОСТИЖЕНИЯ ===== */
 var LEVELS=['Стажёр','Пекарь','Сильный пекарь','Старший пекарь','Мастер','Технолог'];
 var LEVELS_BAR=['Стажёр бара','Бариста','Уверенный бариста','Старший бариста','Мастер бара'];
+var LEVELS_MGR=['Стажёр','Администратор','Менеджер','Старший менеджер','Управляющий'];
+var TRACKS={
+  baker:{title:'Пекарь',levels:LEVELS},
+  bar:{title:'Бар',levels:LEVELS_BAR},
+  mgr:{title:'Менеджер',levels:LEVELS_MGR},
+  none:{title:'Без грейдов (владелец, фаундер)',levels:[]}
+};
+var POS_TRACK={};   /* должность -> линейка; только для нестандартных названий */
+function trackGuess(pos){
+  var p=String(pos||'').toLowerCase();
+  if(/владел|основат|фаундер|founder|директор|собствен/.test(p))return 'none';
+  if(/барист|бармен/.test(p))return 'bar';
+  if(/менедж|админ|управл/.test(p))return 'mgr';
+  return 'baker';
+}
+function trackKey(pos){ var t=POS_TRACK[pos]; return (t&&TRACKS[t])?t:trackGuess(pos); }
+function trackOf(p){ return trackKey(p&&p.pos); }
+function trackAsk(pos,cur){
+  var keys=Object.keys(TRACKS);
+  var v=prompt('К какой линейке грейдов относится должность «'+pos+'»?\n\n'+keys.map(function(k,i){ return (i+1)+' — '+TRACKS[k].title+(TRACKS[k].levels.length?(': '+TRACKS[k].levels.join(' → ')):''); }).join('\n')+'\n\nВведи номер:', String(keys.indexOf(cur||'baker')+1));
+  if(v===null)return null;
+  var n=parseInt(v);
+  if(isNaN(n)||n<1||n>keys.length){ alert('Нужен номер от 1 до '+keys.length+'.'); return null; }
+  return keys[n-1];
+}
+function posTrackEdit(pref){
+  if(!isChef()){alert('Менять линейку грейдов может шеф или менеджер.');return;}
+  var sel=document.getElementById(pref+'-pos'); if(!sel)return;
+  var pos=sel.value; if(!pos)return;
+  var tr=trackAsk(pos,trackKey(pos)); if(!tr)return;
+  POS_TRACK[pos]=tr;
+  if(pref==='en')enLevels(); else eeLevels();
+  renderTeam(); renderLevelLegend(); bvSaveNow();
+}
 var ACH=[
  {n:'Аня',level:3,noErr:18,noLate:62,stable:[20,21],proposed:3,toProd:1,mentored:1,
   badges:['Надёжный пекарь','Мастер формовки','Автор рецептуры','Без опозданий']},
@@ -5597,9 +5794,9 @@ function empOpen(id){
   var avg=shiftAvg(p);
   d.innerHTML='<button class="btn" onclick="empBack()" style="margin-bottom:14px">← Все сотрудники</button>'+
     '<div class="card" style="margin-bottom:22px"><div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">'+empPhotoHtml(p,135)+''+
-    '<div style="flex:1;min-width:200px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="font-size:24px">'+p.first+' '+(p.last&&p.last!=='—'?p.last:'')+'</h2>'+statusBadge(p.status)+'</div>'+
+    '<div style="flex:1;min-width:200px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="font-size:24px">'+tkEsc(empName(p))+'</h2>'+statusBadge(p.status)+'</div>'+
     '<p style="color:var(--muted);font-size:13.5px;margin-top:2px">'+tkEsc(roleLine(p))+'</p>'+
-    '<div class="tk" style="grid-template-columns:1fr 1fr;margin-top:10px"><div><div class="pair"><span>Должность</span><span>'+tkEsc(p.pos||'\u2014')+'</span></div><div class="pair"><span>Направление</span><span>'+p.dir+'</span></div><div class="pair"><span>Стаж</span><span>'+stazh(p.started)+'</span></div><div class="pair"><span>Уровень</span><span>'+levelName(p)+(isChef()?(' <button class="btn" style="padding:0 7px;font-size:11px" onclick="empLevel(\''+p.id+'\')">✎</button>'):'')+'</span></div></div>'+
+    '<div class="tk" style="grid-template-columns:1fr 1fr;margin-top:10px"><div><div class="pair"><span>Должность</span><span>'+tkEsc(p.pos||'\u2014')+'</span></div><div class="pair"><span>Направление</span><span>'+p.dir+'</span></div><div class="pair"><span>Стаж</span><span>'+stazh(p.started)+'</span></div><div class="pair"><span>Уровень</span><span>'+levelName(p)+((isChef()&&hasLevels(p))?(' <button class="btn" style="padding:0 7px;font-size:11px" onclick="empLevel(\''+p.id+'\')">✎</button>'):'')+'</span></div></div>'+
     '<div><div class="pair"><span>Наставник</span><span>'+p.mentor+'</span></div><div class="pair chef-only"><span>Telegram</span><span>'+tgLink(p.tg)+'</span></div><div class="pair chef-only"><span>Телефон</span><span>'+telLink(p.phone)+'</span></div></div></div>'+
     (isChef()?'<div class="btn-row chef-only" style="width:100%;margin-top:16px;margin-bottom:2px;gap:8px;flex-wrap:wrap"><button class="btn" onclick="empEdit(\''+p.id+'\')">✎ Редактировать</button><button class="btn" onclick="empStatus(\''+p.id+'\')">Сменить статус</button><button class="btn" onclick="empAddIssue(\''+p.id+'\')">+ Замечание</button><button class="btn" onclick="empAddPraise(\''+p.id+'\')">+ Похвала</button>'+(p.status!=='Архивный'?'<button class="btn" onclick="empArchive(\''+p.id+'\')">В архив</button>':'')+'<button class="btn" style="color:#C0392B" onclick="empDelete(\''+p.id+'\')">🗑 Удалить</button></div>':'')+
     '</div></div>'+
@@ -5655,7 +5852,7 @@ function empStatus(id){
 }
 function empArchive(id){
   if(!isChef())return; var p=empById(id);
-  if(!confirm(p.n+' уйдёт из графика, смен, онбординга и достижений. История сохранится. Архивировать?'))return;
+  if(!confirm(empName(p)+' уйдёт из графика, смен, онбординга и достижений. История сохранится. Архивировать?'))return;
   p.status='Архивный'; empBack();
 }
 function empRestore(id){ if(!isChef())return; empById(id).status='Активный'; renderTeam(); }
@@ -5801,29 +5998,205 @@ function brArchComment(i){
 
 
 /* ===== НАСТРОЙКИ ПРАВ (матрица) ===== */
-var PERM_FLAGS=[['prod','Производство'],['recipes','Рецептуры (техкарты)'],['tests','Тесты рецептур'],['cost','Себестоимость'],['baronly','Бар: напитки, скрипты, Njuppa'],['edit','Редактирование']];
+var PERM_FLAGS=[['prod','Производство'],['recipes','Рецептуры (техкарты)'],['tests','Тесты рецептур'],['cost','Себестоимость · зарплаты'],['baronly','Бар: напитки, скрипты, Njuppa'],['edit','Редактирование · личные данные · компания'],['permsView','Права доступа: смотреть'],['permsEdit','Права доступа: настраивать']];
+function rolesBoot(){
+  var k,i;
+  for(k in ROLES_BASE){ if(!ROLES[k]) ROLES[k]=JSON.parse(JSON.stringify(ROLES_BASE[k])); }
+  for(k in ROLES){
+    if(!ROLES[k]||typeof ROLES[k]!=='object'){ delete ROLES[k]; continue; }
+    for(i=0;i<PERM_FLAGS.length;i++){
+      var f=PERM_FLAGS[i][0];
+      if(typeof ROLES[k][f]==='undefined') ROLES[k][f]= ROLES_BASE[k] ? !!ROLES_BASE[k][f] : false;
+    }
+    if(!ROLES[k].label) ROLES[k].label=k;
+    if(typeof ROLES[k].bar==='undefined') ROLES[k].bar=!!ROLES[k].baronly;
+  }
+  for(var pin in PIN_MAP_BASE){ if(!PIN_MAP[pin]) PIN_MAP[pin]=JSON.parse(JSON.stringify(PIN_MAP_BASE[pin])); }
+  for(var p2 in PIN_MAP){ if(!PIN_MAP[p2]||!ROLES[PIN_MAP[p2].roleKey]) delete PIN_MAP[p2]; }
+  /* страховка от самоблокировки */
+  if(!Object.keys(ROLES).some(function(x){return ROLES[x].permsEdit;}) && ROLES.chef) ROLES.chef.permsEdit=true;
+  if(!Object.keys(ROLES).some(function(x){return ROLES[x].permsView;}) && ROLES.chef) ROLES.chef.permsView=true;
+}
 function renderRolesMatrix(){
   var box=document.getElementById('roles-matrix'); if(!box)return;
   var canEdit=(CUR_ROLE==='chef');
   var rkeys=Object.keys(ROLES);
-  var head='<tr><th style="text-align:left">Раздел / право</th>'+rkeys.map(function(rk){return '<th>'+ROLES[rk].label+'</th>';}).join('')+'</tr>';
+  var head='<tr><th style="text-align:left">Раздел / право</th>'+rkeys.map(function(rk){
+    return '<th>'+tkEsc(ROLES[rk].label)+(canEdit&&ROLES[rk]._own?'<br><button onclick="roleKill(\''+rk+'\')" title="Удалить роль" style="border:none;background:none;cursor:pointer;color:#C0392B;font-size:11px">🗑 удалить</button>':'')+'</th>';
+  }).join('')+'</tr>';
   var rows=PERM_FLAGS.map(function(pf){
     return '<tr><td style="text-align:left;font-size:13px"><b>'+pf[1]+'</b></td>'+rkeys.map(function(rk){
       var on=!!ROLES[rk][pf[0]];
       return '<td style="text-align:center;'+(canEdit?'cursor:pointer':'')+'" '+(canEdit?'onclick="togglePerm(\''+rk+'\',\''+pf[0]+'\')"':'')+'>'+(on?'<span style="color:#2E7D32;font-weight:700">✓</span>':'<span style="color:#bbb">—</span>')+'</td>';
     }).join('')+'</tr>';
   }).join('');
+  var pins=Object.keys(PIN_MAP).map(function(pn){ return '<div class="pair"><span>'+tkEsc(PIN_MAP[pn].name)+' · '+tkEsc((ROLES[PIN_MAP[pn].roleKey]||{}).label||'?')+'</span><span><b>'+pn+'</b></span></div>'; }).join('');
   box.innerHTML='<div class="sched"><table><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>'+
-    (canEdit?'<p class="hint" style="margin-top:10px">Нажмите ✓/— чтобы изменить право. «Создать новую роль» и тонкая настройка прав на каждый раздел появятся на этапе бэкенда.</p>':'<p class="hint" style="margin-top:10px">Менять права может только Владелец.</p>');
+    (canEdit
+      ? '<div class="btn-row" style="margin-top:12px"><button class="btn primary" onclick="roleNew()">+ Новая роль</button></div>'+
+        '<p class="hint" style="margin-top:10px">Нажми ✓/— чтобы изменить право. Изменения уходят в общую базу.</p>'+
+        '<div class="card" style="margin-top:14px"><b style="font-size:14px">🔑 PIN-коды входа</b><div style="margin-top:6px">'+pins+'</div>'+
+        '<p class="hint" style="margin:8px 0 0">PIN выдаётся при создании роли. Базовые PIN-коды менять нельзя.</p></div>'
+      : '<p class="hint" style="margin-top:10px">Ты видишь права, но менять их может только роль с правом «Права доступа: настраивать».</p>');
 }
 function togglePerm(rk,flag){
-  if(CUR_ROLE!=='chef'){alert('Менять права может только шеф.');return;}
-  ROLES[rk][flag]=!ROLES[rk][flag];
+  if(!can('permsEdit')){alert('Менять права может только роль с правом «Права доступа: настраивать».');return;}
+  if(!ROLES[rk])return;
+  var next=!ROLES[rk][flag];
+  if(flag==='permsEdit'&&!next){
+    var left=Object.keys(ROLES).filter(function(k){return k!==rk&&ROLES[k].permsEdit;});
+    if(!left.length){ alert('Это последняя роль, которая может настраивать права.\n\nЕсли снять — вернуть их будет некому. Сначала дай это право кому-то ещё.'); return; }
+    if(rk===CUR_ROLE && !confirm('Ты снимаешь право настраивать права у своей роли («'+ROLES[rk].label+'»).\n\nВернуть сможет только: '+left.map(function(k){return ROLES[k].label;}).join(', ')+'.\n\nПродолжить?')) return;
+  }
+  ROLES[rk][flag]=next;
   renderRolesMatrix();
   if(rk===CUR_ROLE)setRole(CUR_ROLE);
+  bvSaveNow();
+}
+function roleNew(){
+  if(!can('permsEdit')){alert('Создавать роли может только роль с правом «Права доступа: настраивать».');return;}
+  var nm=prompt('Название роли (например: Владелец):',''); nm=(nm||'').trim(); if(!nm)return;
+  for(var k in ROLES){ if(String(ROLES[k].label).toLowerCase()===nm.toLowerCase()){ alert('Роль «'+nm+'» уже есть.'); return; } }
+  var pin=prompt('PIN для входа этой ролью (4 цифры):',''); pin=(pin||'').trim();
+  if(!/^\d{4}$/.test(pin)){ alert('PIN должен быть из 4 цифр. Роль не создана.'); return; }
+  if(PIN_MAP[pin]){ alert('PIN '+pin+' уже занят: '+PIN_MAP[pin].name+'. Роль не создана.'); return; }
+  var who=(prompt('Чьё имя показывать при входе с этим PIN:',nm)||nm).trim()||nm;
+  var key='r_'+Date.now();
+  ROLES[key]={label:nm,edit:false,prod:false,recipes:false,tests:false,cost:false,baronly:false,bar:false,permsView:false,permsEdit:false,_own:true};
+  PIN_MAP[pin]={name:who,ava:who.charAt(0).toUpperCase(),role:nm,shift:'',roleKey:key};
+  renderRolesMatrix(); bvSaveNow();
+  alert('Роль «'+nm+'» создана.\nPIN для входа: '+pin+'\n\nПрава пока все выключены — отметь ✓ в таблице.');
+}
+function roleKill(rk){
+  if(!can('permsEdit')){alert('Удалять роли может только роль с правом «Права доступа: настраивать».');return;}
+  if(!ROLES[rk]||!ROLES[rk]._own){alert('Базовые роли удалять нельзя.');return;}
+  if(rk===CUR_ROLE){alert('Нельзя удалить роль, под которой ты сейчас работаешь.');return;}
+  var pins=Object.keys(PIN_MAP).filter(function(p){return PIN_MAP[p].roleKey===rk;});
+  if(!confirm('Удалить роль «'+ROLES[rk].label+'»?'+(pins.length?'\n\nPIN '+pins.join(', ')+' перестанет работать.':'')))return;
+  delete ROLES[rk];
+  pins.forEach(function(p){ delete PIN_MAP[p]; });
+  renderRolesMatrix(); bvSaveNow();
 }
 
 
+
+/* ===== ДАННЫЕ КОМПАНИИ ===== */
+var COMPANY_FIELDS=[
+  ['name','Полное название (пун назив)','BreadVenture d.o.o. Beograd'],
+  ['short','Краткое название','BreadVenture'],
+  ['pib','ПИБ',''],
+  ['mb','Матични број',''],
+  ['addr','Адрес','BULEVAR ZORANA ĐINĐIĆA 67, lokal 18'],
+  ['city','Город','Beograd'],
+  ['country','Страна происхождения (для саставницы)','Srbija'],
+  ['dir','Директор / законски заступник',''],
+  ['act','Шифра делатности',''],
+  ['reg','Дата регистрации в АПР',''],
+  ['vat','В системе ПДВ (да/нет)',''],
+  ['bank','Банк',''],
+  ['acc','Текући рачун',''],
+  ['phone','Телефон',''],
+  ['email','E-mail','']
+];
+var COMPANY={vals:{},extra:[],docs:[]};
+var CO_DOC_UP=false;
+function coNorm(){ if(!COMPANY||typeof COMPANY!=='object')COMPANY={}; if(!COMPANY.vals)COMPANY.vals={}; if(!COMPANY.extra)COMPANY.extra=[]; if(!COMPANY.docs)COMPANY.docs=[]; return COMPANY; }
+function coSet(k,v){ coNorm().vals[k]=v; declSync(); }
+
+/* --- связка: «Данные компании» -> саставница (единственный источник) --- */
+function declSync(){
+  if(typeof DECL_DEFAULTS==='undefined'||!DECL_DEFAULTS)return;
+  var v=coNorm().vals;
+  DECL_DEFAULTS.producer=(v.short||v.name||'');
+  DECL_DEFAULTS.address=[(v.addr||'').trim(),(v.city||'').trim()].filter(Boolean).join(', ');
+  DECL_DEFAULTS.origin=(v.country||'');
+}
+/* переносим то, что уже вбито в саставнице, в «Данные компании» — один раз */
+function coMigrate(){
+  coNorm();
+  if(COMPANY._linked)return;
+  if(typeof DECL_DEFAULTS!=='undefined'&&DECL_DEFAULTS){
+    var v=COMPANY.vals, g=DECL_DEFAULTS;
+    if(!v.short&&g.producer)v.short=g.producer;
+    if(!v.name&&g.producer)v.name=g.producer;
+    if(!v.addr&&g.address)v.addr=String(g.address).trim();
+    if(!v.country&&g.origin)v.country=g.origin;
+  }
+  COMPANY._linked=true;
+  declSync();
+}
+/* блок реквизитов внутри окна саставницы — только чтение */
+function declCoBlock(){
+  declSync();
+  var g=DECL_DEFAULTS||{};
+  function row(l,val){ return '<div class="pair"><span>'+l+'</span><span><b>'+(tkEsc(val||'')||'<span style="color:#C0392B;font-weight:400">не заполнено</span>')+'</b></span></div>'; }
+  return '<div style="border:1.5px solid var(--hair);border-radius:10px;padding:9px;background:#fff;margin:0 0 8px">'+
+    row('Производитель / Proizvođač',g.producer)+
+    row('Адрес / Adresa',g.address)+
+    row('Страна / Zemlja porekla',g.origin)+
+    '<p class="hint" style="margin:7px 0 0">Берётся из раздела <b>Команда → Данные компании</b> и одинаково для всех изделий.'+
+    (isChef()?' <a onclick="var m=document.getElementById(\'decl-modal\');if(m)m.remove();go(\'company\')" style="color:var(--accent);cursor:pointer;text-decoration:underline">Изменить →</a>':' Поменять может шеф или менеджер.')+
+    '</p></div>';
+}
+function coSetExtra(i,which,v){ var e=coNorm().extra[i]; if(e)e[which==='label'?0:1]=v; }
+function coAddField(){
+  var l=prompt('Название своего поля:',''); l=(l||'').trim(); if(!l)return;
+  coNorm().extra.push([l,'']); renderCompany(); bvSaveNow();
+}
+function coDelField(i){
+  var e=coNorm().extra[i]; if(!e)return;
+  if(!confirm('Удалить поле «'+e[0]+'»?'))return;
+  COMPANY.extra.splice(i,1); renderCompany(); bvSaveNow();
+}
+function renderCompany(){
+  var box=document.getElementById('co-fields'); if(!box)return;
+  coNorm();
+  var chef=isChef();
+  function inp(val,handler,ph){
+    return chef?('<input type="text" value="'+tkEsc(val||'')+'" placeholder="'+tkEsc(ph||'')+'" oninput="'+handler+'" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px;width:190px;max-width:100%">')
+               :('<b>'+(tkEsc(val||'')||'—')+'</b>');
+  }
+  var rows=COMPANY_FIELDS.map(function(f){
+    return '<div class="pair"><span>'+f[1]+'</span><span>'+inp(COMPANY.vals[f[0]],"coSet('"+f[0]+"',this.value)",f[2])+'</span></div>';
+  }).join('');
+  rows+=COMPANY.extra.map(function(e,i){
+    return '<div class="pair"><span>'+(chef?('<input type="text" value="'+tkEsc(e[0])+'" oninput="coSetExtra('+i+',\'label\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:3px 6px;font-size:12px;width:140px">'):tkEsc(e[0]))+'</span>'+
+      '<span style="display:flex;gap:6px;align-items:center">'+inp(e[1],"coSetExtra("+i+",'val',this.value)","")+
+      (chef?'<button onclick="coDelField('+i+')" title="Удалить поле" style="border:none;background:none;cursor:pointer;color:#C0392B;font-size:13px">✕</button>':'')+'</span></div>';
+  }).join('');
+  box.innerHTML=rows+
+    '<p class="hint" style="margin:8px 0 0;border-top:1.5px dashed var(--hair);padding-top:7px">🔗 <b>Краткое название</b>, <b>адрес</b>, <b>город</b> и <b>страна</b> автоматически подставляются в саставницу всех изделий (Производитель / Adresa / Zemlja porekla). Вводятся здесь один раз.</p>'+
+    (chef?'<div class="btn-row" style="margin-top:10px"><button class="btn" style="padding:3px 10px;font-size:12px" onclick="coAddField()">+ своё поле</button></div>':'');
+  declSync();
+  renderCompanyDocs();
+}
+function renderCompanyDocs(){
+  var box=document.getElementById('co-docs'); if(!box)return;
+  coNorm();
+  var chef=isChef();
+  var list=COMPANY.docs.length? COMPANY.docs.map(function(d,i){
+    return '<div class="pair"><span>'+tkEsc(d.name)+'<br><span style="color:var(--muted);font-size:11px">'+(d.date||'')+'</span></span><span style="display:flex;gap:6px;align-items:center">'+
+      '<a href="'+d.url+'" target="_blank" class="btn" style="padding:3px 10px;font-size:12px;text-decoration:none">Открыть</a>'+
+      (chef?'<button class="btn" style="padding:3px 8px;font-size:12px;color:#C0392B" onclick="coDocDel('+i+')">✕</button>':'')+'</span></div>';
+  }).join('') : '<p class="hint" style="margin:4px 0">Документов пока нет. Загрузи выписку из АПР, устав, договор аренды, решения — они сохранятся на Google Диске.</p>';
+  box.innerHTML=list+(CO_DOC_UP?'<p class="hint">Загрузка…</p>':'')+
+    (chef?'<div class="btn-row" style="margin-top:10px"><label class="btn" style="cursor:pointer">+ Загрузить документ<input type="file" style="display:none" onchange="coDocPick(this)"></label></div>':'');
+}
+function coDocPick(inp){
+  if(!inp.files||!inp.files[0])return;
+  var f=inp.files[0], nm=(prompt('Название документа:', f.name)||f.name);
+  CO_DOC_UP=true; renderCompanyDocs();
+  bvUploadFile(f, function(url){
+    CO_DOC_UP=false;
+    if(url){ coNorm().docs.push({name:nm,url:url,date:new Date().toLocaleDateString('ru-RU')}); bvSaveNow(); }
+    renderCompanyDocs();
+  });
+}
+function coDocDel(i){
+  var d=coNorm().docs[i]; if(!d)return;
+  if(!confirm('Убрать «'+d.name+'» из списка?\n\nСам файл останется на Google Диске.'))return;
+  COMPANY.docs.splice(i,1); renderCompanyDocs(); bvSaveNow();
+}
 
 /* ===== ВИТРИНА ДНЯ ===== */
 var VITRINA={assembly:'08:30',shipment:'09:00',invoice:null,invoiceName:'',
@@ -7267,7 +7640,7 @@ function sendChk(){
 }
 /* ===================== СОХРАНЕНИЕ В БРАУЗЕРЕ (localStorage) ===================== */
 var BV_KEY='bv_pekar_store_v1';
-var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','ROLE_TAGS','POS_LIST','DIR_LIST'];
+var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN'];
 function bvSnapshot(){ var o={}; for(var i=0;i<BV_PERSIST.length;i++){ var k=BV_PERSIST[i]; try{ if(typeof window[k]!=='undefined') o[k]=window[k]; }catch(e){} } return o; }
 function bvSave(){ try{ localStorage.setItem(BV_KEY, JSON.stringify(bvSnapshot())); }catch(e){} }
 function bvLoad(){ try{ var raw=localStorage.getItem(BV_KEY); if(!raw)return false; var o=JSON.parse(raw); var n=0; for(var k in o){ if(o.hasOwnProperty(k) && BV_PERSIST.indexOf(k)>=0){ try{ window[k]=o[k]; n++; }catch(e){} } } return n>0; }catch(e){ return false; } }
@@ -7316,8 +7689,8 @@ function bvBootCloud(){
     }
   }).catch(function(e){});
 }
-bvBootCloud();bvLoad();try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} var _sn=document.getElementById('bv-store-note'); var _rl=document.getElementById('bv-reset-link'); if(BV_CLOUD_URL){ if(_sn)_sn.innerHTML='☁️ Данные в общей базе<br><span style="opacity:.8">общие для команды</span><br><a onclick="bvPing()" style="cursor:pointer;text-decoration:underline">Проверить базу</a>'; if(_rl)_rl.style.display='none'; } bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
-renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAch();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
+bvBootCloud();bvLoad();try{if(typeof rolesBoot==='function')rolesBoot();}catch(e){}try{if(typeof teamBoot==='function')teamBoot();}catch(e){}try{if(typeof coMigrate==='function')coMigrate();}catch(e){}try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} var _sn=document.getElementById('bv-store-note'); var _rl=document.getElementById('bv-reset-link'); if(BV_CLOUD_URL){ if(_sn)_sn.innerHTML='☁️ Данные в общей базе<br><span style="opacity:.8">общие для команды</span><br><a onclick="bvPing()" style="cursor:pointer;text-decoration:underline">Проверить базу</a>'; if(_rl)_rl.style.display='none'; } bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
+renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAch();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();rolesBoot();teamBoot();coMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
 
 calcKalk();calcAkt();calcHidr();calcBP();
 
