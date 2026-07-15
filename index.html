@@ -286,13 +286,16 @@
 
 /* --- Печать графика отпёка --- */
 #print-area{display:none}
-@page{margin:14mm}
+@page{margin:12mm}
 @media print{
+  html,body{background:#fff!important}
+  body{display:block!important;min-height:0!important;height:auto!important}
   body > *:not(#print-area){display:none!important}
-  #print-area .decl-block{break-inside:avoid;page-break-inside:avoid}
+  #print-area{display:block!important;height:auto!important;min-height:0!important;width:auto!important;flex:none!important;background:#fff!important}
+  #print-area > *{height:auto!important}
+  #print-area .decl-block{break-inside:avoid;page-break-inside:avoid;background:#fff!important}
   #print-area table{break-inside:auto}
   #print-area tr{break-inside:avoid;page-break-inside:avoid}
-  #print-area{display:block!important}
   #print-area button{display:none!important}
   #print-area .hint{display:none!important}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
