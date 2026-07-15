@@ -1154,7 +1154,7 @@
   </div>
   <div class="tabpane active" id="team-people"><div id="team-list-wrap"><div id="team-legend"></div><div class="btn-row chef-only" style="margin-bottom:14px"><button class="btn primary" onclick="empNew()">+ Добавить сотрудника</button></div><div id="team-grid" class="grid g2"></div><div id="team-archived"></div></div><div id="team-detail" style="display:none"></div></div>
   <div class="tabpane" id="team-ach">
-    <div class="note" style="margin-bottom:16px">🏅 Система оценивает рабочие показатели и вклад, а не личность. Помогает видеть надёжность и рост команды, и снижать зависимость от одного человека.</div>
+    <div class="note" style="margin-bottom:16px">🏅 Система оценивает рабочие показатели и вклад, а не личность. Помогает видеть надёжность и рост команды, и снижать зависимость от одного человека.<br><span style="font-size:12px">Список берётся из карточек сотрудников. Оценка смен, стаж, похвалы и замечания считаются сами; остальные показатели ведёт шеф.</span></div>
     <div id="ach-grid" class="grid g2"></div>
   </div>
 </section>
@@ -4492,11 +4492,9 @@ function empLevel(id){
   if(isNaN(n)||n<0||n>=L.length){ alert('Нужен номер от 0 до '+(L.length-1)); return; }
   var old=levelName(p);
   p.level=n;
-  var why=prompt('Почему такой уровень? Коротко — это увидит команда.\n\nНапример: «Стабильно ведёт пятничный пик один».', (p.levelMeta&&p.levelMeta[1])||'');
   var ym=new Date().toISOString().slice(0,7);
-  if(why!==null) p.levelMeta=[ym,String(why).trim()];
   if(!p.history)p.history=[];
-  if(old!==L[n]) p.history.push([ym,'Уровень: '+old+' → '+L[n]+((why&&String(why).trim())?(' ('+String(why).trim()+')'):'')]);
+  if(old!==L[n]) p.history.push([ym,'Уровень: '+old+' → '+L[n]]);
   empOpen(id,true); renderTeam(); bvSaveNow();
 }
 /* --- легенда уровней --- */
@@ -4516,7 +4514,7 @@ function renderLevelLegend(){
     '<b style="font-size:13px">Ур. — уровень мастерства</b><p class="hint" style="margin:2px 0 6px">Ставит шеф вручную в карточке сотрудника — по факту навыков, а не автоматически. Растёт, когда человек стабильно тянет следующую ступень.</p>'+
     rows+
     '<div style="margin-top:12px;border-top:1.5px solid var(--hair);padding-top:8px"><b style="font-size:13px">Владелец / фаундер:</b> <span style="color:var(--muted);font-size:12.5px">грейдов нет — уровень не показывается.</span></div>'+
-    '<p class="hint" style="margin:6px 0 0">Линейка выбирается по должности. Поменять её можно в «✎ Редактировать» → ссылка «✎ линейка» рядом с полем «Уровень». <b>Почему</b> конкретному человеку стоит именно этот уровень — в его карточке, в строке «❓ Что значит … и почему он».</p>'+
+    '<p class="hint" style="margin:6px 0 0">Линейка выбирается по должности. Поменять её можно в «✎ Редактировать» → ссылка «✎ линейка» рядом с полем «Уровень». У каждого сотрудника в карточке есть строка «❓ Что значит …» — там вся его линейка с выделенной ступенью.</p>'+
     '<div style="margin-top:12px;border-top:1.5px solid var(--hair);padding-top:8px"><b style="font-size:13px">★ смены</b><p class="hint" style="margin:2px 0 0">Средняя оценка за <b>последние 10 смен</b> (шеф ставит оценку при приёмке смены, от 1 до 5). Считается автоматически.</p></div>'+
     '<div style="margin-top:8px"><b style="font-size:13px">⚠️ замечаний</b><p class="hint" style="margin:2px 0 0">Сколько открытых (неисправленных) замечаний у сотрудника. Закрываются в карточке.</p></div>'+
     '</div></details>';
@@ -5443,7 +5441,7 @@ function posTrackEdit(pref){
   if(pref==='en')enLevels(); else eeLevels();
   renderTeam(); renderLevelLegend(); bvSaveNow();
 }
-var ACH=[
+var ACH_OLD=[
  {n:'Аня',level:3,noErr:18,noLate:62,stable:[20,21],proposed:3,toProd:1,mentored:1,
   badges:['Надёжный пекарь','Мастер формовки','Автор рецептуры','Без опозданий']},
  {n:'Нико',level:3,noErr:31,noLate:104,stable:[28,30],proposed:1,toProd:0,mentored:2,
@@ -5453,8 +5451,38 @@ var ACH=[
  {n:'Надя',level:4,noErr:0,noLate:0,stable:[0,0],proposed:0,toProd:0,mentored:3,
   badges:['Наставник']}
 ];
+var ACH_MIG={done:false};
+function achOf(p){ if(!p.ach||typeof p.ach!=='object')p.ach={}; if(!p.ach.badges)p.ach.badges=[]; return p.ach; }
+/* однократно переносим показатели из старого списка в карточки сотрудников */
+function achMigrate(){
+  if(!ACH_MIG||ACH_MIG.done)return;
+  if(typeof TEAM==='undefined'||!TEAM.forEach){ return; }
+  ACH_OLD.forEach(function(o){
+    var p=TEAM.filter(function(x){return x.n===o.n;})[0]; if(!p)return;
+    var a=achOf(p);
+    if(o.bar){
+      a.shiftsBar=o.shiftsBar; a.noLate=o.noLate;
+      a.latte0=o.latteScore[0]; a.latte1=o.latteScore[1];
+      a.serv0=o.serviceScore[0]; a.serv1=o.serviceScore[1];
+      a.drinksServed=o.drinksServed; a.upsell=o.upsell;
+    } else {
+      a.noErr=o.noErr; a.noLate=o.noLate;
+      a.stable0=o.stable[0]; a.stable1=o.stable[1];
+      a.proposed=o.proposed; a.toProd=o.toProd; a.mentored=o.mentored;
+    }
+    a.badges=(o.badges||[]).slice();
+  });
+  ACH_MIG.done=true;
+}
+/* какие показатели ведём вручную — по линейке */
+var ACH_FIELDS={
+  baker:[['noErr','Смен без ошибок подряд'],['noLate','Дней без опозданий'],['stable0','Стабильных отпёков'],['stable1','Отпёков всего'],['proposed','Предложено рецептур'],['toProd','Доведено до производства'],['mentored','Обучил сотрудников']],
+  bar:[['shiftsBar','Смен на баре'],['noLate','Дней без опозданий'],['latte0','Латте-арт: удачных'],['latte1','Латте-арт: всего'],['serv0','Сервис: оценок «ок»'],['serv1','Сервис: оценок всего'],['drinksServed','Напитков приготовлено'],['upsell','Удачных апселлов']],
+  mgr:[['noLate','Дней без опозданий'],['mentored','Обучил сотрудников'],['proposed','Предложено улучшений'],['toProd','Внедрено улучшений']],
+  none:[['mentored','Обучил сотрудников'],['proposed','Предложено рецептур'],['toProd','Доведено до производства']]
+};
 function noErrTier(n){var t=[5,10,15,30,50,100];var cur=0;t.forEach(function(x){if(n>=x)cur=x;});return cur;}
-function achBaristaCard(p){
+function achBaristaCard_unused(p){
   var latte=p.latteScore[1]?Math.round(p.latteScore[0]/p.latteScore[1]*100):null;
   var serv=p.serviceScore[1]?Math.round(p.serviceScore[0]/p.serviceScore[1]*100):null;
   var m='';
@@ -5468,23 +5496,105 @@ function achBaristaCard(p){
   return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><b style="font-size:19px">'+p.n+' <span class="tag" style="font-size:11px">бариста</span></b><span class="tag warn">Уровень: '+LEVELS_BAR[p.levelBar]+'</span></div>'+
     '<div style="margin-top:10px">'+m+'</div>'+(badges?'<div style="margin-top:10px">'+badges+'</div>':'')+'</div>';
 }
+function achRow(l,v,extra){ return '<div class="pair"><span>'+l+'</span><span><b>'+v+'</b>'+(extra||'')+'</span></div>'; }
+function achManual(p){
+  var a=achOf(p), tk=trackOf(p), m='';
+  function num(k,l){ if(a[k])m+=achRow(l,a[k]); }
+  function ratio(k0,k1,l){ var x=a[k0]||0,y=a[k1]||0; if(y)m+=achRow(l,x+'/'+y,' · '+Math.round(x/y*100)+'%'); }
+  if(tk==='bar'){
+    num('shiftsBar','Смен на баре'); num('noLate','Дней без опозданий');
+    ratio('latte0','latte1','Качество латте-арт'); ratio('serv0','serv1','Оценка сервиса');
+    num('drinksServed','Напитков приготовлено'); num('upsell','Удачных апселлов');
+  } else if(tk==='mgr'){
+    num('noLate','Дней без опозданий'); num('mentored','Обучил сотрудников');
+    num('proposed','Предложено улучшений'); num('toProd','Внедрено улучшений');
+  } else {
+    var t=noErrTier(a.noErr||0);
+    if(a.noErr)m+=achRow('Смен без ошибок подряд',a.noErr,(t>=15?' <span class="tag ok">🏅 '+t+' смен</span>':''));
+    num('noLate','Дней без опозданий');
+    ratio('stable0','stable1','Стабильность выпечки');
+    num('proposed','Предложено рецептур'); num('toProd','Доведено до производства'); num('mentored','Обучил сотрудников');
+  }
+  return m;
+}
 function renderAch(){
-  document.getElementById('ach-grid').innerHTML=ACH.map(function(p){
-    if(p.bar)return achBaristaCard(p);
-    var stablePct=p.stable[1]?Math.round(p.stable[0]/p.stable[1]*100):null;
-    var tier=noErrTier(p.noErr);
-    var metrics='';
-    if(p.noErr)metrics+='<div class="pair"><span>Смен без ошибок подряд</span><span><b>'+p.noErr+'</b>'+(tier>=15?' <span class="tag ok">🏅 '+tier+' смен</span>':'')+'</span></div>';
-    if(p.noLate)metrics+='<div class="pair"><span>Дней без опозданий</span><span><b>'+p.noLate+'</b></span></div>';
-    if(stablePct!=null)metrics+='<div class="pair"><span>Стабильность выпечки</span><span><b>'+p.stable[0]+'/'+p.stable[1]+'</b> · '+stablePct+'%</span></div>';
-    if(p.proposed)metrics+='<div class="pair"><span>Предложено рецептур</span><span><b>'+p.proposed+'</b></span></div>';
-    if(p.toProd)metrics+='<div class="pair"><span>Доведено до производства</span><span><b>'+p.toProd+'</b></span></div>';
-    if(p.mentored)metrics+='<div class="pair"><span>Обучил сотрудников</span><span><b>'+p.mentored+'</b></span></div>';
-    var badges=p.badges.map(function(b){return '<span class="tag ok" style="margin:2px 4px 2px 0">🏅 '+b+'</span>';}).join('');
-    return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><b style="font-size:19px">'+p.n+'</b><span class="tag warn">Уровень: '+LEVELS[p.level]+'</span></div>'+
-      '<div style="margin-top:10px">'+(metrics||'<p class="hint">Показатели появятся с накоплением смен.</p>')+'</div>'+
-      (badges?'<div style="margin-top:10px">'+badges+'</div>':'')+'</div>';
+  var box=document.getElementById('ach-grid'); if(!box)return;
+  var list=TEAM.filter(function(p){return p.status!=='Архивный';});
+  if(!list.length){ box.innerHTML='<p class="hint">Сотрудников пока нет.</p>'; return; }
+  box.innerHTML=list.map(function(p){
+    var a=achOf(p), tk=trackOf(p), T=TRACKS[tk];
+    /* — реальные данные из карточки — */
+    var real='';
+    var avg=shiftAvg(p);
+    if(avg!=null)real+=achRow('★ Средняя оценка смен',avg,' <span style="font-weight:400;color:var(--muted);font-size:11.5px">за '+Math.min(10,(p.shiftScores||[]).length)+'</span>');
+    real+=achRow('Стаж',tenureText(p.started));
+    var pr=(p.praises||[]).length, iss=(p.issues||[]).filter(function(x){return x.status!=='Закрыто';}).length;
+    if(pr)real+=achRow('🌟 Похвал',pr);
+    if(iss)real+=achRow('⚠️ Активных замечаний',iss);
+    var man=achManual(p);
+    var badges=(a.badges||[]).map(function(b,i){
+      return '<span class="tag ok" style="margin:2px 4px 2px 0;display:inline-flex;align-items:center;gap:4px">🏅 '+tkEsc(b)+
+        (isChef()?'<button onclick="achBadgeDel(\''+p.id+'\','+i+')" title="Убрать" style="border:none;background:none;cursor:pointer;font-size:10px;padding:0 2px;color:var(--ink)">✕</button>':'')+'</span>';
+    }).join('');
+    return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">'+
+      '<b style="font-size:19px">'+tkEsc(empName(p))+'</b>'+
+      '<span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+
+        '<span class="tag" style="font-size:11px">'+tkEsc(p.pos||'—')+'</span>'+
+        (T.levels.length?('<span class="tag warn">Уровень: '+tkEsc(levelName(p))+'</span>'):'')+
+      '</span></div>'+
+      '<div style="margin-top:10px">'+real+'</div>'+
+      (man?('<div style="margin-top:8px;border-top:1.5px dashed var(--hair);padding-top:6px">'+man+'</div>')
+          :'<p class="hint" style="margin-top:8px">Показатели пока не заполнены'+(isChef()?' — нажми «✎ Показатели».':'.')+'</p>')+
+      (badges?'<div style="margin-top:10px">'+badges+'</div>':'')+
+      (isChef()?'<div class="btn-row chef-only" style="margin-top:10px;gap:8px"><button class="btn" style="padding:3px 10px;font-size:12px" onclick="achEdit(\''+p.id+'\')">✎ Показатели</button><button class="btn" style="padding:3px 10px;font-size:12px" onclick="achBadgeAdd(\''+p.id+'\')">+ Бейдж</button></div>':'')+
+      '</div>';
   }).join('');
+}
+function achBadgeAdd(id){
+  if(!isChef())return; var p=empById(id); if(!p)return;
+  var b=prompt('Название бейджа (например: «Наставник»):',''); b=(b||'').trim(); if(!b)return;
+  var a=achOf(p); if(a.badges.indexOf(b)<0)a.badges.push(b);
+  renderAch(); bvSaveNow();
+}
+function achBadgeDel(id,i){
+  if(!isChef())return; var p=empById(id); if(!p)return;
+  var a=achOf(p); if(!a.badges[i])return;
+  if(!confirm('Убрать бейдж «'+a.badges[i]+'» у '+empName(p)+'?'))return;
+  a.badges.splice(i,1); renderAch(); bvSaveNow();
+}
+function achEdit(id){
+  if(!isChef())return; var p=empById(id); if(!p)return;
+  var a=achOf(p), tk=trackOf(p), flds=ACH_FIELDS[tk]||ACH_FIELDS.baker;
+  var ov=document.getElementById('ach-modal');
+  if(!ov){ ov=document.createElement('div'); ov.id='ach-modal'; ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px'; document.body.appendChild(ov); }
+  ov.innerHTML='<div style="background:var(--bg);border:1.5px solid var(--ink);border-radius:16px;max-width:480px;width:100%;padding:20px;box-shadow:4px 4px 0 var(--ink)">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b style="font-size:17px">✎ Показатели — '+tkEsc(empName(p))+'</b><button onclick="document.getElementById(\'ach-modal\').remove()" style="border:none;background:none;font-size:20px;cursor:pointer">✕</button></div>'+
+    '<p class="hint" style="margin:0 0 12px">Линейка «'+tkEsc(TRACKS[tk].title.toLowerCase())+'». Ноль — показатель не выводится в карточке.</p>'+
+    '<div class="grid g2" style="gap:10px">'+flds.map(function(f){
+      return '<div class="field" style="margin:0"><label>'+f[1]+'</label><input type="number" min="0" step="1" id="ach-'+f[0]+'" value="'+(a[f[0]]||0)+'" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>';
+    }).join('')+'</div>'+
+    '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap"><button class="btn primary" onclick="achSave(\''+p.id+'\')">💾 Сохранить</button>'+
+    '<button class="btn" onclick="achZero(\''+p.id+'\')">Обнулить всё</button>'+
+    '<button class="btn" onclick="document.getElementById(\'ach-modal\').remove()">Отмена</button></div>'+
+    '</div>';
+}
+function achSave(id){
+  var p=empById(id); if(!p)return;
+  var a=achOf(p), tk=trackOf(p), flds=ACH_FIELDS[tk]||ACH_FIELDS.baker;
+  flds.forEach(function(f){
+    var el=document.getElementById('ach-'+f[0]); if(!el)return;
+    var n=parseInt(el.value); a[f[0]]=(isNaN(n)||n<0)?0:n;
+  });
+  var m=document.getElementById('ach-modal'); if(m)m.remove();
+  renderAch(); bvSaveNow();
+}
+function achZero(id){
+  var p=empById(id); if(!p)return;
+  if(!confirm('Обнулить все показатели '+empName(p)+'?\n\nБейджи останутся.'))return;
+  var a=achOf(p), tk=trackOf(p), flds=ACH_FIELDS[tk]||ACH_FIELDS.baker;
+  flds.forEach(function(f){ a[f[0]]=0; });
+  var m=document.getElementById('ach-modal'); if(m)m.remove();
+  renderAch(); bvSaveNow();
 }
 
 
@@ -5797,14 +5907,15 @@ function empSkillsAll(id){ EMP_ALL_SKILLS[id]=!EMP_ALL_SKILLS[id]; empOpen(id,tr
 function levelWhyHtml(p){
   var tk=trackOf(p), T=TRACKS[tk], L=T.levels, i=p.level;
   if(!L.length)return '';
-  var desc=(TRACK_DESC[tk]||[])[i]||'';
-  var m=p.levelMeta;
-  return '<div style="font-size:12.5px;color:var(--muted);line-height:1.65">'+
-    '<b style="color:var(--ink)">'+tkEsc(L[i]||'—')+'</b>'+(desc?(' — '+tkEsc(desc)):'')+
-    '<div style="margin-top:6px">Линейка «'+tkEsc(T.title.toLowerCase())+'»: '+L.map(function(l,j){ return j===i?('<b style="color:var(--ink)">'+tkEsc(l)+'</b>'):tkEsc(l); }).join(' → ')+'</div>'+
-    '<div style="margin-top:7px;border-top:1.5px dashed var(--hair);padding-top:6px"><b style="color:var(--ink)">Почему этот уровень:</b> '+
-    ((m&&m[1])?(tkEsc(m[1])+' <span style="opacity:.75">· поставил шеф, '+tkEsc(m[0])+'</span>')
-             :'<span style="color:#C0392B">обоснование не записано'+(isChef()?' — нажми ✎ у поля «Уровень» и впиши':'')+'</span>')+'</div></div>';
+  return '<div style="font-size:12.5px;line-height:1.55">'+
+    '<div style="color:var(--muted);margin-bottom:4px">Линейка «'+tkEsc(T.title.toLowerCase())+'» — все ступени. Текущая выделена.</div>'+
+    L.map(function(l,j){
+      var desc=(TRACK_DESC[tk]||[])[j]||'', cur=(j===i);
+      return '<div style="display:flex;gap:8px;align-items:baseline;padding:6px 7px;margin-top:4px;border-radius:7px;'+
+        (cur?'background:var(--yellow);border:1.5px solid var(--ink)':'border:1.5px solid transparent')+'">'+
+        '<b style="min-width:132px;flex-shrink:0;'+(cur?'':'color:var(--muted);font-weight:600')+'">'+tkEsc(l)+'</b>'+
+        '<span style="'+(cur?'':'color:var(--muted)')+'">'+tkEsc(desc)+'</span></div>';
+    }).join('')+'</div>';
 }
 function stazh(started){ return tenureText(started); }   /* единая формула: годы + месяцы, от сегодняшней даты */
 function empOpen(id,keep){
@@ -5855,7 +5966,7 @@ function empOpen(id,keep){
     '<p style="color:var(--muted);font-size:13.5px;margin-top:2px">'+tkEsc(roleLine(p))+'</p>'+
     '<div class="tk" style="grid-template-columns:1fr 1fr;margin-top:10px"><div><div class="pair"><span>Должность</span><span>'+tkEsc(p.pos||'\u2014')+'</span></div><div class="pair"><span>Направление</span><span>'+p.dir+'</span></div><div class="pair"><span>Стаж</span><span>'+stazh(p.started)+'</span></div><div class="pair"><span>Уровень</span><span>'+levelName(p)+((isChef()&&hasLevels(p))?(' <button class="btn" style="padding:0 7px;font-size:11px" onclick="empLevel(\''+p.id+'\')">✎</button>'):'')+'</span></div></div>'+
     '<div><div class="pair"><span>Наставник</span><span>'+p.mentor+'</span></div><div class="pair chef-only"><span>Telegram</span><span>'+tgLink(p.tg)+'</span></div><div class="pair chef-only"><span>Телефон</span><span>'+telLink(p.phone)+'</span></div></div></div>'+
-    (hasLevels(p)?('<details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;color:var(--accent)">❓ Что значит «'+tkEsc(levelName(p))+'» и почему он</summary><div style="border:1.5px solid var(--hair);border-radius:10px;padding:10px;margin-top:6px;background:#fff">'+levelWhyHtml(p)+'</div></details>'):'')+
+    (hasLevels(p)?('<details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;color:var(--accent)">❓ Что значит «'+tkEsc(levelName(p))+'» — вся линейка</summary><div style="border:1.5px solid var(--hair);border-radius:10px;padding:10px;margin-top:6px;background:#fff">'+levelWhyHtml(p)+'</div></details>'):'')+
     (isChef()?'<div class="btn-row chef-only" style="width:100%;margin-top:16px;margin-bottom:2px;gap:8px;flex-wrap:wrap"><button class="btn" onclick="empEdit(\''+p.id+'\')">✎ Редактировать</button><button class="btn" onclick="empStatus(\''+p.id+'\')">Сменить статус</button><button class="btn" onclick="empAddIssue(\''+p.id+'\')">+ Замечание</button><button class="btn" onclick="empAddPraise(\''+p.id+'\')">+ Похвала</button>'+(p.status!=='Архивный'?'<button class="btn" onclick="empArchive(\''+p.id+'\')">В архив</button>':'')+'<button class="btn" style="color:#C0392B" onclick="empDelete(\''+p.id+'\')">🗑 Удалить</button></div>':'')+
     '</div></div>'+
     '<div class="grid g2"><div class="card"><b style="font-size:15px">Навыки (1–5)</b><div style="margin-top:10px">'+skillGroups+skillLegendHtml()+'</div></div>'+
@@ -7747,7 +7858,7 @@ function sendChk(){
 }
 /* ===================== СОХРАНЕНИЕ В БРАУЗЕРЕ (localStorage) ===================== */
 var BV_KEY='bv_pekar_store_v1';
-var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN'];
+var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','ACH_MIG'];
 function bvSnapshot(){ var o={}; for(var i=0;i<BV_PERSIST.length;i++){ var k=BV_PERSIST[i]; try{ if(typeof window[k]!=='undefined') o[k]=window[k]; }catch(e){} } return o; }
 function bvSave(){ try{ localStorage.setItem(BV_KEY, JSON.stringify(bvSnapshot())); }catch(e){} }
 function bvLoad(){ try{ var raw=localStorage.getItem(BV_KEY); if(!raw)return false; var o=JSON.parse(raw); var n=0; for(var k in o){ if(o.hasOwnProperty(k) && BV_PERSIST.indexOf(k)>=0){ try{ window[k]=o[k]; n++; }catch(e){} } } return n>0; }catch(e){ return false; } }
@@ -7796,8 +7907,8 @@ function bvBootCloud(){
     }
   }).catch(function(e){});
 }
-bvBootCloud();bvLoad();try{if(typeof rolesBoot==='function')rolesBoot();}catch(e){}try{if(typeof teamBoot==='function')teamBoot();}catch(e){}try{if(typeof coMigrate==='function')coMigrate();}catch(e){}try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} var _sn=document.getElementById('bv-store-note'); var _rl=document.getElementById('bv-reset-link'); if(BV_CLOUD_URL){ if(_sn)_sn.innerHTML='☁️ Данные в общей базе<br><span style="opacity:.8">общие для команды</span><br><a onclick="bvPing()" style="cursor:pointer;text-decoration:underline">Проверить базу</a>'; if(_rl)_rl.style.display='none'; } bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
-renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAch();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();rolesBoot();teamBoot();coMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
+bvBootCloud();bvLoad();try{if(typeof rolesBoot==='function')rolesBoot();}catch(e){}try{if(typeof teamBoot==='function')teamBoot();}catch(e){}try{if(typeof coMigrate==='function')coMigrate();}catch(e){}try{if(typeof achMigrate==='function')achMigrate();}catch(e){}try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} var _sn=document.getElementById('bv-store-note'); var _rl=document.getElementById('bv-reset-link'); if(BV_CLOUD_URL){ if(_sn)_sn.innerHTML='☁️ Данные в общей базе<br><span style="opacity:.8">общие для команды</span><br><a onclick="bvPing()" style="cursor:pointer;text-decoration:underline">Проверить базу</a>'; if(_rl)_rl.style.display='none'; } bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
+renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAch();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();rolesBoot();teamBoot();coMigrate();achMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
 
 calcKalk();calcAkt();calcHidr();calcBP();
 
