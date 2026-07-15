@@ -286,8 +286,12 @@
 
 /* --- Печать графика отпёка --- */
 #print-area{display:none}
+@page{margin:14mm}
 @media print{
   body > *:not(#print-area){display:none!important}
+  #print-area .decl-block{break-inside:avoid;page-break-inside:avoid}
+  #print-area table{break-inside:auto}
+  #print-area tr{break-inside:avoid;page-break-inside:avoid}
   #print-area{display:block!important}
   #print-area button{display:none!important}
   #print-area .hint{display:none!important}
@@ -2365,103 +2369,179 @@ function tkSafetyEdit(v){ if(currentRecipe)currentRecipe.safety=parseFloat(v)||0
 var SR_ING_DICT=[
  [/цельнозерн.*мук/i,'integralno pšenično brašno'],[/цельнозерн/i,'integralno brašno'],
  [/пшеничн.*мук/i,'pšenično brašno'],[/бел.*мук/i,'belo pšenično brašno'],[/ржан.*мук|рж.?ан/i,'raženo brašno'],[/отруб/i,'mekinje'],[/мук/i,'brašno'],
- [/лед.*вод|вод.*лед/i,'ledena voda'],[/вод/i,'voda'],
+ [/лед.*вод|вод.*лед/i,'voda'],[/вод/i,'voda'],
  [/морск.*сол/i,'morska so'],[/сол/i,'so'],
- [/закваск/i,'kiselo testo (starter)'],[/опар/i,'kiselo testo (poolish)'],[/дрожж/i,'kvasac'],
- [/сахар|сахарн/i,'šećer'],[/сливочн.*масл/i,'puter'],[/растит.*масл|подсолнечн.*масл|оливков.*масл/i,'ulje'],[/масл/i,'puter'],
+ [/закваск/i,'kiselo testo'],[/опар/i,'kiselo testo'],[/дрожж/i,'kvasac'],
+ [/сахар/i,'šećer'],[/сливочн.*масл/i,'puter'],[/растит.*масл|подсолнечн.*масл|оливков.*масл/i,'ulje'],[/масл/i,'puter'],
  [/яйц|яич/i,'jaja'],[/молок/i,'mleko'],[/сливк/i,'pavlaka'],[/сыр/i,'sir'],[/мед/i,'med'],[/солод/i,'slad'],
- [/льн|семен.*льн/i,'seme lana'],[/подсолнечник|семен.*подсолнеч/i,'seme suncokreta'],[/тыкв|семен.*тыкв/i,'seme bundeve'],[/кунжут|сезам/i,'susam'],[/семен|семечк/i,'semenke'],
+ [/льн/i,'seme lana'],[/подсолнечник/i,'seme suncokreta'],[/тыкв/i,'seme bundeve'],[/кунжут|сезам/i,'susam'],[/семен|семечк/i,'semenke'],
  [/зернов.*смес|зернов.*микс/i,'mešavina žitarica'],[/орех/i,'orasi']
 ];
 function srIng(name){ for(var i=0;i<SR_ING_DICT.length;i++){ if(SR_ING_DICT[i][0].test(name)) return SR_ING_DICT[i][1]; } return name; }
-function tkDetectAllergens(ing){
-  var found={};
+
+/* аллергены: код -> [RU, SR] */
+var ALLERG_LIST=[['gluten','Глютен (злаки)','gluten (žitarice)'],['mleko','Молоко','mleko'],['jaja','Яйца','jaja'],['orasi','Орехи','jezgrasto voće'],['susam','Кунжут','susam'],['soja','Соя','soja'],['kikiriki','Арахис','kikiriki'],['seme_slacice','Горчица','slačica'],['celer','Сельдерей','celer']];
+function tkAllergAuto(ing){
+  var f={};
   ing.forEach(function(i){ var n=i[0];
-    if(/мук|пшениц|рож|ржан|ячмен|ovs|овс|глютен|закваск|опар|солод|отруб/i.test(n)) found['gluten']=1;
-    if(/молок|сливк|сыр|творог|йогурт|сливочн\w*\s*масл|сыворотк/i.test(n)) found['mleko']=1;
-    if(/яйц|яич/i.test(n)) found['jaja']=1;
-    if(/орех|миндал|фундук|фисташк|кешью|грецк/i.test(n)) found['orasi']=1;
-    if(/кунжут|сезам/i.test(n)) found['susam']=1;
-    if(/соя|соев/i.test(n)) found['soja']=1;
-    if(/арахис/i.test(n)) found['kikiriki']=1;
+    if(/мук|пшениц|рож|ржан|ячмен|овс|глютен|закваск|опар|солод|отруб|манк/i.test(n)) f['gluten']=1;
+    if(/молок|сливк|сыр|творог|йогурт|сливочн.*масл|сыворотк/i.test(n)) f['mleko']=1;
+    if(/яйц|яич/i.test(n)) f['jaja']=1;
+    if(/орех|миндал|фундук|фисташк|кешью|грецк/i.test(n)) f['orasi']=1;
+    if(/кунжут|сезам/i.test(n)) f['susam']=1;
+    if(/соя|соев/i.test(n)) f['soja']=1;
+    if(/арахис/i.test(n)) f['kikiriki']=1;
+    if(/горчиц|слачиц/i.test(n)) f['seme_slacice']=1;
+    if(/сельдер/i.test(n)) f['celer']=1;
   });
-  var map={gluten:['Глютен (злаки)','gluten (žitarice)'],mleko:['Молоко','mleko'],jaja:['Яйца','jaja'],orasi:['Орехи','jezgrasto voće (orasi)'],susam:['Кунжут','susam'],soja:['Соя','soja'],kikiriki:['Арахис','kikiriki']};
-  var ru=[],sr=[]; Object.keys(found).forEach(function(k){ ru.push(map[k][0]); sr.push(map[k][1]); });
-  return {ru:ru, sr:sr};
+  return Object.keys(f);
 }
 function tkDeclData(){
   var r=currentRecipe, ing=tkActiveIng().slice();
+  if(!r.decl)r.decl={};
+  if(!r.decl.ingSr)r.decl.ingSr={};
+  if(!r.decl.ingRu)r.decl.ingRu={};
   var total=0; ing.forEach(function(i){total+=i[1];});
-  var list=ing.filter(function(i){return i[1]>0;}).map(function(i){ return {ru:i[0], sr:srIng(i[0]), pct: total>0?Math.round(i[1]/total*1000)/10:0}; });
-  list.sort(function(a,b){return b.pct-a.pct;});
-  var al=tkDetectAllergens(ing);
-  return {list:list, allerg:al};
+  var list=ing.filter(function(i){return i[1]>0;}).map(function(i,idx){
+    var key=i[0];
+    return {key:key, ru:(r.decl.ingRu[key]||i[0]), sr:(r.decl.ingSr[key]||srIng(i[0])), pct: total>0?Math.round(i[1]/total*1000)/10:0, grams:i[1]};
+  });
+  list.sort(function(a,b){return b.grams-a.grams;});
+  return {list:list};
 }
-var DECL_DEFAULTS={producer:'BreadVenture',address:'',origin:'Srbija',defaultStorage:'',defaultShelfLife:''};
+function tkAllergActive(){
+  var r=currentRecipe; if(!r.decl)r.decl={};
+  if(!r.decl.allerg){ r.decl.allerg=tkAllergAuto(tkActiveIng()); }
+  return r.decl.allerg;
+}
+function tkAllergToggle(code,on){
+  var r=currentRecipe, a=tkAllergActive();
+  var i=a.indexOf(code);
+  if(on && i<0) a.push(code);
+  if(!on && i>=0) a.splice(i,1);
+}
+function tkAllergReset(){ currentRecipe.decl.allerg=tkAllergAuto(tkActiveIng()); tkDeclOpen(); }
+function tkLotGen(){
+  var d=new Date();
+  var yy=String(d.getFullYear()).slice(2), mm=('0'+(d.getMonth()+1)).slice(-2), dd=('0'+d.getDate()).slice(-2);
+  return 'L'+yy+mm+dd;
+}
+
+var DECL_DEFAULTS={producer:'BreadVenture',address:'BULEVAR ZORANA ĐINĐIĆA 67, lokal 18, Beograd',origin:'Srbija',defaultStorage:'',defaultShelfLife:''};
 function tkDeclDefault(k,v){ DECL_DEFAULTS[k]=v; }
+
 function tkDeclOpen(){
   var r=currentRecipe; if(!r.decl)r.decl={};
   var d=r.decl, c=r.client||{}, g=DECL_DEFAULTS;
   if(d.shelfLife===undefined)d.shelfLife=(c.srok||g.defaultShelfLife||'');
   if(d.storage===undefined)d.storage=(c.hran||g.defaultStorage||'');
+  if(d.netMass===undefined)d.netMass=(r.weight? (Math.round(r.weight)+' g') : '');
+  if(d.showLot===undefined)d.showLot=false;
+  if(d.showPct===undefined)d.showPct=false;
   if(!d.nutrition)d.nutrition={};
+  if(!d.ingSr)d.ingSr={};
+  if(!d.ingRu)d.ingRu={};
+  tkAllergActive();
+  var data=tkDeclData();
   var ov=document.getElementById('decl-modal');
   if(!ov){ ov=document.createElement('div'); ov.id='decl-modal'; ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px'; document.body.appendChild(ov); }
   function fld(label,key,ph){ return '<div class="field" style="margin:0 0 8px"><label>'+label+'</label><input type="text" value="'+tkEsc(d[key]||'')+'" placeholder="'+(ph||'')+'" oninput="tkDeclField(\''+key+'\',this.value)" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'; }
   function gfld(label,key,ph){ return '<div class="field" style="margin:0 0 8px"><label>'+label+'</label><input type="text" value="'+tkEsc(g[key]||'')+'" placeholder="'+(ph||'')+'" oninput="tkDeclDefault(\''+key+'\',this.value)" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'; }
   function nut(label,key){ return '<div class="field" style="margin:0"><label style="font-size:11px">'+label+'</label><input type="text" value="'+tkEsc((d.nutrition[key])||'')+'" oninput="tkDeclNut(\''+key+'\',this.value)" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:6px;font-size:12px;box-sizing:border-box"></div>'; }
-  ov.innerHTML='<div style="background:var(--bg);border:1.5px solid var(--ink);border-radius:16px;max-width:640px;width:100%;padding:20px;box-shadow:4px 4px 0 var(--ink)">'+
+
+  var ingRows=data.list.map(function(x){
+    return '<tr><td style="padding:3px 4px;font-size:12px;color:var(--muted);white-space:nowrap">'+tkEsc(x.key)+'</td>'+
+      '<td style="padding:3px 4px"><input type="text" value="'+tkEsc(x.ru)+'" oninput="tkIngName(\'ru\',\''+tkEsc(x.key).replace(/'/g,"\\'")+'\',this.value)" style="width:100%;border:1.5px solid var(--hair);border-radius:6px;padding:4px;font-size:12px;box-sizing:border-box"></td>'+
+      '<td style="padding:3px 4px"><input type="text" value="'+tkEsc(x.sr)+'" oninput="tkIngName(\'sr\',\''+tkEsc(x.key).replace(/'/g,"\\'")+'\',this.value)" style="width:100%;border:1.5px solid var(--hair);border-radius:6px;padding:4px;font-size:12px;box-sizing:border-box"></td></tr>';
+  }).join('');
+
+  var active=tkAllergActive();
+  var allergBoxes=ALLERG_LIST.map(function(a){
+    var on=active.indexOf(a[0])>=0;
+    return '<label style="display:inline-flex;align-items:center;gap:5px;margin:0 10px 6px 0;font-size:12.5px;cursor:pointer"><input type="checkbox" '+(on?'checked':'')+' onchange="tkAllergToggle(\''+a[0]+'\',this.checked)"> '+a[1]+' / '+a[2]+'</label>';
+  }).join('');
+
+  ov.innerHTML='<div style="background:var(--bg);border:1.5px solid var(--ink);border-radius:16px;max-width:680px;width:100%;padding:20px;box-shadow:4px 4px 0 var(--ink)">'+
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b style="font-size:17px">📄 Саставница / Deklaracija</b><button onclick="document.getElementById(\'decl-modal\').remove()" style="border:none;background:none;font-size:20px;cursor:pointer">✕</button></div>'+
-    '<p class="hint" style="margin:0 0 14px">Состав и аллергены подставляются из рецептуры. Заполни данные производителя, срок, хранение и пищевую ценность — они сохранятся в рецепте. Затем «Печать».</p>'+
-    '<div class="lbl" style="font-size:11px;margin:0 0 6px;color:var(--accent)">🏢 Данные пекарни — вводятся один раз, общие для всех изделий</div>'+
+    '<p class="hint" style="margin:0 0 14px">Название, состав и аллергены подтягиваются автоматически. Проверь перевод и отметь аллергены.</p>'+
+
+    '<div class="lbl" style="font-size:11px;margin:0 0 6px;color:var(--accent)">🏢 Данные пекарни — один раз для всех изделий</div>'+
     gfld('Производитель / Proizvođač','producer')+
-    gfld('Адрес / Adresa','address','ulica, grad')+
+    gfld('Адрес / Adresa','address')+
     gfld('Страна происхождения / Zemlja porekla','origin')+
-    '<div class="lbl" style="font-size:11px;margin:12px 0 6px;color:var(--accent)">🥖 Данные этого изделия</div>'+
-    fld('Название (SR) / Naziv proizvoda','nameSr','npr. Tartin klasik')+
+
+    '<div class="lbl" style="font-size:11px;margin:14px 0 6px;color:var(--accent)">🥖 Это изделие</div>'+
+    '<div class="field" style="margin:0 0 8px"><label>Название RU (из системы)</label><input type="text" value="'+tkEsc(r.name)+'" disabled style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box;opacity:.6;background:#f0efe5"></div>'+
+    fld('Название SR / Naziv proizvoda','nameSr','npr. Tartin klasik')+
     '<div class="grid g2" style="gap:10px">'+fld('Нетто-масса / Neto masa','netMass','npr. 780 g')+fld('Срок годности / Rok trajanja','shelfLife','npr. 3 dana')+'</div>'+
     fld('Условия хранения / Uslovi čuvanja','storage')+
-    '<div class="grid g2" style="gap:10px">'+fld('Серия/лот / Serija (lot)','batch')+fld('Может содержать следы / Može sadržati','mayContain','npr. susam')+'</div>'+
-    '<div class="lbl" style="font-size:11px;margin:12px 0 6px">Пищевая ценность на 100 г / Nutritivna vrednost na 100 g</div>'+
-    '<div class="grid g3" style="gap:8px">'+nut('Энергия / Energija (kcal)','energy')+nut('Жиры / Masti (g)','fat')+nut('— насыщ. / zasićene (g)','satfat')+nut('Углеводы / UH (g)','carbs')+nut('— сахара / šećeri (g)','sugars')+nut('Белки / Proteini (g)','protein')+nut('Соль / So (g)','salt')+'</div>'+
-    '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn primary" onclick="tkDeclPrint()">🖨 Печать / Štampaj (PDF)</button><button class="btn" onclick="document.getElementById(\'decl-modal\').remove()">Закрыть</button></div>'+
+
+    '<div class="lbl" style="font-size:11px;margin:14px 0 6px;color:var(--accent)">🧾 Названия ингредиентов для этикетки</div>'+
+    '<div style="max-height:210px;overflow:auto;border:1.5px solid var(--hair);border-radius:10px;padding:6px"><table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;font-size:10px;color:var(--muted);padding:2px 4px">в рецепте</th><th style="text-align:left;font-size:10px;color:var(--muted);padding:2px 4px">RU на этикетке</th><th style="text-align:left;font-size:10px;color:var(--muted);padding:2px 4px">SR na deklaraciji</th></tr></thead><tbody>'+ingRows+'</tbody></table></div>'+
+
+    '<div class="lbl" style="font-size:11px;margin:14px 0 6px;color:var(--accent)">⚠️ Аллергены <span class="hint" style="margin:0">— отмечены автоматически по составу, поправь галочками</span></div>'+
+    '<div>'+allergBoxes+'</div>'+
+    '<button class="btn" style="padding:2px 10px;font-size:11px;margin-bottom:8px" onclick="tkAllergReset()">↻ Пересчитать по составу</button>'+
+    fld('Может содержать следы / Može sadržati u tragovima','mayContain','npr. susam, orasi')+
+
+    '<div class="lbl" style="font-size:11px;margin:14px 0 6px;color:var(--accent)">⚙️ Что печатать</div>'+
+    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:6px;cursor:pointer"><input type="checkbox" '+(d.showLot?'checked':'')+' onchange="tkDeclToggle(\'showLot\',this.checked)"> Печатать номер серии (лот) — для конкретной партии</label>'+
+    '<div id="decl-lot-row" style="display:'+(d.showLot?'flex':'none')+';gap:8px;align-items:flex-end;margin-bottom:8px">'+
+      '<div class="field" style="margin:0;flex:1"><label>Серия / Serija (lot)</label><input type="text" id="decl-lot" value="'+tkEsc(d.batch||tkLotGen())+'" oninput="tkDeclField(\'batch\',this.value)" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
+      '<button class="btn" style="padding:6px 12px;font-size:12px" onclick="tkLotAuto()">↻ Сгенерировать</button></div>'+
+    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" '+(d.showPct?'checked':'')+' onchange="tkDeclToggle(\'showPct\',this.checked)"> Печатать проценты ингредиентов <span class="hint" style="margin:0">(обычно не нужно)</span></label>'+
+
+    '<div class="lbl" style="font-size:11px;margin:14px 0 6px;color:var(--accent)">📊 Пищевая ценность на 100 г</div>'+
+    '<div class="grid g3" style="gap:8px">'+nut('Энергия (kcal)','energy')+nut('Жиры (g)','fat')+nut('— насыщ. (g)','satfat')+nut('Углеводы (g)','carbs')+nut('— сахара (g)','sugars')+nut('Белки (g)','protein')+nut('Соль (g)','salt')+'</div>'+
+
+    '<div style="display:flex;gap:8px;margin-top:18px"><button class="btn primary" onclick="tkDeclPrint()">🖨 Печать / Štampaj (PDF)</button><button class="btn" onclick="document.getElementById(\'decl-modal\').remove()">Закрыть</button></div>'+
+    '<p class="hint" style="margin:10px 0 0">В окне печати сними галочку «Напечатать колонтитулы», чтобы убрать дату и ссылку.</p>'+
     '</div>';
 }
 function tkDeclField(k,v){ if(!currentRecipe.decl)currentRecipe.decl={}; currentRecipe.decl[k]=v; }
 function tkDeclNut(k,v){ if(!currentRecipe.decl)currentRecipe.decl={}; if(!currentRecipe.decl.nutrition)currentRecipe.decl.nutrition={}; currentRecipe.decl.nutrition[k]=v; }
+function tkDeclToggle(k,v){ tkDeclField(k,v); if(k==='showLot'){ var row=document.getElementById('decl-lot-row'); if(row)row.style.display=v?'flex':'none'; if(v&&!currentRecipe.decl.batch){ currentRecipe.decl.batch=tkLotGen(); var el=document.getElementById('decl-lot'); if(el)el.value=currentRecipe.decl.batch; } } }
+function tkLotAuto(){ currentRecipe.decl.batch=tkLotGen(); var el=document.getElementById('decl-lot'); if(el)el.value=currentRecipe.decl.batch; }
+function tkIngName(lang,key,val){ var d=currentRecipe.decl; if(!d)d=currentRecipe.decl={}; if(lang==='sr'){ if(!d.ingSr)d.ingSr={}; d.ingSr[key]=val; } else { if(!d.ingRu)d.ingRu={}; d.ingRu[key]=val; } }
+
 function tkDeclPrint(){
   var r=currentRecipe, d=r.decl||{}, g=DECL_DEFAULTS, n=d.nutrition||{}, data=tkDeclData();
+  var active=tkAllergActive();
   function esc(x){return tkEsc(x);}
-  function ingLine(lang){ return data.list.map(function(x){ var nm=lang==='sr'?x.sr:x.ru; return esc(nm)+' ('+x.pct+'%)'; }).join(', '); }
-  var allR=data.allerg.ru.join(', ')+(d.mayContain?('. Может содержать следы: '+esc(d.mayContain)):'');
-  var allS=data.allerg.sr.join(', ')+(d.mayContain?('. Može sadržati u tragovima: '+esc(d.mayContain)):'');
+  function ingLine(lang){ return data.list.map(function(x){ var nm=lang==='sr'?x.sr:x.ru; return esc(nm)+(d.showPct?(' ('+x.pct+'%)'):''); }).join(', '); }
+  function allergLine(lang){
+    var names=active.map(function(code){ var a=ALLERG_LIST.filter(function(z){return z[0]===code;})[0]; return a?(lang==='sr'?a[2]:a[1]):code; });
+    var s=names.join(', ');
+    if(d.mayContain){ s+=(s?'. ':'')+(lang==='sr'?'Može sadržati u tragovima: ':'Может содержать следы: ')+esc(d.mayContain); }
+    return s||'—';
+  }
   function block(lang){
     var t = lang==='sr'
       ? {title:'DEKLARACIJA / SASTAVNICA',naziv:'Naziv proizvoda',sast:'Sastojci',alerg:'Alergeni',neto:'Neto masa',rok:'Rok trajanja',cuv:'Uslovi čuvanja',proiz:'Proizvođač',adr:'Adresa',zem:'Zemlja porekla',ser:'Serija (lot)',nutr:'Nutritivna vrednost (na 100 g)',en:'Energija',fat:'Masti',sat:'od toga zasićene',uh:'Ugljeni hidrati',sug:'od toga šećeri',pro:'Proteini',so:'So'}
       : {title:'ДЕКЛАРАЦИЯ / САСТАВНИЦА',naziv:'Название продукта',sast:'Состав',alerg:'Аллергены',neto:'Нетто-масса',rok:'Срок годности',cuv:'Условия хранения',proiz:'Производитель',adr:'Адрес',zem:'Страна происхождения',ser:'Серия (лот)',nutr:'Пищевая ценность (на 100 г)',en:'Энергия',fat:'Жиры',sat:'в т.ч. насыщенные',uh:'Углеводы',sug:'в т.ч. сахара',pro:'Белки',so:'Соль'};
     var name = lang==='sr'?(d.nameSr||r.name):r.name;
-    function row(l,v){ return v?('<tr><td style="padding:4px 8px;color:#555;vertical-align:top;white-space:nowrap">'+l+'</td><td style="padding:4px 8px"><b>'+esc(v)+'</b></td></tr>'):''; }
-    return '<div style="border:1px solid #333;border-radius:10px;padding:16px;margin-bottom:14px">'+
-      '<div style="font-weight:700;font-size:15px;margin-bottom:8px">'+t.title+'</div>'+
+    function row(l,v){ return v?('<tr><td style="padding:5px 10px;color:#555;vertical-align:top;white-space:nowrap;border-bottom:1px solid #eee">'+l+'</td><td style="padding:5px 10px;border-bottom:1px solid #eee"><b>'+esc(v)+'</b></td></tr>'):''; }
+    var nutRows='';
+    if(n.energy||n.fat||n.carbs||n.protein||n.salt){
+      function nr(l,v,u,ind){ return v?('<tr><td style="padding:3px 10px'+(ind?' 3px 24px':'')+';color:'+(ind?'#777':'#222')+'">'+l+'</td><td style="padding:3px 10px;text-align:right">'+esc(v)+' '+u+'</td></tr>'):''; }
+      nutRows='<div style="font-weight:600;font-size:12px;margin:10px 0 4px">'+t.nutr+'</div>'+
+        '<table style="width:100%;border-collapse:collapse;font-size:12px">'+
+        nr(t.en,n.energy,'kcal')+nr(t.fat,n.fat,'g')+nr(t.sat,n.satfat,'g',true)+nr(t.uh,n.carbs,'g')+nr(t.sug,n.sugars,'g',true)+nr(t.pro,n.protein,'g')+nr(t.so,n.salt,'g')+
+        '</table>';
+    }
+    return '<div class="decl-block" style="border:1px solid #333;border-radius:10px;padding:16px 14px;margin-bottom:16px;break-inside:avoid;page-break-inside:avoid">'+
+      '<div style="font-weight:700;font-size:15px;margin-bottom:10px;letter-spacing:.02em">'+t.title+'</div>'+
       '<table style="width:100%;border-collapse:collapse;font-size:13px">'+
       row(t.naziv,name)+
-      '<tr><td style="padding:4px 8px;color:#555;vertical-align:top">'+t.sast+'</td><td style="padding:4px 8px">'+ingLine(lang)+'</td></tr>'+
-      '<tr><td style="padding:4px 8px;color:#555;vertical-align:top">'+t.alerg+'</td><td style="padding:4px 8px"><b>'+(lang==='sr'?allS:allR)+'</b></td></tr>'+
-      row(t.neto,d.netMass)+row(t.rok,d.shelfLife)+row(t.cuv,d.storage)+row(t.proiz,g.producer)+row(t.adr,g.address)+row(t.zem,g.origin)+row(t.ser,d.batch)+
-      '</table>'+
-      ((n.energy||n.fat||n.carbs||n.protein)?('<div style="font-weight:600;font-size:12px;margin:10px 0 4px">'+t.nutr+'</div><table style="width:100%;border-collapse:collapse;font-size:12px">'+
-        (n.energy?'<tr><td style="padding:2px 8px">'+t.en+'</td><td style="padding:2px 8px;text-align:right">'+esc(n.energy)+' kcal</td></tr>':'')+
-        (n.fat?'<tr><td style="padding:2px 8px">'+t.fat+'</td><td style="padding:2px 8px;text-align:right">'+esc(n.fat)+' g</td></tr>':'')+
-        (n.satfat?'<tr><td style="padding:2px 8px 2px 20px;color:#666">'+t.sat+'</td><td style="padding:2px 8px;text-align:right">'+esc(n.satfat)+' g</td></tr>':'')+
-        (n.carbs?'<tr><td style="padding:2px 8px">'+t.uh+'</td><td style="padding:2px 8px;text-align:right">'+esc(n.carbs)+' g</td></tr>':'')+
-        (n.sugars?'<tr><td style="padding:2px 8px 2px 20px;color:#666">'+t.sug+'</td><td style="padding:2px 8px;text-align:right">'+esc(n.sugars)+' g</td></tr>':'')+
-        (n.protein?'<tr><td style="padding:2px 8px">'+t.pro+'</td><td style="padding:2px 8px;text-align:right">'+esc(n.protein)+' g</td></tr>':'')+
-        (n.salt?'<tr><td style="padding:2px 8px">'+t.so+'</td><td style="padding:2px 8px;text-align:right">'+esc(n.salt)+' g</td></tr>':'')+
-      '</table>'):'')+
+      '<tr><td style="padding:5px 10px;color:#555;vertical-align:top;border-bottom:1px solid #eee">'+t.sast+'</td><td style="padding:5px 10px;border-bottom:1px solid #eee;line-height:1.5">'+ingLine(lang)+'</td></tr>'+
+      '<tr><td style="padding:5px 10px;color:#555;vertical-align:top;border-bottom:1px solid #eee">'+t.alerg+'</td><td style="padding:5px 10px;border-bottom:1px solid #eee"><b>'+allergLine(lang)+'</b></td></tr>'+
+      row(t.neto,d.netMass)+row(t.rok,d.shelfLife)+row(t.cuv,d.storage)+row(t.proiz,g.producer)+row(t.adr,g.address)+row(t.zem,g.origin)+
+      (d.showLot?row(t.ser,d.batch||tkLotGen()):'')+
+      '</table>'+nutRows+
       '</div>';
   }
   var pa=document.getElementById('print-area'); if(!pa){ pa=document.createElement('div'); pa.id='print-area'; document.body.appendChild(pa); }
-  pa.innerHTML='<div style="padding:20px;font-family:-apple-system,Arial,sans-serif;color:#111">'+block('ru')+block('sr')+'<p style="font-size:10px;color:#999;margin-top:8px">Состав в порядке убывания массы. Проверьте соответствие действующему «Pravilnik o deklarisanju, označavanju i reklamiranju hrane» перед печатью на упаковку.</p></div>';
+  pa.innerHTML='<div style="padding:0;font-family:-apple-system,Arial,sans-serif;color:#111">'+block('ru')+block('sr')+'</div>';
   window.print();
 }
 
