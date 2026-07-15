@@ -1230,11 +1230,12 @@
       <div>
         <b style="font-size:16px">Кого вводим в работу</b>
         <p class="hint" style="margin-top:4px">Выберите стажёра и направление — маршрут подстроится.</p>
+        <div class="btn-row chef-only" style="margin-top:8px"><button class="btn" style="padding:3px 11px;font-size:12px" onclick="obNewEmp()">+ Завести сотрудника</button></div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <div class="field" style="margin:0"><label>Стажёр</label><input type="text" id="ob-name" value="Новый пекарь" oninput="renderOnboard()"></div>
+        <div class="field" style="margin:0"><label>Стажёр</label><select id="ob-name" onchange="renderOnboard()"></select></div>
         <div class="field" style="margin:0"><label>Направление</label><select id="ob-track" onchange="renderOnboard()"><option value="hleb">Хлеб</option><option value="sdoba">Сдоба / бариста</option></select></div>
-        <div class="field" style="margin:0"><label>Наставник</label><select id="ob-mentor" onchange="renderOnboard()"><option>Аня</option><option>Нико</option><option>Андрей</option><option>Светлана</option></select></div>
+        <div class="field" style="margin:0"><label>Наставник</label><select id="ob-mentor" onchange="renderOnboard()"></select></div>
       </div>
     </div>
     <div style="margin-top:14px">
@@ -4459,7 +4460,7 @@ function empNew(){
     '<div class="field" style="margin:8px 0 0"><label>Роли (как показывать в карточке)</label><div id="en-roles" style="border:1.5px solid var(--hair);border-radius:10px;padding:9px;background:#fff"></div></div>'+
     '<div class="grid g2" style="gap:10px;margin-top:8px">'+
       '<div class="field" id="en-lvl-box" style="margin:0"><label>Уровень <a onclick="posTrackEdit(\'en\')" style="color:var(--accent);cursor:pointer;font-size:11px;text-decoration:underline">✎ линейка</a></label><select id="en-level" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></select><p class="hint" id="en-lvl-hint" style="margin:3px 0 0;font-size:11px"></p></div>'+
-      '<div class="field" style="margin:0"><label>Наставник</label><input type="text" id="en-mentor" placeholder="Светлана" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
+      '<div class="field" style="margin:0"><label>Наставник</label><select id="en-mentor" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+mentorOpts('')+'</select></div>'+
     '</div>'+
     '<div class="grid g2" style="gap:10px;margin-top:8px">'+
       '<div class="field" style="margin:0"><label>Телефон</label><input type="text" id="en-phone" placeholder="+381 60 123 4567" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
@@ -4948,7 +4949,7 @@ function empEdit(id){
     '<div class="field" style="margin:8px 0 0"><label>Роли (строка под именем)</label><div id="ee-roles" style="border:1.5px solid var(--hair);border-radius:10px;padding:9px;background:#fff"></div></div>'+
     '<div class="grid g2" style="gap:10px;margin-top:8px">'+
       '<div class="field" id="ee-lvl-box" style="margin:0'+(_T.levels.length?'':';display:none')+'"><label>Уровень <a onclick="posTrackEdit(\'ee\')" style="color:var(--accent);cursor:pointer;font-size:11px;text-decoration:underline">✎ линейка</a></label><select id="ee-level" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+levelSelHtml(_T.levels,p.level)+'</select><p class="hint" id="ee-lvl-hint" style="margin:3px 0 0;font-size:11px">'+(_T.levels.length?('линейка: '+_T.title.toLowerCase()):'у этой должности грейдов нет')+'</p></div>'+
-      f('Наставник','mentor')+
+      '<div class="field" style="margin:0"><label>Наставник</label><select id="ee-mentor" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+mentorOpts(p.mentor,p.id)+'</select></div>'+
     '</div>'+
     '<div class="grid g2" style="gap:10px;margin-top:8px">'+f('Телефон','phone','+381 60 123 4567')+f('Telegram','tg','@nickname')+'</div>'+
     '<div class="grid g2" style="gap:10px;margin-top:8px">'+f('Дата начала работы','started','','date')+f('Дата начала контракта','contractStart','','date')+'</div>'+
@@ -5163,19 +5164,33 @@ function renderReminders(){
   });
   rows.sort(function(a,b){return a.days-b.days;});
   document.getElementById('rem-list').innerHTML=rows.map(function(r){return r.html;}).join('');
-  document.getElementById('rem-san').innerHTML=SAN_BOOKS.map(function(p){
-    var until=new Date(p.until),days=daysLeft(until);
-    var stage=sanStage(days);
+  var sb=sanBooks();
+  document.getElementById('rem-san').innerHTML=(sb.length?sb.map(function(x){
+    var days=x.days, stage=sanStage(days);
     return '<div style="border:1.5px dashed var(--hair);border-radius:12px;padding:12px;margin-bottom:10px">'+
-      '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><span><b>'+p.name+'</b> · действует до '+fmtD(until)+'</span>'+remTag(days)+'</div>'+
-      (stage?'<div style="margin-top:8px;font-size:13px;color:'+(days<0?'#C0392B':days<=7?'#C0392B':'var(--muted)')+'">'+stage+'</div>':'')+
-      (days<=7?'<div class="btn-row"><button class="btn" onclick="sanConfirm(\''+p.name+'\',true)">✅ Книжка готова</button><button class="btn" onclick="sanConfirm(\''+p.name+'\',false)">Ещё нет</button></div><div id="san-ans-'+p.name.replace(/[^A-Za-zА-Яа-я0-9]/g,'')+'"></div>':'')+
+      '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><span><b>'+tkEsc(x.name)+'</b> · '+tkEsc(x.pos||'—')+' · действует до '+fmtD(x.until)+'</span>'+remTag(days)+'</div>'+
+      (stage?'<div style="margin-top:8px;font-size:13px;color:'+(days<=7?'#C0392B':'var(--muted)')+'">'+stage+'</div>':'')+
+      '<div class="btn-row" style="margin-top:8px"><button class="btn" style="padding:3px 10px;font-size:12px" onclick="go(\'hr\');HR_EMP=\''+x.id+'\';renderHR()">Открыть личные данные ↗</button></div>'+
       '</div>';
-  }).join('');
+  }).join(''):'<p class="hint">Ни у кого не заполнена дата оформления санкнижки. Она вводится в «Команда → Личные данные → Санитарная книжка».</p>')+
+  '<p class="hint" style="margin-top:8px">Данные берутся из «Команда → Личные данные». Здесь их не правят — только видно, у кого срок ближе.</p>';
+  var noSan=TEAM.filter(function(p){ return p.status!=='Архивный' && !(p.san&&p.san.issued); });
+  if(noSan.length) document.getElementById('rem-san').innerHTML+='<div class="note" style="margin-top:10px">⚠️ Не заполнена санкнижка: '+noSan.map(function(p){return tkEsc(empName(p));}).join(', ')+'</div>';
   var urgent=rows.filter(function(r){return r.days<=30;}).length +
     SAN_BOOKS.filter(function(p){return daysLeft(new Date(p.until))<=30;}).length;
   var rc=document.getElementById('remind-count');
   if(rc)rc.textContent=urgent?(urgent+' требуют внимания'):'всё в порядке';
+}
+/* санкнижки считаются из карточек сотрудников — единственный источник */
+function sanBooks(){
+  if(typeof TEAM==='undefined'||!TEAM.filter)return [];
+  return TEAM.filter(function(p){ return p.status!=='Архивный' && p.san && p.san.issued; }).map(function(p){
+    var months=parseInt(p.san.months)||6;
+    var d=new Date(p.san.issued);
+    if(isNaN(d.getTime()))return null;
+    var exp=new Date(d); exp.setMonth(exp.getMonth()+months);
+    return { id:p.id, name:empName(p), pos:p.pos||'', until:exp, days:daysLeft(exp) };
+  }).filter(Boolean).sort(function(a,b){ return a.days-b.days; });
 }
 function sanStage(days){
   if(days<0)return '⛔ Срок истёк '+(-days)+' дн назад. Без действующей сан.книжки доступ в цех и к работе закрыт.';
@@ -6173,6 +6188,20 @@ document.addEventListener('click',function(e){
 
 var SKILL_GROUPS={'Хлеб':['Закваска','Замес','Формовка','Расстойка','Выпечка'],'Сдоба':['Замес','Начинки','Формовка','Декор'],'Кофе':['Настройка помола','Эспрессо','Молочные напитки','Латте-арт','Фильтр'],'Сервис':['Общение с клиентами','Работа с возражениями','Рекомендации продуктов','Апселл','Работа с конфликтами'],'Работа смены':['Открытие','Закрытие','Касса','Витрина','Отчёт дня'],'Производство':['Санитария','Оборудование','Контроль качества','Организация смены']};
 function empById(id){return TEAM.find(function(x){return x.id===id;});}
+/* наставник — всегда из карточек сотрудников, не свободный текст */
+function mentorList(exceptId){
+  return TEAM.filter(function(p){ return p.status!=='Архивный' && p.id!==exceptId; });
+}
+function mentorOpts(cur,exceptId){
+  var out='<option value="—"'+((!cur||cur==='—')?' selected':'')+'>— нет наставника</option>';
+  out+=mentorList(exceptId).map(function(p){
+    var n=empName(p);
+    return '<option value="'+tkEsc(n)+'"'+(n===cur?' selected':'')+'>'+tkEsc(n)+' · '+tkEsc(p.pos||'—')+'</option>';
+  }).join('');
+  if(cur&&cur!=='—'&&!mentorList(exceptId).some(function(p){return empName(p)===cur;}))
+    out+='<option value="'+tkEsc(cur)+'" selected>'+tkEsc(cur)+' (нет карточки)</option>';
+  return out;
+}
 var TRACK_SKILLS={
   baker:['Хлеб','Сдоба','Производство','Работа смены'],
   bar:['Кофе','Сервис','Работа смены'],
@@ -6350,8 +6379,10 @@ function empOpen(id,keep){
          '<div><div class="card bg-pink"><b style="font-size:15px">⚠️ Активные замечания</b><div style="margin-top:6px">'+issHtml+'</div></div>'+
          '<div class="card bg-green" style="margin-top:16px"><b style="font-size:15px">🌟 Похвалы</b><div style="margin-top:6px">'+prHtml+'</div></div></div></div>')
       : '<div class="card"><b style="font-size:15px">🥖 Владелец</b><p class="hint" style="margin-top:8px">Навыки, замечания и похвалы владельцу не ставят — некому. Всё остальное про работу пекарни в остальных разделах.</p></div>')+
-    '<div class="grid g2" style="margin-top:16px"><div class="card"><b style="font-size:15px">📈 История развития</b><div style="margin-top:6px">'+devHtmlFull+'</div></div>'+
-    (hasLevels(p)?('<div class="card"><b style="font-size:15px">⭐ Последние оценки смен</b>'+(avg!=null?'<p style="font-size:30px;font-weight:700;margin:8px 0 0">'+avg+' <span style="font-size:14px;color:var(--muted);font-weight:400">средний за '+Math.min(10,p.shiftScores.length)+' смен</span></p>':'<p class="hint" style="margin-top:8px">Оценок пока нет.</p>')+'</div>'):('<div class="card"><b style="font-size:15px">🥖 Владелец</b><p class="hint" style="margin-top:8px">Себе смены не оценивают. Результат владельца — вся эта таблица целиком.</p></div>'))+'</div>';
+    (hasLevels(p)
+      ? ('<div class="grid g2" style="margin-top:16px"><div class="card"><b style="font-size:15px">📈 История развития</b><div style="margin-top:6px">'+devHtmlFull+'</div></div>'+
+         '<div class="card"><b style="font-size:15px">⭐ Последние оценки смен</b>'+(avg!=null?'<p style="font-size:30px;font-weight:700;margin:8px 0 0">'+avg+' <span style="font-size:14px;color:var(--muted);font-weight:400">средний за '+Math.min(10,p.shiftScores.length)+' смен</span></p>':'<p class="hint" style="margin-top:8px">Оценок пока нет.</p>')+'</div></div>')
+      : '')+'';
   if(keep)window.scrollTo(0,_sy); else window.scrollTo({top:0});
 }
 function empBack(){document.getElementById('team-detail').style.display='none';document.getElementById('team-list-wrap').style.display='';document.querySelector('#v-team .tabs').style.display='';renderTeam();}
@@ -6645,7 +6676,7 @@ function renderRolesMatrix(){
     var e=PIN_MAP[pn], r=ROLES[e.roleKey]||{}, emp=pinEmp(pn);
     var me=(typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.name===pinName(pn)&&CUR_ROLE===e.roleKey);
     return '<div class="pair"><span>'+tkEsc(pinName(pn))+
-      (emp?' <span style="color:var(--muted)">· '+tkEsc(emp.pos||'—')+'</span>':' <span class="tag crit" style="font-size:10px">нет карточки</span>')+
+      (emp?' <span style="color:var(--muted)">· '+tkEsc(emp.pos||'—')+'</span>':' <button class="tag crit" style="font-size:10px;cursor:pointer" onclick="pinEdit(\''+pn+'\')" title="Указать, чей это вход">нет карточки — привязать</button>')+
       ' <span class="tag" style="font-size:10px">'+tkEsc(r.label||'?')+'</span>'+(me?' <span class="tag ok" style="font-size:10px">это ты</span>':'')+'</span>'+
       '<span style="display:flex;gap:6px;align-items:center"><b style="letter-spacing:.09em;font-size:14px">'+pn+'</b>'+
       '<button class="btn" style="padding:2px 8px;font-size:11px" onclick="pinEdit(\''+pn+'\')" title="Сменить PIN, имя или роль">✎</button>'+
@@ -8021,7 +8052,31 @@ function obData(){
   if(!OB_STATE[tr])OB_STATE[tr]=JSON.parse(JSON.stringify(OB_TRACKS[tr]));
   return OB_STATE[tr];
 }
+function obFillPeople(){
+  var ns=document.getElementById('ob-name'), ms=document.getElementById('ob-mentor');
+  if(ns){
+    var cur=ns.value;
+    var act=TEAM.filter(function(p){return p.status!=='Архивный';});
+    ns.innerHTML=act.map(function(p){
+      var n=empName(p);
+      return '<option value="'+tkEsc(n)+'"'+(n===cur?' selected':'')+'>'+tkEsc(n)+' · '+tkEsc(p.pos||'—')+'</option>';
+    }).join('') || '<option value="">— сотрудников нет —</option>';
+    if(cur&&act.some(function(p){return empName(p)===cur;})) ns.value=cur;
+  }
+  if(ms){
+    var mc=ms.value;
+    var self=ns?ns.value:'';
+    var sp=TEAM.filter(function(p){return empName(p)===self;})[0];
+    ms.innerHTML=mentorOpts(mc,sp?sp.id:null);
+    if(mc)ms.value=mc;
+  }
+}
+function obNewEmp(){
+  if(!isChef()){ alert('Заводить сотрудников может шеф или менеджер.'); return; }
+  empNew();
+}
 function renderOnboard(){
+  obFillPeople();
   var data=obData(), mentor=document.getElementById('ob-mentor').value, name=document.getElementById('ob-name').value;
   var total=0,done=0;
   var html=data.phases.map(function(p,pi){
