@@ -1174,7 +1174,6 @@
   <div class="tabpane active" id="team-people"><div id="team-list-wrap"><div id="team-legend"></div><div class="btn-row chef-only" style="margin-bottom:14px"><button class="btn primary" onclick="empNew()">+ Добавить сотрудника</button></div><div id="team-grid" class="grid g2"></div><div id="team-archived"></div></div><div id="team-detail" style="display:none"></div></div>
   <div class="tabpane" id="team-ach">
     <div class="note" style="margin-bottom:16px">🏅 Система оценивает рабочие показатели и вклад, а не личность. Помогает видеть надёжность и рост команды, и снижать зависимость от одного человека.<br><span style="font-size:12px">Список берётся из карточек сотрудников. Оценка смен, стаж, похвалы и замечания считаются сами; остальные показатели ведёт шеф.</span></div>
-    <div class="btn-row chef-only" style="margin-bottom:14px"><button class="btn" onclick="achZeroAll()">🧹 Обнулить показатели всей команды</button></div>
     <div id="ach-grid" class="grid g2"></div>
   </div>
 </section>
@@ -4758,13 +4757,18 @@ function hasLevels(p){ return levelsFor(p).length>0; }
 function levelName(p){ var L=levelsFor(p); if(!L.length)return '—'; return L[p.level]!==undefined?L[p.level]:'—'; }
 
 /* --- удаление сотрудника --- */
+function pinDropFor(empId){
+  Object.keys(PIN_MAP).forEach(function(pn){ if(PIN_MAP[pn].empId===empId) delete PIN_MAP[pn]; });
+}
 function empDelete(id){
   if(!isChef()){alert('Удалять сотрудников может шеф или менеджер.');return;}
   var p=empById(id); if(!p)return;
   if(!confirm('Удалить «'+empName(p)+'» навсегда?\n\nВся история, замечания и навыки будут стёрты без возможности вернуть.\nЕсли сотрудник просто уволился — лучше «В архив».'))return;
   if(!confirm('Точно удалить? Это действие необратимо.'))return;
+  var pins=Object.keys(PIN_MAP).filter(function(x){return PIN_MAP[x].empId===p.id;});
   var i=TEAM.indexOf(p); if(i>=0)TEAM.splice(i,1);
-  empBack(); renderTeam(); renderHR();
+  if(pins.length){ pinDropFor(id); alert('Вход закрыт: PIN '+pins.join(', ')+' больше не работает.'); }
+  empBack(); renderTeam(); renderHR(); renderAch(); renderBadgeBook(); renderRolesMatrix(); bvSaveNow();
 }
 
 /* --- фото сотрудника --- */
@@ -4984,7 +4988,7 @@ function renderTeam(){
       '<p style="color:var(--muted);font-size:13px;margin:2px 0 8px">'+tkEsc(roleLine(p))+'</p>'+
       '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
       (openIss?'<span class="tag crit">⚠️ замечаний: '+openIss+'</span>':'')+
-      (avg!=null?'<span class="tag">★ смены '+avg+'</span>':'')+
+      ((avg!=null&&hasLevels(p))?'<span class="tag">★ смены '+avg+'</span>':'')+
       (hasLevels(p)?'<span class="tag warn">Ур. '+levelName(p)+'</span>':'')+'</div>'+
       '<div style="text-align:right;margin-top:8px;font-size:13px;color:var(--accent)"><b>Открыть карточку ›</b></div>'+
       '</div></div></div>';
@@ -5528,7 +5532,106 @@ var BADGES=[
   {id:'clean',   ic:'🧼', t:'Чистый цех',      tier:'blue', tracks:null, rule:'Присваивает шеф', d:'После его смены цех принимать не страшно.', auto:null},
   {id:'calm',    ic:'🧊', t:'Холодная голова', tier:'blue', tracks:null, rule:'Присваивает шеф', d:'В пик работает так же ровно, как в пустой понедельник.', auto:null}
 ];
-function badgeById(id){ return BADGES.filter(function(b){return b.id===id;})[0]; }
+/* --- правки каталога: свои бейджи + переименование базовых + скрытие --- */
+var BADGE_CUSTOM=[];     /* свои бейджи (только ручные) */
+var BADGE_EDITS={};      /* id -> {ic,t,d,tier} — правки базовых */
+var BADGE_HIDDEN=[];     /* id базовых, убранных из каталога */
+function badgeAll(){
+  var out=BADGES.filter(function(b){ return BADGE_HIDDEN.indexOf(b.id)<0; }).map(function(b){
+    var e=BADGE_EDITS[b.id];
+    if(!e)return b;
+    return {id:b.id,ic:e.ic||b.ic,t:e.t||b.t,d:e.d||b.d,tier:e.tier||b.tier,tracks:b.tracks,rule:b.rule,auto:b.auto,_edited:true};
+  });
+  BADGE_CUSTOM.forEach(function(c){
+    out.push({id:c.id,ic:c.ic,t:c.t,d:c.d,tier:c.tier||'blue',tracks:c.tracks||null,rule:'Присваивает шеф',auto:null,_own:true});
+  });
+  return out;
+}
+function badgeById(id){ return badgeAll().filter(function(b){return b.id===id;})[0]; }
+function badgeEditor(){
+  if(!isChef()){ alert('Менять каталог бейджей может шеф или менеджер.'); return; }
+  var ov=document.getElementById('bde-modal');
+  if(!ov){ ov=document.createElement('div'); ov.id='bde-modal'; ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px'; document.body.appendChild(ov); }
+  function line(b){
+    return '<div class="bdg-book"><span class="bdg-m bdg-'+b.tier+'" style="flex-shrink:0">'+b.ic+'</span>'+
+      '<span style="flex:1;min-width:0"><span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><b style="font-size:13px">'+tkEsc(b.t)+'</b>'+
+      (b._own?'<span class="tag" style="font-size:10px">свой</span>':(b.auto?'<span class="tag ok" style="font-size:10px">по показателям</span>':'<span class="tag warn" style="font-size:10px">даёт шеф</span>'))+
+      (b._edited?'<span class="tag" style="font-size:10px;opacity:.7">изменён</span>':'')+'</span>'+
+      '<div style="font-size:11.5px;color:var(--muted);line-height:1.4;margin-top:2px">'+tkEsc(b.d)+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:2px"><b>Условие:</b> '+tkEsc(b.rule)+(b.auto?' <i>(меняется только в коде)</i>':'')+'</div></span>'+
+      '<span style="display:flex;gap:5px;flex-shrink:0"><button class="btn" style="padding:2px 8px;font-size:11px" onclick="badgeEdit(\''+b.id+'\')">✎</button>'+
+      '<button class="btn" style="padding:2px 8px;font-size:11px;color:#C0392B" onclick="badgeKill(\''+b.id+'\')" title="'+(b._own?'Удалить':'Убрать из каталога')+'">🗑</button></span></div>';
+  }
+  var all=badgeAll();
+  var hidden=BADGES.filter(function(b){ return BADGE_HIDDEN.indexOf(b.id)>=0; });
+  ov.innerHTML='<div style="background:var(--bg);border:1.5px solid var(--ink);border-radius:16px;max-width:620px;width:100%;padding:20px;box-shadow:4px 4px 0 var(--ink)">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">✎ Каталог бейджей</b><button onclick="document.getElementById(\'bde-modal\').remove()" style="border:none;background:none;font-size:20px;cursor:pointer">✕</button></div>'+
+    '<p class="hint" style="margin:4px 0 0">Иконку, название и значение можно менять у любого бейджа. <b>Условие</b> у бейджей «по показателям» зашито в коде — его меняю я, скажи какое надо.</p>'+
+    all.map(line).join('')+
+    (hidden.length?('<div style="margin-top:14px"><b style="font-size:13px">Убранные из каталога</b>'+
+      hidden.map(function(b){ return '<div class="pair"><span style="opacity:.6">'+b.ic+' '+tkEsc(b.t)+'</span><span><button class="btn" style="padding:2px 9px;font-size:11px" onclick="badgeRestore(\''+b.id+'\')">Вернуть</button></span></div>'; }).join('')+'</div>'):'')+
+    '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn" onclick="badgeNew()">+ Свой бейдж</button>'+
+    '<button class="btn primary" onclick="document.getElementById(\'bde-modal\').remove()">Готово</button></div>'+
+    '</div>';
+}
+function badgeRefresh(){ badgeEditor(); renderAch(); renderBadgeBook(); bvSaveNow(); }
+function tierPick(cur){
+  var t=['gold','silver','bronze','blue'], n=['Золото','Серебро','Бронза','Синий (ручной)'];
+  var v=prompt('Цвет медальона:\n\n'+n.map(function(x,i){return (i+1)+'. '+x;}).join('\n')+'\n\nНомер:', String(t.indexOf(cur||'blue')+1));
+  if(v===null)return null;
+  var i=parseInt(v)-1;
+  if(isNaN(i)||!t[i]){ alert('Нет такого номера.'); return null; }
+  return t[i];
+}
+function badgeNew(){
+  if(!isChef())return;
+  var ic=prompt('Иконка бейджа (один эмодзи):','🏅'); if(ic===null)return; ic=String(ic).trim()||'🏅';
+  var t=prompt('Название:',''); if(t===null)return; t=String(t).trim(); if(!t){ alert('Название не может быть пустым.'); return; }
+  if(badgeAll().some(function(b){ return b.t.toLowerCase()===t.toLowerCase(); })){ alert('Бейдж «'+t+'» уже есть.'); return; }
+  var d=prompt('Что он значит? Одной фразой — это увидит команда:',''); if(d===null)return; d=String(d).trim();
+  if(!d){ alert('Без значения бейдж — просто подпись. Впиши, за что он даётся.'); return; }
+  var tier=tierPick('blue'); if(!tier)return;
+  BADGE_CUSTOM.push({id:'b_'+Date.now(),ic:ic,t:t,d:d,tier:tier,tracks:null});
+  badgeRefresh();
+}
+function badgeEdit(id){
+  if(!isChef())return;
+  var b=badgeById(id); if(!b)return;
+  var ic=prompt('Иконка (один эмодзи):',b.ic); if(ic===null)return; ic=String(ic).trim()||b.ic;
+  var t=prompt('Название:',b.t); if(t===null)return; t=String(t).trim(); if(!t){ alert('Название не может быть пустым.'); return; }
+  var d=prompt('Что он значит:',b.d); if(d===null)return; d=String(d).trim(); if(!d){ alert('Значение не может быть пустым.'); return; }
+  var tier=tierPick(b.tier); if(!tier)return;
+  if(b._own){
+    var c=BADGE_CUSTOM.filter(function(x){return x.id===id;})[0];
+    if(c){ c.ic=ic; c.t=t; c.d=d; c.tier=tier; }
+  } else {
+    BADGE_EDITS[id]={ic:ic,t:t,d:d,tier:tier};
+  }
+  badgeRefresh();
+}
+function badgeKill(id){
+  if(!isChef())return;
+  var b=badgeById(id); if(!b)return;
+  var who=TEAM.filter(function(p){ return achBadges(p).some(function(g){return g.b.id===id;}); });
+  if(b._own){
+    if(!confirm('Удалить свой бейдж «'+b.t+'» насовсем?'+(who.length?('\n\nОн есть у: '+who.map(function(p){return empName(p);}).join(', ')):'')))return;
+    BADGE_CUSTOM=BADGE_CUSTOM.filter(function(x){return x.id!==id;});
+  } else {
+    if(!confirm('Убрать «'+b.t+'» из каталога?'+(who.length?('\n\nОн есть у: '+who.map(function(p){return empName(p);}).join(', ')):'')+'\n\nВернуть можно тут же, ниже списка.'))return;
+    if(BADGE_HIDDEN.indexOf(id)<0)BADGE_HIDDEN.push(id);
+  }
+  TEAM.forEach(function(p){
+    var a=achOf(p);
+    a.manual=(a.manual||[]).filter(function(x){return x!==id;});
+    a.off=(a.off||[]).filter(function(x){return x!==id;});
+  });
+  badgeRefresh();
+}
+function badgeRestore(id){
+  if(!isChef())return;
+  BADGE_HIDDEN=BADGE_HIDDEN.filter(function(x){return x!==id;});
+  badgeRefresh();
+}
 function badgeEarned(b,p,a){ if(!b.auto)return false; try{ return !!b.auto(p,a); }catch(e){ return false; } }
 function badgeFits(b,tk){ return !b.tracks || b.tracks.indexOf(tk)>=0; }
 /* что показывать у сотрудника: заработанные + присвоенные вручную */
@@ -5542,7 +5645,7 @@ function badgeState(p,b){
 function achBadges(p){
   var tk=trackOf(p), out=[];
   if(tk==='none')return out;              /* у владельца бейджей нет */
-  BADGES.forEach(function(b){
+  badgeAll().forEach(function(b){
     if(!badgeFits(b,tk))return;
     var st=badgeState(p,b);
     if(st.on)out.push({b:b,auto:st.auto&&!st.man});
@@ -5563,7 +5666,7 @@ function badgeMigrate(){
   TEAM.forEach(function(p){
     var a=achOf(p), old=(a.badges||[]).slice();
     old.forEach(function(t){
-      var b=BADGES.filter(function(x){return x.t===t;})[0];
+      var b=badgeAll().filter(function(x){return x.t===t;})[0];
       if(b){ if(a.manual.indexOf(b.id)<0)a.manual.push(b.id); }
       else if(a.custom.indexOf(t)<0)a.custom.push(t);
     });
@@ -5699,13 +5802,15 @@ function renderBadgeBook(){
     if(!arr.length)return '';
     return '<div class="card" style="margin-bottom:16px"><b style="font-size:15px">'+title+'</b>'+(note?'<p class="hint" style="margin:2px 0 4px">'+note+'</p>':'')+arr.map(card).join('')+'</div>';
   }
-  var byTrack=function(tk){ return BADGES.filter(function(b){ return b.auto && b.tracks && b.tracks.indexOf(tk)>=0; }); };
+  var ALL=badgeAll();
+  var byTrack=function(tk){ return ALL.filter(function(b){ return b.auto && b.tracks && b.tracks.indexOf(tk)>=0; }); };
   box.innerHTML=
-    grp('⭐ Для всех','Считаются автоматически у любой должности.',BADGES.filter(function(b){return b.auto&&!b.tracks;}))+
+    (isChef()?'<div class="btn-row chef-only" style="margin-bottom:14px"><button class="btn" onclick="badgeEditor()">✎ Править каталог</button></div>':'')+
+    grp('⭐ Для всех','Считаются автоматически у любой должности.',ALL.filter(function(b){return b.auto&&!b.tracks;}))+
     grp('🥖 Пекарь','Только на линейке пекаря.',byTrack('baker'))+
     grp('☕ Бар','Только на линейке бара.',byTrack('bar'))+
     grp('📋 Менеджер','Только на линейке менеджера.',byTrack('mgr'))+
-    grp('🎖 Присваивает шеф','За то, что цифрой не померить.',BADGES.filter(function(b){return !b.auto;}))+
+    grp('🎖 Присваивает шеф','За то, что цифрой не померить.',ALL.filter(function(b){return !b.auto;}))+
     '<p class="hint">Линейка определяется должностью. У владельца бейджей нет — см. «Достижения и рост».</p>';
 }
 function achBadgePick(id){
@@ -5713,7 +5818,7 @@ function achBadgePick(id){
   var a=achOf(p), tk=trackOf(p);
   var ov=document.getElementById('bdg-modal');
   if(!ov){ ov=document.createElement('div'); ov.id='bdg-modal'; ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px'; document.body.appendChild(ov); }
-  var list=BADGES.filter(function(b){return badgeFits(b,tk);});
+  var list=badgeAll().filter(function(b){return badgeFits(b,tk);});
   function line(b){
     var st=badgeState(p,b);
     var tag = st.off ? '<span class="tag crit" style="font-size:10px">снят шефом</span>'
@@ -5767,19 +5872,6 @@ function achSave(id){
   });
   var m=document.getElementById('ach-modal'); if(m)m.remove();
   renderAch(); bvSaveNow();
-}
-function achZeroAll(){
-  if(!isChef())return;
-  if(!confirm('Начать с чистого листа по всей команде?\n\nУйдут:\n• все показатели (смены без ошибок, опоздания, стабильность, рецептуры, обучил…)\n• все бейджи — и заработанные, и выданные вручную\n\nОстанутся: стаж, оценки смен, похвалы, замечания, навыки, уровни.'))return;
-  if(!confirm('Точно? Отменить это нельзя.'))return;
-  TEAM.forEach(function(p){
-    var a=achOf(p);
-    Object.keys(ACH_FIELDS).forEach(function(k){ ACH_FIELDS[k].forEach(function(f){ a[f[0]]=0; }); });
-    a.custom=[]; a.manual=[]; a.off=[]; a.badges=[];
-  });
-  var m=document.getElementById('ach-modal'); if(m)m.remove();
-  renderAch(); renderBadgeBook(); bvSaveNow();
-  alert('Готово. Показатели и бейджи обнулены — можно начинать с чистого листа.\n\nБейджи начнут появляться сами, как только пойдут реальные цифры.');
 }
 function achZero(id){
   var p=empById(id); if(!p)return;
@@ -6054,7 +6146,7 @@ function searchIndex(){
   if(typeof GROUPS!=='undefined')Object.keys(GROUPS).forEach(function(g){GROUPS[g].views.forEach(function(v){if(viewAllowed(v[1]))idx.push({t:v[0],sub:'Раздел · '+GROUPS[g].label,act:"go('"+v[1]+"')"});});});
   // доп. разделы вне групп
   [['Передача смены','handoff'],['Достижения и рост','team'],['Обучение и тесты','train'],['Бейджи','badges']].forEach(function(v){idx.push({t:v[0],sub:'Раздел',act:"go('"+v[1]+"')"});});
-  if(typeof BADGES!=='undefined')BADGES.forEach(function(b){ idx.push({t:b.ic+' '+b.t,sub:'Бейдж · '+(b.auto?b.rule:'присваивает шеф'),act:"go('badges')"}); });
+  if(typeof badgeAll==='function')badgeAll().forEach(function(b){ idx.push({t:b.ic+' '+b.t,sub:'Бейдж · '+(b.auto?b.rule:'присваивает шеф'),act:"go('badges')"}); });
   return idx;
 }
 function doSearch(q){
@@ -6085,11 +6177,102 @@ var TRACK_SKILLS={
   baker:['Хлеб','Сдоба','Производство','Работа смены'],
   bar:['Кофе','Сервис','Работа смены'],
   mgr:['Сервис','Работа смены','Производство'],
-  none:['Хлеб','Сдоба','Кофе','Сервис','Работа смены','Производство']
+  none:[]
 };
-var EMP_ALL_SKILLS={};
+/* ===== РЕДАКТОР СПИСКА НАВЫКОВ (шеф) ===== */
+function skillEditor(){
+  if(!isChef()){ alert('Менять список навыков может шеф или менеджер.'); return; }
+  var ov=document.getElementById('sk-modal');
+  if(!ov){ ov=document.createElement('div'); ov.id='sk-modal'; ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px'; document.body.appendChild(ov); }
+  var tks=Object.keys(TRACKS).filter(function(k){return TRACKS[k].levels.length;});
+  var body=Object.keys(SKILL_GROUPS).map(function(g){
+    var used=tks.filter(function(k){ return (TRACK_SKILLS[k]||[]).indexOf(g)>=0; });
+    return '<div style="border:1.5px solid var(--hair);border-radius:11px;padding:10px;margin-top:8px;background:var(--card)">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'+
+      '<b style="font-size:13.5px">'+tkEsc(g)+'</b>'+
+      '<span style="display:flex;gap:6px"><button class="btn" style="padding:2px 8px;font-size:11px" onclick="skGroupRename(\''+encodeURIComponent(g)+'\')">✎ имя</button>'+
+      '<button class="btn" style="padding:2px 8px;font-size:11px;color:#C0392B" onclick="skGroupDel(\''+encodeURIComponent(g)+'\')">🗑</button></span></div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">'+
+      SKILL_GROUPS[g].map(function(k,i){
+        return '<span class="tag" style="display:inline-flex;align-items:center;gap:5px;background:#fff">'+tkEsc(k)+
+          '<button onclick="skDel(\''+encodeURIComponent(g)+'\','+i+')" title="Удалить навык" style="border:none;background:none;cursor:pointer;font-size:10px;padding:0 2px;color:#C0392B">✕</button></span>';
+      }).join('')+
+      '<button class="btn" style="padding:2px 9px;font-size:11px" onclick="skAdd(\''+encodeURIComponent(g)+'\')">+ навык</button></div>'+
+      '<div style="margin-top:8px;font-size:11.5px;color:var(--muted)">Показывать у линеек: '+
+      tks.map(function(k){
+        var on=used.indexOf(k)>=0;
+        return '<button class="btn" style="padding:1px 8px;font-size:11px;margin:2px 4px 0 0;'+(on?'background:var(--yellow)':'background:#fff;opacity:.6')+'" onclick="skTrack(\''+encodeURIComponent(g)+'\',\''+k+'\')">'+(on?'✓ ':'')+tkEsc(TRACKS[k].title)+'</button>';
+      }).join('')+'</div></div>';
+  }).join('');
+  ov.innerHTML='<div style="background:var(--bg);border:1.5px solid var(--ink);border-radius:16px;max-width:600px;width:100%;padding:20px;box-shadow:4px 4px 0 var(--ink)">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">✎ Список навыков</b><button onclick="document.getElementById(\'sk-modal\').remove()" style="border:none;background:none;font-size:20px;cursor:pointer">✕</button></div>'+
+    '<p class="hint" style="margin:4px 0 0">Общий для всей пекарни. Жёлтым отмечено, у каких линеек группа показывается в карточке.</p>'+
+    body+
+    '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn" onclick="skGroupAdd()">+ Группа навыков</button>'+
+    '<button class="btn primary" onclick="document.getElementById(\'sk-modal\').remove()">Готово</button></div>'+
+    '</div>';
+}
+function skRefresh(){
+  skillEditor();
+  if(typeof HR_EMP!=='undefined'){}
+  var d=document.getElementById('team-detail');
+  if(d&&d.style.display!=='none'){ var m=/empOpen\('(u_[\w]+)'/.exec(d.innerHTML||''); }
+  renderTeam(); bvSaveNow();
+}
+function skAdd(gEnc){
+  if(!isChef())return; var g=decodeURIComponent(gEnc); if(!SKILL_GROUPS[g])return;
+  var v=prompt('Новый навык в группе «'+g+'»:',''); v=(v||'').trim(); if(!v)return;
+  if(SKILL_GROUPS[g].indexOf(v)>=0){ alert('Такой навык в этой группе уже есть.'); return; }
+  SKILL_GROUPS[g].push(v); skRefresh();
+}
+function skDel(gEnc,i){
+  if(!isChef())return; var g=decodeURIComponent(gEnc); if(!SKILL_GROUPS[g])return;
+  var k=SKILL_GROUPS[g][i]; if(!k)return;
+  var who=TEAM.filter(function(p){ return p.skills&&p.skills[k]!=null; });
+  if(!confirm('Удалить навык «'+k+'» из группы «'+g+'»?'+(who.length?('\n\nОценки пропадут у: '+who.map(function(p){return empName(p);}).join(', ')):'')))return;
+  SKILL_GROUPS[g].splice(i,1);
+  var stillUsed=Object.keys(SKILL_GROUPS).some(function(x){ return SKILL_GROUPS[x].indexOf(k)>=0; });
+  if(!stillUsed) who.forEach(function(p){ delete p.skills[k]; if(p.skillMeta)delete p.skillMeta[k]; });
+  skRefresh();
+}
+function skGroupAdd(){
+  if(!isChef())return;
+  var g=prompt('Название группы навыков (например: «Бар»):',''); g=(g||'').trim(); if(!g)return;
+  if(SKILL_GROUPS[g]){ alert('Такая группа уже есть.'); return; }
+  SKILL_GROUPS[g]=[];
+  skRefresh();
+}
+function skGroupRename(gEnc){
+  if(!isChef())return; var g=decodeURIComponent(gEnc); if(!SKILL_GROUPS[g])return;
+  var n=prompt('Новое название группы:',g); n=(n||'').trim(); if(!n||n===g)return;
+  if(SKILL_GROUPS[n]){ alert('Группа «'+n+'» уже есть.'); return; }
+  var out={};
+  Object.keys(SKILL_GROUPS).forEach(function(k){ out[k===g?n:k]=SKILL_GROUPS[k]; });
+  SKILL_GROUPS=out;
+  Object.keys(TRACK_SKILLS).forEach(function(t){ TRACK_SKILLS[t]=(TRACK_SKILLS[t]||[]).map(function(x){return x===g?n:x;}); });
+  skRefresh();
+}
+function skGroupDel(gEnc){
+  if(!isChef())return; var g=decodeURIComponent(gEnc); if(!SKILL_GROUPS[g])return;
+  var keys=SKILL_GROUPS[g].slice();
+  var who=TEAM.filter(function(p){ return p.skills&&keys.some(function(k){return p.skills[k]!=null;}); });
+  if(!confirm('Удалить группу «'+g+'» целиком?'+(keys.length?('\n\nНавыки: '+keys.join(', ')):'')+(who.length?('\n\nОценки пропадут у: '+who.map(function(p){return empName(p);}).join(', ')):'')))return;
+  delete SKILL_GROUPS[g];
+  Object.keys(TRACK_SKILLS).forEach(function(t){ TRACK_SKILLS[t]=(TRACK_SKILLS[t]||[]).filter(function(x){return x!==g;}); });
+  keys.forEach(function(k){
+    var still=Object.keys(SKILL_GROUPS).some(function(x){ return SKILL_GROUPS[x].indexOf(k)>=0; });
+    if(!still) TEAM.forEach(function(p){ if(p.skills)delete p.skills[k]; if(p.skillMeta)delete p.skillMeta[k]; });
+  });
+  skRefresh();
+}
+function skTrack(gEnc,tk){
+  if(!isChef())return; var g=decodeURIComponent(gEnc);
+  if(!TRACK_SKILLS[tk])TRACK_SKILLS[tk]=[];
+  var i=TRACK_SKILLS[tk].indexOf(g);
+  if(i>=0)TRACK_SKILLS[tk].splice(i,1); else TRACK_SKILLS[tk].push(g);
+  skRefresh();
+}
 function skillGroupsFor(p){
-  if(EMP_ALL_SKILLS[p.id]) return Object.keys(SKILL_GROUPS);
   var base=(TRACK_SKILLS[trackOf(p)]||Object.keys(SKILL_GROUPS)).filter(function(g){return SKILL_GROUPS[g];});
   var out=base.slice();
   Object.keys(SKILL_GROUPS).forEach(function(g){
@@ -6097,7 +6280,6 @@ function skillGroupsFor(p){
   });
   return out;
 }
-function empSkillsAll(id){ EMP_ALL_SKILLS[id]=!EMP_ALL_SKILLS[id]; empOpen(id,true); }
 function levelWhyHtml(p){
   var tk=trackOf(p), T=TRACKS[tk], L=T.levels, i=p.level;
   if(!L.length)return '';
@@ -6129,7 +6311,7 @@ function empOpen(id,keep){
     }).join('');
     return '<div style="margin-bottom:10px"><b style="font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">'+g+'</b>'+rows+'</div>';
   }).join('') || '<p class="hint">Оценок навыков пока нет.</p>';
-  if(isChef())skillGroups+='<button class="btn chef-only" style="padding:3px 10px;font-size:11.5px;margin-top:2px" onclick="empSkillsAll(\''+p.id+'\')">'+(EMP_ALL_SKILLS[p.id]?'Только профильные группы':'+ Показать все группы')+'</button>';
+
   if(!p.issues)p.issues=[]; if(!p.praises)p.praises=[];
   function actBtns(kind,i){
     if(!isChef())return '';
@@ -6163,9 +6345,11 @@ function empOpen(id,keep){
     (hasLevels(p)?('<details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;color:var(--accent)">❓ Что значит «'+tkEsc(levelName(p))+'» — вся линейка</summary><div style="border:1.5px solid var(--hair);border-radius:10px;padding:10px;margin-top:6px;background:#fff">'+levelWhyHtml(p)+'</div></details>'):'')+
     (isChef()?'<div class="btn-row chef-only" style="width:100%;margin-top:16px;margin-bottom:2px;gap:8px;flex-wrap:wrap"><button class="btn" onclick="empEdit(\''+p.id+'\')">✎ Редактировать</button><button class="btn" onclick="empStatus(\''+p.id+'\')">Сменить статус</button><button class="btn" onclick="empAddIssue(\''+p.id+'\')">+ Замечание</button><button class="btn" onclick="empAddPraise(\''+p.id+'\')">+ Похвала</button>'+(p.status!=='Архивный'?'<button class="btn" onclick="empArchive(\''+p.id+'\')">В архив</button>':'')+'<button class="btn" style="color:#C0392B" onclick="empDelete(\''+p.id+'\')">🗑 Удалить</button></div>':'')+
     '</div></div>'+
-    '<div class="grid g2"><div class="card"><b style="font-size:15px">Навыки (1–5)</b><div style="margin-top:10px">'+skillGroups+skillLegendHtml()+'</div></div>'+
-    '<div><div class="card bg-pink"><b style="font-size:15px">⚠️ Активные замечания</b><div style="margin-top:6px">'+issHtml+'</div></div>'+
-    '<div class="card bg-green" style="margin-top:16px"><b style="font-size:15px">🌟 Похвалы</b><div style="margin-top:6px">'+prHtml+'</div></div></div></div>'+
+    (hasLevels(p)
+      ? ('<div class="grid g2"><div class="card"><b style="font-size:15px">Навыки (1–5)</b>'+(isChef()?'<button class="btn chef-only" style="padding:2px 9px;font-size:11px;margin-left:8px" onclick="skillEditor()">✎ Список навыков</button>':'')+'<div style="margin-top:10px">'+skillGroups+skillLegendHtml()+'</div></div>'+
+         '<div><div class="card bg-pink"><b style="font-size:15px">⚠️ Активные замечания</b><div style="margin-top:6px">'+issHtml+'</div></div>'+
+         '<div class="card bg-green" style="margin-top:16px"><b style="font-size:15px">🌟 Похвалы</b><div style="margin-top:6px">'+prHtml+'</div></div></div></div>')
+      : '<div class="card"><b style="font-size:15px">🥖 Владелец</b><p class="hint" style="margin-top:8px">Навыки, замечания и похвалы владельцу не ставят — некому. Всё остальное про работу пекарни в остальных разделах.</p></div>')+
     '<div class="grid g2" style="margin-top:16px"><div class="card"><b style="font-size:15px">📈 История развития</b><div style="margin-top:6px">'+devHtmlFull+'</div></div>'+
     (hasLevels(p)?('<div class="card"><b style="font-size:15px">⭐ Последние оценки смен</b>'+(avg!=null?'<p style="font-size:30px;font-weight:700;margin:8px 0 0">'+avg+' <span style="font-size:14px;color:var(--muted);font-weight:400">средний за '+Math.min(10,p.shiftScores.length)+' смен</span></p>':'<p class="hint" style="margin-top:8px">Оценок пока нет.</p>')+'</div>'):('<div class="card"><b style="font-size:15px">🥖 Владелец</b><p class="hint" style="margin-top:8px">Себе смены не оценивают. Результат владельца — вся эта таблица целиком.</p></div>'))+'</div>';
   if(keep)window.scrollTo(0,_sy); else window.scrollTo({top:0});
@@ -6427,6 +6611,8 @@ function rolesBoot(){
   /* Базовые PIN восстанавливаем ТОЛЬКО как страховку от блокировки:
      если входов не осталось совсем, либо ни один не даёт настраивать права.
      Иначе закрытый шефом вход воскресал бы после перезагрузки. */
+  if(typeof pinLink==='function')pinLink();
+  if(typeof pinSync==='function')pinSync();
   var _pins=Object.keys(PIN_MAP);
   var _admin=_pins.some(function(x){ var r=ROLES[PIN_MAP[x].roleKey]; return r&&r.permsEdit; });
   if(!_pins.length){
@@ -6454,10 +6640,13 @@ function renderRolesMatrix(){
       return '<td style="text-align:center;'+(canEdit?'cursor:pointer':'')+'" '+(canEdit?'onclick="togglePerm(\''+rk+'\',\''+pf[0]+'\')"':'')+'>'+(on?'<span style="color:#2E7D32;font-weight:700">✓</span>':'<span style="color:#bbb">—</span>')+'</td>';
     }).join('')+'</tr>';
   }).join('');
-  var pins=Object.keys(PIN_MAP).sort(function(x,y){ return String(PIN_MAP[x].name||'').localeCompare(String(PIN_MAP[y].name||''),'ru'); }).map(function(pn){
-    var e=PIN_MAP[pn], r=ROLES[e.roleKey]||{};
-    var me=(typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.name===e.name&&CUR_ROLE===e.roleKey);
-    return '<div class="pair"><span>'+tkEsc(e.name)+' <span style="color:var(--muted)">· '+tkEsc(r.label||'?')+'</span>'+(me?' <span class="tag ok" style="font-size:10px">это ты</span>':'')+'</span>'+
+  pinLink();
+  var pins=Object.keys(PIN_MAP).sort(function(x,y){ return pinName(x).localeCompare(pinName(y),'ru'); }).map(function(pn){
+    var e=PIN_MAP[pn], r=ROLES[e.roleKey]||{}, emp=pinEmp(pn);
+    var me=(typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.name===pinName(pn)&&CUR_ROLE===e.roleKey);
+    return '<div class="pair"><span>'+tkEsc(pinName(pn))+
+      (emp?' <span style="color:var(--muted)">· '+tkEsc(emp.pos||'—')+'</span>':' <span class="tag crit" style="font-size:10px">нет карточки</span>')+
+      ' <span class="tag" style="font-size:10px">'+tkEsc(r.label||'?')+'</span>'+(me?' <span class="tag ok" style="font-size:10px">это ты</span>':'')+'</span>'+
       '<span style="display:flex;gap:6px;align-items:center"><b style="letter-spacing:.09em;font-size:14px">'+pn+'</b>'+
       '<button class="btn" style="padding:2px 8px;font-size:11px" onclick="pinEdit(\''+pn+'\')" title="Сменить PIN, имя или роль">✎</button>'+
       '<button class="btn" style="padding:2px 8px;font-size:11px;color:#C0392B" onclick="pinDel(\''+pn+'\')" title="Закрыть вход">🗑</button></span></div>';
@@ -6469,7 +6658,7 @@ function renderRolesMatrix(){
         '<div class="card" style="margin-top:14px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><b style="font-size:14px">🔑 PIN-коды входа</b>'+
         '<button class="btn primary" style="padding:3px 12px;font-size:12px" onclick="pinAdd()">+ Выдать вход</button></div>'+
         '<div style="margin-top:8px">'+pins+'</div>'+
-        '<p class="hint" style="margin:8px 0 0"><b>✎</b> — сменить PIN, имя или роль. <b>🗑</b> — закрыть вход: PIN перестаёт работать сразу, данные сотрудника остаются.<br>Уволился человек — закрой вход. Утёк PIN — смени его через ✎.</p></div>'
+        '<p class="hint" style="margin:8px 0 0">Имя и должность берутся из карточки сотрудника — здесь их не правят. Тут только <b>кто заходит</b>, <b>каким PIN</b> и <b>с какой ролью</b>.<br><b>✎</b> — сменить PIN, сотрудника или роль. <b>🗑</b> — закрыть вход: PIN перестаёт работать сразу, карточка остаётся.<br>Уволился — закрой вход. Утёк PIN — смени через ✎.</p></div>'
       : '<p class="hint" style="margin-top:10px">Ты видишь права, но менять их может только роль с правом «Права доступа: настраивать».</p>');
 }
 function togglePerm(rk,flag){
@@ -6487,6 +6676,30 @@ function togglePerm(rk,flag){
   bvSaveNow();
 }
 /* ===== PIN-КОДЫ: выдать / изменить / закрыть вход ===== */
+/* Вход ссылается на карточку сотрудника (empId).
+   Имя и должность НЕ дублируются, а берутся из карточки. */
+function pinEmp(pn){ var e=PIN_MAP[pn]; return (e&&e.empId)?empById(e.empId):null; }
+function pinName(pn){ var e=PIN_MAP[pn]; if(!e)return '?'; var p=pinEmp(pn); return p?empName(p):(e.name||'?'); }
+function pinPos(pn){ var p=pinEmp(pn); return p?(p.pos||''):''; }
+/* однократно связываем существующие входы с карточками по имени */
+function pinLink(){
+  if(!ACH_MIG||ACH_MIG.pins)return;
+  if(typeof TEAM==='undefined'||!TEAM.forEach)return;
+  Object.keys(PIN_MAP).forEach(function(pn){
+    var e=PIN_MAP[pn]; if(e.empId)return;
+    var nm=String(e.name||'').trim().toLowerCase();
+    var hit=TEAM.filter(function(p){
+      return String(p.n||'').trim().toLowerCase()===nm || String(empName(p)).trim().toLowerCase()===nm;
+    });
+    if(hit.length===1){ e.empId=hit[0].id; return; }
+    /* тёзки: доразличаем по роли (Андрей-пекарь / Андрей-бариста) */
+    if(hit.length>1){
+      var byTrack=hit.filter(function(p){ return trackOf(p)===(e.roleKey==='barista'?'bar':(e.roleKey==='manager'?'mgr':'baker')); });
+      if(byTrack.length===1) e.empId=byTrack[0].id;
+    }
+  });
+  ACH_MIG.pins=true;
+}
 function pinGuard(){
   if(!can('permsEdit')){ alert('Управлять входами может только роль с правом «Права доступа: настраивать».'); return false; }
   return true;
@@ -6506,6 +6719,13 @@ function rolePick(cur){
   if(isNaN(i)||!keys[i]){ alert('Нет такой роли.'); return null; }
   return keys[i];
 }
+function pinSync(){
+  Object.keys(PIN_MAP).forEach(function(pn){
+    var e=PIN_MAP[pn], p=e.empId?empById(e.empId):null;
+    if(p){ e.name=empName(p); e.ava=String(empName(p)).charAt(0).toUpperCase(); }
+    var r=ROLES[e.roleKey]; if(r)e.role=r.label;
+  });
+}
 function pinAdmins(skip){
   return Object.keys(PIN_MAP).filter(function(x){
     if(x===skip)return false;
@@ -6516,22 +6736,28 @@ function pinAdmins(skip){
 function pinAdd(){
   if(!pinGuard())return;
   var act=TEAM.filter(function(p){return p.status!=='Архивный';});
-  var v=prompt('Кому выдать вход?\n\n'+act.map(function(p,i){return (i+1)+'. '+empName(p)+' \u00B7 '+(p.pos||'\u2014');}).join('\n')+'\n0. Другой человек — вписать имя\n\nНомер:');
+  if(!act.length){ alert('Сначала заведи сотрудника в «Команда → Сотрудники».'); return; }
+  var v=prompt('Кому выдать вход?\n\n'+act.map(function(p,i){return (i+1)+'. '+empName(p)+' \u00B7 '+(p.pos||'\u2014');}).join('\n')+'\n\nНомер:\n(нет в списке — сначала добавь его в «Сотрудники»)');
   if(v===null)return;
-  var i=parseInt(v), who='';
-  if(i===0){ who=(prompt('Имя для экрана входа:','')||'').trim(); if(!who)return; }
-  else { var p=act[i-1]; if(!p){ alert('Нет такого номера.'); return; } who=empName(p); }
+  var p=act[parseInt(v)-1];
+  if(!p){ alert('Нет такого номера.'); return; }
+  var had=Object.keys(PIN_MAP).filter(function(x){return PIN_MAP[x].empId===p.id;});
+  if(had.length && !confirm(empName(p)+' уже заходит по PIN '+had.join(', ')+'.\n\nВыдать ещё один вход?'))return;
   var rk=rolePick(); if(!rk)return;
   var pin=pinAsk(''); if(!pin)return;
-  PIN_MAP[pin]={name:who,ava:who.charAt(0).toUpperCase(),role:ROLES[rk].label,shift:'',roleKey:rk};
+  PIN_MAP[pin]={empId:p.id,name:empName(p),ava:String(empName(p)).charAt(0).toUpperCase(),role:ROLES[rk].label,shift:'',roleKey:rk};
   renderRolesMatrix(); bvSaveNow();
-  alert('Вход выдан.\n\n'+who+' \u00B7 '+ROLES[rk].label+'\nPIN: '+pin+'\n\nПередай PIN лично — он работает сразу.');
+  alert('Вход выдан.\n\n'+empName(p)+' \u00B7 '+ROLES[rk].label+'\nPIN: '+pin+'\n\nПередай PIN лично — он работает сразу.');
 }
 function pinEdit(pin){
   if(!pinGuard())return;
   var e=PIN_MAP[pin]; if(!e)return;
-  var who=prompt('Имя для экрана входа:',e.name); if(who===null)return;
-  who=String(who).trim()||e.name;
+  var act=TEAM.filter(function(p){return p.status!=='Архивный';});
+  var cur=e.empId?act.map(function(p){return p.id;}).indexOf(e.empId):-1;
+  var wv=prompt('Чей это вход?\n\n'+act.map(function(p,i){return (i+1)+'. '+empName(p)+' \u00B7 '+(p.pos||'\u2014');}).join('\n')+'\n\nНомер:', cur>=0?String(cur+1):'');
+  if(wv===null)return;
+  var emp=act[parseInt(wv)-1];
+  if(!emp){ alert('Нет такого номера. Имя берётся из карточки сотрудника — заведи его в «Сотрудники».'); return; }
   var rk=rolePick(e.roleKey); if(!rk)return;
   if(ROLES[e.roleKey]&&ROLES[e.roleKey].permsEdit&&!ROLES[rk].permsEdit&&!pinAdmins(pin).length){
     alert('Это последний вход, который может настраивать права.\n\nЕсли сменить роль — в настройки больше никто не попадёт. Сначала выдай такой вход кому-то ещё.');
@@ -6539,9 +6765,9 @@ function pinEdit(pin){
   }
   var np=pinAsk(pin,pin); if(np===null)return;
   delete PIN_MAP[pin];
-  PIN_MAP[np]={name:who,ava:who.charAt(0).toUpperCase(),role:ROLES[rk].label,shift:e.shift||'',roleKey:rk};
+  PIN_MAP[np]={empId:emp.id,name:empName(emp),ava:String(empName(emp)).charAt(0).toUpperCase(),role:ROLES[rk].label,shift:e.shift||'',roleKey:rk};
   renderRolesMatrix(); bvSaveNow();
-  alert('Готово.\n\n'+who+' \u00B7 '+ROLES[rk].label+'\nPIN: '+np+(np!==pin?('\n\nСтарый PIN '+pin+' больше не работает.'):''));
+  alert('Готово.\n\n'+empName(emp)+' \u00B7 '+ROLES[rk].label+'\nPIN: '+np+(np!==pin?('\n\nСтарый PIN '+pin+' больше не работает.'):''));
 }
 function pinDel(pin){
   if(!pinGuard())return;
@@ -6551,7 +6777,7 @@ function pinDel(pin){
     alert('Это последний вход, который может настраивать права.\n\nЕсли его закрыть — в настройки больше никто не попадёт. Сначала выдай такой вход кому-то ещё.');
     return;
   }
-  if(!confirm('Закрыть вход для «'+e.name+'» ('+(r?r.label:'?')+')?\n\nPIN '+pin+' перестанет работать сразу.\nКарточка сотрудника, его смены и данные останутся на месте.'))return;
+  if(!confirm('Закрыть вход для «'+pinName(pin)+'» ('+(r?r.label:'?')+')?\n\nPIN '+pin+' перестанет работать сразу.\nКарточка сотрудника, его смены и данные останутся на месте.'))return;
   delete PIN_MAP[pin];
   renderRolesMatrix(); bvSaveNow();
   alert('Вход закрыт. PIN '+pin+' больше не работает.');
@@ -6677,12 +6903,13 @@ function renderCompanyDocs(){
   var box=document.getElementById('co-docs'); if(!box)return;
   coNorm();
   var chef=isChef();
+  var note='<p class="hint" style="margin:0 0 8px;border-bottom:1.5px dashed var(--hair);padding-bottom:7px">Здесь держим документы <b>фирмы</b>, а не сотрудников: решение АПР, устав, договор аренды, регистрация ПДВ, договоры с поставщиками, страховка, сертификаты, санитарные решения.<br>Документы людей (контракты, паспорта, ВНЖ, санкнижки) — в разделе «Личные данные».</p>';
   var list=COMPANY.docs.length? COMPANY.docs.map(function(d,i){
     return '<div class="pair"><span>'+tkEsc(d.name)+'<br><span style="color:var(--muted);font-size:11px">'+(d.date||'')+'</span></span><span style="display:flex;gap:6px;align-items:center">'+
       '<a href="'+driveView(d.url)+'" target="_blank" class="btn" style="padding:3px 10px;font-size:12px;text-decoration:none">Открыть</a>'+
       (chef?'<button class="btn" style="padding:3px 8px;font-size:12px;color:#C0392B" onclick="coDocDel('+i+')">✕</button>':'')+'</span></div>';
   }).join('') : '<p class="hint" style="margin:4px 0">Документов пока нет. Загрузи выписку из АПР, устав, договор аренды, решения — они сохранятся на Google Диске.</p>';
-  box.innerHTML=list+(CO_DOC_UP?'<p class="hint">Загрузка…</p>':'')+
+  box.innerHTML=note+list+(CO_DOC_UP?'<p class="hint">Загрузка…</p>':'')+
     (chef?'<div class="btn-row" style="margin-top:10px"><label class="btn" style="cursor:pointer">+ Загрузить документ<input type="file" style="display:none" onchange="coDocPick(this)"></label></div>':'');
 }
 function coDocPick(inp){
@@ -8143,7 +8370,7 @@ function sendChk(){
 }
 /* ===================== СОХРАНЕНИЕ В БРАУЗЕРЕ (localStorage) ===================== */
 var BV_KEY='bv_pekar_store_v1';
-var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','ACH_MIG'];
+var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','ACH_MIG','SKILL_GROUPS','TRACK_SKILLS','BADGE_CUSTOM','BADGE_EDITS','BADGE_HIDDEN'];
 function bvSnapshot(){ var o={}; for(var i=0;i<BV_PERSIST.length;i++){ var k=BV_PERSIST[i]; try{ if(typeof window[k]!=='undefined') o[k]=window[k]; }catch(e){} } return o; }
 function bvSave(){ try{ localStorage.setItem(BV_KEY, JSON.stringify(bvSnapshot())); }catch(e){} }
 function bvLoad(){ try{ var raw=localStorage.getItem(BV_KEY); if(!raw)return false; var o=JSON.parse(raw); var n=0; for(var k in o){ if(o.hasOwnProperty(k) && BV_PERSIST.indexOf(k)>=0){ try{ window[k]=o[k]; n++; }catch(e){} } } return n>0; }catch(e){ return false; } }
