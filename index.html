@@ -4490,25 +4490,33 @@ function empLevel(id){
   if(v===null)return;
   var n=parseInt(v);
   if(isNaN(n)||n<0||n>=L.length){ alert('Нужен номер от 0 до '+(L.length-1)); return; }
-  p.level=n; empOpen(id); renderTeam();
+  var old=levelName(p);
+  p.level=n;
+  var why=prompt('Почему такой уровень? Коротко — это увидит команда.\n\nНапример: «Стабильно ведёт пятничный пик один».', (p.levelMeta&&p.levelMeta[1])||'');
+  var ym=new Date().toISOString().slice(0,7);
+  if(why!==null) p.levelMeta=[ym,String(why).trim()];
+  if(!p.history)p.history=[];
+  if(old!==L[n]) p.history.push([ym,'Уровень: '+old+' → '+L[n]+((why&&String(why).trim())?(' ('+String(why).trim()+')'):'')]);
+  empOpen(id,true); renderTeam(); bvSaveNow();
 }
 /* --- легенда уровней --- */
 function renderLevelLegend(){
   var box=document.getElementById('team-legend'); if(!box)return;
-  var rows=LEVELS.map(function(l,i){
-    var desc=['Учится, работает под присмотром наставника','Работает самостоятельно по техкарте','Стабильно держит качество, помогает другим','Ведёт смену, отвечает за результат','Обучает, ставит процессы, принимает смену','Разрабатывает рецептуры и стандарты'][i]||'';
-    return '<div style="display:flex;gap:10px;padding:5px 0;border-top:1.5px dashed var(--hair);font-size:12.5px"><b style="min-width:130px">'+l+'</b><span style="color:var(--muted)">'+desc+'</span></div>';
-  }).join('');
-  var bar=LEVELS_BAR.join(' → ');
-  var mgr=LEVELS_MGR.join(' → ');
+  function ladder(tk){
+    var T=TRACKS[tk]; if(!T.levels.length)return '';
+    return '<div style="margin-top:12px"><b style="font-size:13px">Линейка «'+tkEsc(T.title)+'»</b>'+
+      T.levels.map(function(l,i){
+        var desc=(TRACK_DESC[tk]||[])[i]||'';
+        return '<div style="display:flex;gap:10px;padding:5px 0;border-top:1.5px dashed var(--hair);font-size:12.5px"><b style="min-width:140px;flex-shrink:0">'+tkEsc(l)+'</b><span style="color:var(--muted)">'+tkEsc(desc)+'</span></div>';
+      }).join('')+'</div>';
+  }
+  var rows=ladder('baker')+ladder('bar')+ladder('mgr');
   box.innerHTML='<details style="margin-bottom:14px"><summary style="cursor:pointer;font-weight:600;font-size:13px">❓ Что значат уровни и оценки</summary>'+
     '<div style="border:1.5px solid var(--hair);border-radius:12px;padding:12px;margin-top:8px;background:var(--card)">'+
     '<b style="font-size:13px">Ур. — уровень мастерства</b><p class="hint" style="margin:2px 0 6px">Ставит шеф вручную в карточке сотрудника — по факту навыков, а не автоматически. Растёт, когда человек стабильно тянет следующую ступень.</p>'+
     rows+
-    '<div style="margin-top:10px"><b style="font-size:13px">Для бара:</b> <span style="color:var(--muted);font-size:12.5px">'+bar+'</span></div>'+
-    '<div style="margin-top:6px"><b style="font-size:13px">Для менеджера:</b> <span style="color:var(--muted);font-size:12.5px">'+mgr+'</span></div>'+
-    '<div style="margin-top:6px"><b style="font-size:13px">Владелец / фаундер:</b> <span style="color:var(--muted);font-size:12.5px">грейдов нет — уровень не показывается.</span></div>'+
-    '<p class="hint" style="margin:6px 0 0">Линейка выбирается по должности. Поменять её можно в «✎ Редактировать» → ссылка «✎ линейка» рядом с полем «Уровень».</p>'+
+    '<div style="margin-top:12px;border-top:1.5px solid var(--hair);padding-top:8px"><b style="font-size:13px">Владелец / фаундер:</b> <span style="color:var(--muted);font-size:12.5px">грейдов нет — уровень не показывается.</span></div>'+
+    '<p class="hint" style="margin:6px 0 0">Линейка выбирается по должности. Поменять её можно в «✎ Редактировать» → ссылка «✎ линейка» рядом с полем «Уровень». <b>Почему</b> конкретному человеку стоит именно этот уровень — в его карточке, в строке «❓ Что значит … и почему он».</p>'+
     '<div style="margin-top:12px;border-top:1.5px solid var(--hair);padding-top:8px"><b style="font-size:13px">★ смены</b><p class="hint" style="margin:2px 0 0">Средняя оценка за <b>последние 10 смен</b> (шеф ставит оценку при приёмке смены, от 1 до 5). Считается автоматически.</p></div>'+
     '<div style="margin-top:8px"><b style="font-size:13px">⚠️ замечаний</b><p class="hint" style="margin:2px 0 0">Сколько открытых (неисправленных) замечаний у сотрудника. Закрываются в карточке.</p></div>'+
     '</div></details>';
@@ -5402,6 +5410,12 @@ var TRACKS={
   mgr:{title:'Менеджер',levels:LEVELS_MGR},
   none:{title:'Без грейдов (владелец, фаундер)',levels:[]}
 };
+var TRACK_DESC={
+  baker:['Учится, работает под присмотром наставника','Работает самостоятельно по техкарте','Стабильно держит качество, помогает другим','Ведёт смену, отвечает за результат','Обучает, ставит процессы, принимает смену','Разрабатывает рецептуры и стандарты'],
+  bar:['Учится, работает под присмотром','Готовит по стандарту, знает всё меню','Стабильное качество, справляется с потоком','Ведёт смену бара: витрина, касса, отчёт','Обучает, ставит стандарты бара, вводит новые напитки'],
+  mgr:['Учится процессам, работает под присмотром','Держит смену: касса, витрина, отчёт дня','Ведёт закупки, график и партнёров','Отвечает за несколько направлений, обучает','Отвечает за операционку целиком'],
+  none:[]
+};
 var POS_TRACK={};   /* должность -> линейка; только для нестандартных названий */
 function trackGuess(pos){
   var p=String(pos||'').toLowerCase();
@@ -5763,32 +5777,75 @@ document.addEventListener('click',function(e){
 
 var SKILL_GROUPS={'Хлеб':['Закваска','Замес','Формовка','Расстойка','Выпечка'],'Сдоба':['Замес','Начинки','Формовка','Декор'],'Кофе':['Настройка помола','Эспрессо','Молочные напитки','Латте-арт','Фильтр'],'Сервис':['Общение с клиентами','Работа с возражениями','Рекомендации продуктов','Апселл','Работа с конфликтами'],'Работа смены':['Открытие','Закрытие','Касса','Витрина','Отчёт дня'],'Производство':['Санитария','Оборудование','Контроль качества','Организация смены']};
 function empById(id){return TEAM.find(function(x){return x.id===id;});}
-function stazh(started){
-  if(!started)return '—';
-  var d=new Date(started),now=new Date('2026-06-10');
-  var m=(now.getFullYear()-d.getFullYear())*12+(now.getMonth()-d.getMonth());
-  var y=Math.floor(m/12),mm=m%12;
-  return (y?y+' г ':'')+(mm?mm+' мес':(y?'':'меньше месяца'));
+var TRACK_SKILLS={
+  baker:['Хлеб','Сдоба','Производство','Работа смены'],
+  bar:['Кофе','Сервис','Работа смены'],
+  mgr:['Сервис','Работа смены','Производство'],
+  none:['Хлеб','Сдоба','Кофе','Сервис','Работа смены','Производство']
+};
+var EMP_ALL_SKILLS={};
+function skillGroupsFor(p){
+  if(EMP_ALL_SKILLS[p.id]) return Object.keys(SKILL_GROUPS);
+  var base=(TRACK_SKILLS[trackOf(p)]||Object.keys(SKILL_GROUPS)).filter(function(g){return SKILL_GROUPS[g];});
+  var out=base.slice();
+  Object.keys(SKILL_GROUPS).forEach(function(g){
+    if(out.indexOf(g)<0 && SKILL_GROUPS[g].some(function(k){ return p.skills&&p.skills[k]!=null; })) out.push(g);
+  });
+  return out;
 }
-function empOpen(id){
+function empSkillsAll(id){ EMP_ALL_SKILLS[id]=!EMP_ALL_SKILLS[id]; empOpen(id,true); }
+function levelWhyHtml(p){
+  var tk=trackOf(p), T=TRACKS[tk], L=T.levels, i=p.level;
+  if(!L.length)return '';
+  var desc=(TRACK_DESC[tk]||[])[i]||'';
+  var m=p.levelMeta;
+  return '<div style="font-size:12.5px;color:var(--muted);line-height:1.65">'+
+    '<b style="color:var(--ink)">'+tkEsc(L[i]||'—')+'</b>'+(desc?(' — '+tkEsc(desc)):'')+
+    '<div style="margin-top:6px">Линейка «'+tkEsc(T.title.toLowerCase())+'»: '+L.map(function(l,j){ return j===i?('<b style="color:var(--ink)">'+tkEsc(l)+'</b>'):tkEsc(l); }).join(' → ')+'</div>'+
+    '<div style="margin-top:7px;border-top:1.5px dashed var(--hair);padding-top:6px"><b style="color:var(--ink)">Почему этот уровень:</b> '+
+    ((m&&m[1])?(tkEsc(m[1])+' <span style="opacity:.75">· поставил шеф, '+tkEsc(m[0])+'</span>')
+             :'<span style="color:#C0392B">обоснование не записано'+(isChef()?' — нажми ✎ у поля «Уровень» и впиши':'')+'</span>')+'</div></div>';
+}
+function stazh(started){ return tenureText(started); }   /* единая формула: годы + месяцы, от сегодняшней даты */
+function empOpen(id,keep){
+  var _sy=keep?(window.scrollY||window.pageYOffset||0):0;
   var p=empById(id);
   document.getElementById('team-list-wrap').style.display='none';
   document.querySelector('#v-team .tabs').style.display='none';
   var d=document.getElementById('team-detail');d.style.display='';
-  var skillGroups=Object.keys(SKILL_GROUPS).filter(function(g){return SKILL_GROUPS[g].some(function(k){return p.skills[k]!=null;});}).map(function(g){
-    var rows=SKILL_GROUPS[g].filter(function(k){return p.skills[k]!=null||isChef();}).map(function(k){
+  if(!p.skills)p.skills={};
+  var skillGroups=skillGroupsFor(p).map(function(g){
+    var keys=SKILL_GROUPS[g].filter(function(k){return p.skills[k]!=null||isChef();});
+    if(!keys.length)return '';
+    var rows=keys.map(function(k){
       var v=p.skills[k];
       var meta=(p.skillMeta&&p.skillMeta[k])?('<span style="color:var(--muted);font-size:11.5px"> · '+p.skillMeta[k][0]+(p.skillMeta[k][1]?' · '+p.skillMeta[k][1]:'')+'</span>'):'';
-      return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:5px 0"><span style="font-size:13px">'+k+meta+'</span><span style="display:flex;align-items:center;gap:6px">'+skillBar(v||0)+(isChef()?'<button class="btn chef-only" style="padding:1px 8px;font-size:11px" onclick="empSkill(\''+p.id+'\',\''+k+'\')">✎</button>':'')+'</span></div>';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:5px 0"><span style="font-size:13px'+(v==null?';color:var(--muted)':'')+'">'+k+meta+'</span><span style="display:flex;align-items:center;gap:6px">'+(v==null?'<span style="font-size:11.5px;color:var(--muted)">не оценён</span>':skillBar(v||0))+(isChef()?'<button class="btn chef-only" style="padding:1px 8px;font-size:11px" onclick="empSkill(\''+p.id+'\',\''+k+'\')">✎</button>':'')+'</span></div>';
     }).join('');
     return '<div style="margin-bottom:10px"><b style="font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">'+g+'</b>'+rows+'</div>';
-  }).join('');
-  var openIss=(p.issues||[]).filter(function(x){return x.status!=='Закрыто';});
-  var issHtml=openIss.length?openIss.map(function(x,i){
-    return '<div style="padding:9px 0;border-top:1.5px dashed var(--hair)"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span><span class="tag crit" style="font-size:11px">'+x.cat+'</span> <b style="font-size:13.5px">'+x.status+'</b></span><span style="color:var(--muted);font-size:12px">'+x.date+' · '+x.by+'</span></div><p style="font-size:13.5px;margin-top:4px">'+x.text+'</p>'+(isChef()?'<button class="btn chef-only" style="padding:3px 10px;font-size:12px;margin-top:4px" onclick="empCloseIssue(\''+p.id+'\','+(p.issues.indexOf(x))+')">Закрыть замечание</button>':'')+'</div>';
+  }).join('') || '<p class="hint">Оценок навыков пока нет.</p>';
+  if(isChef())skillGroups+='<button class="btn chef-only" style="padding:3px 10px;font-size:11.5px;margin-top:2px" onclick="empSkillsAll(\''+p.id+'\')">'+(EMP_ALL_SKILLS[p.id]?'Только профильные группы':'+ Показать все группы')+'</button>';
+  if(!p.issues)p.issues=[]; if(!p.praises)p.praises=[];
+  function actBtns(kind,i){
+    if(!isChef())return '';
+    return '<span style="display:inline-flex;gap:6px">'+
+      '<button class="btn chef-only" style="padding:2px 8px;font-size:11px" onclick="emp'+kind+'Edit(\''+p.id+'\','+i+')">✎</button>'+
+      '<button class="btn chef-only" style="padding:2px 8px;font-size:11px;color:#C0392B" onclick="emp'+kind+'Del(\''+p.id+'\','+i+')">🗑</button></span>';
+  }
+  var openIss=p.issues.filter(function(x){return x.status!=='Закрыто';});
+  var issHtml=openIss.length?openIss.map(function(x){
+    var i=p.issues.indexOf(x);
+    return '<div style="padding:9px 0;border-top:1.5px dashed var(--hair)"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><span><span class="tag crit" style="font-size:11px">'+tkEsc(x.cat)+'</span> <b style="font-size:13.5px">'+tkEsc(x.status)+'</b></span><span style="color:var(--muted);font-size:12px">'+tkEsc(x.date)+' · '+tkEsc(x.by)+'</span></div><p style="font-size:13.5px;margin-top:4px">'+tkEsc(x.text)+'</p>'+
+      '<div style="display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap">'+(isChef()?'<button class="btn chef-only" style="padding:3px 10px;font-size:12px" onclick="empCloseIssue(\''+p.id+'\','+i+')">Закрыть замечание</button>':'')+actBtns('Issue',i)+'</div></div>';
   }).join(''):'<p class="hint">Активных замечаний нет.</p>';
-  var prHtml=(p.praises||[]).length?p.praises.map(function(x){
-    return '<div style="padding:9px 0;border-top:1.5px dashed var(--hair)"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="tag ok" style="font-size:11px">🌟 '+x.cat+'</span><span style="color:var(--muted);font-size:12px">'+x.date+' · '+x.by+'</span></div><p style="font-size:13.5px;margin-top:4px">'+x.text+'</p></div>';
+  var closedIss=p.issues.filter(function(x){return x.status==='Закрыто';});
+  if(closedIss.length) issHtml+='<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;color:var(--accent)">Закрытые замечания ('+closedIss.length+')</summary>'+
+    closedIss.map(function(x){ var i=p.issues.indexOf(x);
+      return '<div style="padding:7px 0;border-top:1.5px dashed var(--hair);opacity:.75"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><span class="tag" style="font-size:11px">'+tkEsc(x.cat)+'</span><span style="color:var(--muted);font-size:12px">'+tkEsc(x.date)+' · '+tkEsc(x.by)+'</span></div><p style="font-size:13px;margin-top:3px">'+tkEsc(x.text)+'</p><div style="display:flex;margin-top:4px">'+actBtns('Issue',i)+'</div></div>';
+    }).join('')+'</details>';
+  var prHtml=p.praises.length?p.praises.map(function(x,i){
+    return '<div style="padding:9px 0;border-top:1.5px dashed var(--hair)"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><span class="tag ok" style="font-size:11px">🌟 '+tkEsc(x.cat)+'</span><span style="color:var(--muted);font-size:12px">'+tkEsc(x.date)+' · '+tkEsc(x.by)+'</span></div><p style="font-size:13.5px;margin-top:4px">'+tkEsc(x.text)+'</p>'+
+      '<div style="display:flex;margin-top:5px">'+actBtns('Praise',i)+'</div></div>';
   }).join(''):'<p class="hint">Пока нет.</p>';
   var devHtmlFull=(p.history||[]).slice().reverse().map(function(h){return '<div style="font-size:13px;padding:6px 0;border-top:1.5px dashed var(--hair)"><b>'+h[0]+'</b> — '+h[1]+'</div>';}).join('')||'<p class="hint">Пусто.</p>';
   var avg=shiftAvg(p);
@@ -5798,6 +5855,7 @@ function empOpen(id){
     '<p style="color:var(--muted);font-size:13.5px;margin-top:2px">'+tkEsc(roleLine(p))+'</p>'+
     '<div class="tk" style="grid-template-columns:1fr 1fr;margin-top:10px"><div><div class="pair"><span>Должность</span><span>'+tkEsc(p.pos||'\u2014')+'</span></div><div class="pair"><span>Направление</span><span>'+p.dir+'</span></div><div class="pair"><span>Стаж</span><span>'+stazh(p.started)+'</span></div><div class="pair"><span>Уровень</span><span>'+levelName(p)+((isChef()&&hasLevels(p))?(' <button class="btn" style="padding:0 7px;font-size:11px" onclick="empLevel(\''+p.id+'\')">✎</button>'):'')+'</span></div></div>'+
     '<div><div class="pair"><span>Наставник</span><span>'+p.mentor+'</span></div><div class="pair chef-only"><span>Telegram</span><span>'+tgLink(p.tg)+'</span></div><div class="pair chef-only"><span>Телефон</span><span>'+telLink(p.phone)+'</span></div></div></div>'+
+    (hasLevels(p)?('<details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;color:var(--accent)">❓ Что значит «'+tkEsc(levelName(p))+'» и почему он</summary><div style="border:1.5px solid var(--hair);border-radius:10px;padding:10px;margin-top:6px;background:#fff">'+levelWhyHtml(p)+'</div></details>'):'')+
     (isChef()?'<div class="btn-row chef-only" style="width:100%;margin-top:16px;margin-bottom:2px;gap:8px;flex-wrap:wrap"><button class="btn" onclick="empEdit(\''+p.id+'\')">✎ Редактировать</button><button class="btn" onclick="empStatus(\''+p.id+'\')">Сменить статус</button><button class="btn" onclick="empAddIssue(\''+p.id+'\')">+ Замечание</button><button class="btn" onclick="empAddPraise(\''+p.id+'\')">+ Похвала</button>'+(p.status!=='Архивный'?'<button class="btn" onclick="empArchive(\''+p.id+'\')">В архив</button>':'')+'<button class="btn" style="color:#C0392B" onclick="empDelete(\''+p.id+'\')">🗑 Удалить</button></div>':'')+
     '</div></div>'+
     '<div class="grid g2"><div class="card"><b style="font-size:15px">Навыки (1–5)</b><div style="margin-top:10px">'+skillGroups+skillLegendHtml()+'</div></div>'+
@@ -5805,44 +5863,93 @@ function empOpen(id){
     '<div class="card bg-green" style="margin-top:16px"><b style="font-size:15px">🌟 Похвалы</b><div style="margin-top:6px">'+prHtml+'</div></div></div></div>'+
     '<div class="grid g2" style="margin-top:16px"><div class="card"><b style="font-size:15px">📈 История развития</b><div style="margin-top:6px">'+devHtmlFull+'</div></div>'+
     '<div class="card"><b style="font-size:15px">⭐ Последние оценки смен</b>'+(avg!=null?'<p style="font-size:30px;font-weight:700;margin:8px 0 0">'+avg+' <span style="font-size:14px;color:var(--muted);font-weight:400">средний за '+Math.min(10,p.shiftScores.length)+' смен</span></p>':'<p class="hint" style="margin-top:8px">Оценок пока нет.</p>')+'</div></div>';
-  window.scrollTo({top:0});
+  if(keep)window.scrollTo(0,_sy); else window.scrollTo({top:0});
 }
 function empBack(){document.getElementById('team-detail').style.display='none';document.getElementById('team-list-wrap').style.display='';document.querySelector('#v-team .tabs').style.display='';renderTeam();}
 function empSkill(id,k){
-  if(!isChef())return; var p=empById(id);
-  var v=prompt('Оценка 1–5 для «'+k+'»:',p.skills[k]||0); if(v===null)return;
-  v=Math.max(0,Math.min(5,parseInt(v)||0)); var old=p.skills[k]||0; p.skills[k]=v;
-  var c=prompt('Комментарий шефа (необязательно):','')||'';
+  if(!isChef())return; var p=empById(id); if(!p)return; if(!p.skills)p.skills={};
+  var had=p.skills[k]!=null;
+  var v=prompt('Оценка 1–5 для «'+k+'»:'+(had?'\n\nПустое поле — убрать оценку.':''), had?p.skills[k]:'');
+  if(v===null)return;
   var ym=new Date().toISOString().slice(0,7);
+  if(!p.history)p.history=[];
+  if(String(v).trim()===''){
+    if(!had)return;
+    delete p.skills[k]; if(p.skillMeta)delete p.skillMeta[k];
+    p.history.push([ym,'Навык «'+k+'»: оценка убрана']);
+    empOpen(id,true); renderTeam(); bvSaveNow(); return;
+  }
+  var n=parseInt(v);
+  if(isNaN(n)||n<1||n>5){ alert('Нужна оценка от 1 до 5.'); return; }
+  var old=had?p.skills[k]:'—'; p.skills[k]=n;
+  var c=(prompt('Комментарий шефа (необязательно):', (p.skillMeta&&p.skillMeta[k]&&p.skillMeta[k][1])||'')||'').trim();
   if(!p.skillMeta)p.skillMeta={}; p.skillMeta[k]=[ym,c];
-  if(!p.history)p.history=[]; p.history.push([ym,'Навык «'+k+'»: '+old+' → '+v+(c?' ('+c+')':'')]);
-  empOpen(id);
+  p.history.push([ym,'Навык «'+k+'»: '+old+' → '+n+(c?' ('+c+')':'')]);
+  empOpen(id,true); renderTeam(); bvSaveNow();
 }
 function empAddIssue(id){
   if(!isChef())return; var p=empById(id);
   var c=prompt('Категория замечания:\n\n'+ISSUE_CATS.map(function(x,i){return (i+1)+'. '+x;}).join('\n')+'\n\nНомер:'); if(c===null)return;
   var ci=parseInt(c)-1; if(isNaN(ci)||!ISSUE_CATS[ci]){alert('Нет категории');return;}
   var t=prompt('Текст замечания:'); if(t===null||!t.trim())return;
-  if(!p.issues)p.issues=[]; p.issues.unshift({date:new Date().toISOString().slice(0,10),cat:ISSUE_CATS[ci],text:t.trim(),by:'Светлана',status:'Активно'});
-  empOpen(id);
+  if(!p.issues)p.issues=[]; p.issues.unshift({date:new Date().toISOString().slice(0,10),cat:ISSUE_CATS[ci],text:t.trim(),by:whoAmI(),status:'Активно'});
+  empOpen(id,true); renderTeam(); bvSaveNow();
+}
+function whoAmI(){ return (typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.name)?CURRENT_USER.name:'Шеф'; }
+function catPick(list,title,cur){
+  var v=prompt(title+':\n\n'+list.map(function(x,i){return (i+1)+'. '+x;}).join('\n')+'\n\nНомер:', cur?String(list.indexOf(cur)+1||''):'');
+  if(v===null)return null;
+  var i=parseInt(v)-1;
+  if(isNaN(i)||!list[i]){ alert('Нет такой категории.'); return null; }
+  return list[i];
+}
+function empIssueEdit(id,i){
+  if(!isChef())return; var p=empById(id); var x=(p.issues||[])[i]; if(!x)return;
+  var cat=catPick(ISSUE_CATS,'Категория замечания',x.cat); if(cat===null)return;
+  var t=prompt('Текст замечания:',x.text); if(t===null)return;
+  if(!String(t).trim()){ alert('Текст не может быть пустым.'); return; }
+  var d=prompt('Дата (ГГГГ-ММ-ДД):',x.date); if(d===null)return;
+  x.cat=cat; x.text=String(t).trim(); if(String(d).trim())x.date=String(d).trim();
+  empOpen(id,true); renderTeam(); bvSaveNow();
+}
+function empIssueDel(id,i){
+  if(!isChef())return; var p=empById(id); var x=(p.issues||[])[i]; if(!x)return;
+  if(!confirm('Удалить замечание «'+x.cat+'» от '+x.date+' насовсем?\n\n'+x.text))return;
+  p.issues.splice(i,1);
+  empOpen(id,true); renderTeam(); bvSaveNow();
+}
+function empPraiseEdit(id,i){
+  if(!isChef())return; var p=empById(id); var x=(p.praises||[])[i]; if(!x)return;
+  var cat=catPick(PRAISE_CATS,'Категория похвалы',x.cat); if(cat===null)return;
+  var t=prompt('Комментарий:',x.text); if(t===null)return;
+  if(!String(t).trim()){ alert('Текст не может быть пустым.'); return; }
+  var d=prompt('Дата (ГГГГ-ММ-ДД):',x.date); if(d===null)return;
+  x.cat=cat; x.text=String(t).trim(); if(String(d).trim())x.date=String(d).trim();
+  empOpen(id,true); renderTeam(); bvSaveNow();
+}
+function empPraiseDel(id,i){
+  if(!isChef())return; var p=empById(id); var x=(p.praises||[])[i]; if(!x)return;
+  if(!confirm('Удалить похвалу «'+x.cat+'» от '+x.date+' насовсем?\n\n'+x.text))return;
+  p.praises.splice(i,1);
+  empOpen(id,true); renderTeam(); bvSaveNow();
 }
 function empCloseIssue(id,idx){
   if(!isChef())return; var p=empById(id);
   var reason=prompt('Причина закрытия / комментарий:'); if(reason===null)return;
-  var iss=p.issues[idx]; iss.status='Закрыто';
+  var iss=p.issues[idx]; if(!iss)return; iss.status='Закрыто';
   var ym=new Date().toISOString().slice(0,7);
   if(!p.history)p.history=[]; p.history.push([ym,'Закрыто замечание «'+iss.cat+'»'+(reason?': '+reason:'')]);
-  empOpen(id);
+  empOpen(id,true); renderTeam(); bvSaveNow();
 }
 function empAddPraise(id){
   if(!isChef())return; var p=empById(id);
   var c=prompt('Категория похвалы:\n\n'+PRAISE_CATS.map(function(x,i){return (i+1)+'. '+x;}).join('\n')+'\n\nНомер:'); if(c===null)return;
   var ci=parseInt(c)-1; if(isNaN(ci)||!PRAISE_CATS[ci]){alert('Нет категории');return;}
   var t=prompt('Комментарий:'); if(t===null||!t.trim())return;
-  if(!p.praises)p.praises=[]; p.praises.unshift({date:new Date().toISOString().slice(0,10),cat:PRAISE_CATS[ci],text:t.trim(),by:'Светлана'});
+  if(!p.praises)p.praises=[]; p.praises.unshift({date:new Date().toISOString().slice(0,10),cat:PRAISE_CATS[ci],text:t.trim(),by:whoAmI()});
   var ym=new Date().toISOString().slice(0,7);
   if(!p.history)p.history=[]; p.history.push([ym,'Похвала «'+PRAISE_CATS[ci]+'»']);
-  empOpen(id);
+  empOpen(id,true); renderTeam(); bvSaveNow();
 }
 function empStatus(id){
   if(!isChef())return; var p=empById(id);
