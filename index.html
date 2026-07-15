@@ -1109,22 +1109,11 @@
   <div class="grid g3">
     <div class="card">
       <b style="font-size:15px">📄 Документы</b>
-      <div style="margin-top:8px">
-        <div class="pair"><span>Контракт</span><span><span class="tag ok">загружен</span> <button class="btn" style="padding:3px 10px;font-size:12px" onclick="hrDownload('Контракт')">Скачать</button></span></div>
-        <div class="pair"><span>Паспорт (копия)</span><span><span class="tag ok">загружена</span> <button class="btn" style="padding:3px 10px;font-size:12px" onclick="hrDownload('Паспорт')">Скачать</button></span></div>
-        <div class="pair"><span>ВНЖ (копия)</span><span><span class="tag warn">истекает 02.2027</span> <button class="btn" style="padding:3px 10px;font-size:12px" onclick="hrDownload('ВНЖ')">Скачать</button></span></div>
-        <div class="pair"><span>План роста</span><span class="tag">черновик</span></div>
-      </div>
-      <div class="btn-row"><button class="btn" onclick="alert('Загрузка файлов — в боевой версии')">+ Загрузить документ</button></div>
+      <div id="hr-docs" style="margin-top:8px"></div>
     </div>
     <div class="card">
       <b style="font-size:15px">🩺 Санитарная книжка</b>
-      <div style="margin-top:8px">
-        <div class="pair"><span>Актуальна до</span><span><b>14.09.2026</b></span></div>
-        <div class="pair"><span>Обновить до</span><span><b>01.09.2026</b></span></div>
-        <div class="pair"><span>Статус</span><span class="tag ok">в порядке</span></div>
-      </div>
-      <p class="hint">За 30 дней до срока — автоматическое напоминание сотруднику и менеджеру в Telegram.</p>
+      <div id="hr-san" style="margin-top:8px"></div>
     </div>
     <div class="card">
       <b style="font-size:15px">💼 Условия</b>
@@ -4283,8 +4272,8 @@ function reglAttach(){
 
 /* ===== КОМАНДА ===== */
 var TEAM=[
- {id:'u_sveta',n:'Светлана',first:'Светлана',last:'Васильева',role:'Владелица · технолог · пекарь-кондитер (пт)',pos:'Владелица',dir:'Управление',started:'2025-05-01',contractStart:'2025-05-01',bday:'12.04',mentor:'—',level:5,status:'Активный',phone:'+381 ...',tg:'@sveta',email:'sveta@breadventure.rs',resp:'Рецептуры и качество, финансы, маркетинг, Б2Б',good:'Сладкая выпечка, новые продукты, переговоры',skills:{'Закваска':5,'Формовка':5,'Декор':5,'Начинки':5,'Контроль качества':5,'Организация смены':5},skillMeta:{},history:[['2025-09','Технолог — выводит новые позиции'],['2026-01','Запустила линейку бабок']],issues:[],praises:[],shiftScores:[5,5,4,5]},
- {id:'u_nadya',n:'Надя',first:'Надежда',last:'—',role:'Менеджер',pos:'Менеджер',dir:'Производство',started:'2025-08-01',contractStart:'2025-09-01',bday:'27.07',mentor:'Светлана',level:4,status:'Активный',phone:'+381 ...',tg:'@nadya',email:'',resp:'Закупки, смены, витрина, отчётность',good:'Порядок в процессах, общение с поставщиками',skills:{'Организация смены':5,'Контроль качества':4,'Санитария':4},skillMeta:{},history:[['2025-08','Менеджер пекарни']],issues:[],praises:[],shiftScores:[]},
+ {id:'u_sveta',n:'Светлана',first:'Светлана',last:'Васильева',role:'Владелица · технолог · пекарь-кондитер (пт)',pos:'Владелица',dir:'Управление',started:'2025-05-01',contractStart:'2025-05-01',bday:'12.04',san:{issued:'2026-03-14',months:6},docs:[],mentor:'—',level:5,status:'Активный',phone:'+381 ...',tg:'@sveta',email:'sveta@breadventure.rs',resp:'Рецептуры и качество, финансы, маркетинг, Б2Б',good:'Сладкая выпечка, новые продукты, переговоры',skills:{'Закваска':5,'Формовка':5,'Декор':5,'Начинки':5,'Контроль качества':5,'Организация смены':5},skillMeta:{},history:[['2025-09','Технолог — выводит новые позиции'],['2026-01','Запустила линейку бабок']],issues:[],praises:[],shiftScores:[5,5,4,5]},
+ {id:'u_nadya',n:'Надя',first:'Надежда',last:'—',role:'Менеджер',pos:'Менеджер',dir:'Производство',started:'2025-08-01',contractStart:'2025-09-01',bday:'27.07',san:{issued:'2026-01-20',months:6},docs:[],mentor:'Светлана',level:4,status:'Активный',phone:'+381 ...',tg:'@nadya',email:'',resp:'Закупки, смены, витрина, отчётность',good:'Порядок в процессах, общение с поставщиками',skills:{'Организация смены':5,'Контроль качества':4,'Санитария':4},skillMeta:{},history:[['2025-08','Менеджер пекарни']],issues:[],praises:[],shiftScores:[]},
  {id:'u_anya',n:'Аня',first:'Анна',last:'—',role:'Пекарь · хлеб',pos:'Старший пекарь',dir:'Хлеб',started:'2025-11-10',mentor:'Нико',level:3,status:'Активный',phone:'+381 ...',tg:'@anya',email:'',resp:'Хлебные смены, закваска, ретардация',good:'Стабильный тартин, аккуратная формовка',skills:{'Закваска':4,'Замес':4,'Формовка':5,'Расстойка':4,'Выпечка':4,'Санитария':5},skillMeta:{'Формовка':['2026-05','Стабильно ровная затяжка']},history:[['2025-11','Пришла стажёром'],['2026-02','Самостоятельные хлебные смены'],['2026-05','Повышение уровня: Старший пекарь по хлебу']],issues:[{date:'2026-06-08',cat:'Расстойка',text:'Вторая партия пересидела — следить за таймером каждой партии',by:'Светлана',status:'Активно'}],praises:[{date:'2026-05-20',cat:'Высокое качество работы',text:'Идеальная корка всю неделю',by:'Светлана'}],shiftScores:[4,5,4,4,5,4,5,4,5,5]},
  {id:'u_niko',n:'Нико',first:'Нико',last:'—',role:'Пекарь',pos:'Старший пекарь',dir:'Хлеб',started:'2025-06-01',mentor:'—',level:3,status:'Активный',phone:'+381 ...',tg:'@niko',email:'',resp:'Хлебные смены, пиковые дни, Б2Б-отгрузки',good:'Скорость без потери качества, выносливость',skills:{'Закваска':4,'Замес':5,'Формовка':4,'Расстойка':4,'Выпечка':5,'Организация смены':4},skillMeta:{},history:[['2025-06','В команде с открытия'],['2026-03','Наставник для новичков']],issues:[],praises:[{date:'2026-06-06',cat:'Отличная смена',text:'В одиночку закрыл пятничный пик — 53 буханки',by:'Светлана'},{date:'2026-04-01',cat:'Наставничество',text:'Обучил двух новичков',by:'Светлана'}],shiftScores:[5,5,4,5,5,5,4,5]},
  {id:'u_andrey',n:'Андрей',first:'Андрей',last:'—',role:'Пекарь · сдоба / бариста',pos:'Пекарь',dir:'Сдоба',started:'2025-10-01',mentor:'Светлана',level:2,status:'Активный',phone:'+381 ...',tg:'@andrey',email:'',resp:'Бриошь и начинки, кофейная стойка',good:'Ровная сдоба, латте-арт',skills:{'Замес':4,'Начинки':5,'Формовка':4,'Декор':4,'Эспрессо':5,'Молочные напитки':4,'Латте-арт':4,'Настройка помола':4,'Фильтр':3,'Общение с клиентами':4,'Рекомендации продуктов':4,'Апселл':3,'Касса':4,'Витрина':5,'Отчёт дня':4,'Оборудование':5,'Санитария':4},skillMeta:{'Латте-арт':['2026-04','Ровные розетты']},history:[['2025-10','Сдоба и бар'],['2026-04','Отвечает за кофейную стойку']],issues:[],praises:[],shiftScores:[4,4,5,4,4]}
@@ -4364,13 +4353,17 @@ function empNew(){
       '<div class="field" style="margin:0"><label>Фамилия</label><input type="text" id="en-last" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
     '</div>'+
     '<div class="grid g2" style="gap:10px;margin-top:8px">'+
-      '<div class="field" style="margin:0"><label>Должность</label><select id="en-pos" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+POS_LIST.map(function(p){return '<option'+(p==='Пекарь'?' selected':'')+'>'+p+'</option>';}).join('')+'</select></div>'+
-      '<div class="field" style="margin:0"><label>Направление</label><select id="en-dir" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+DIR_LIST.map(function(p){return '<option>'+p+'</option>';}).join('')+'</select></div>'+
+      '<div class="field" style="margin:0"><label>Должность</label><select id="en-pos" onchange="enLevels()" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+POS_LIST.map(function(p){return '<option'+(p==='Пекарь'?' selected':'')+'>'+p+'</option>';}).join('')+'</select></div>'+
+      '<div class="field" style="margin:0"><label>Направление</label><select id="en-dir" onchange="enLevels()" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+DIR_LIST.map(function(p){return '<option>'+p+'</option>';}).join('')+'</select></div>'+
     '</div>'+
     '<div class="field" style="margin:8px 0 0"><label>Описание роли (как показывать в карточке)</label><input type="text" id="en-role" placeholder="Пекарь · хлеб" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
     '<div class="grid g2" style="gap:10px;margin-top:8px">'+
-      '<div class="field" style="margin:0"><label>Уровень</label><select id="en-level" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+LEVELS.map(function(l,i){return '<option value="'+i+'"'+(i===0?' selected':'')+'>'+l+'</option>';}).join('')+'</select></div>'+
+      '<div class="field" style="margin:0"><label>Уровень</label><select id="en-level" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+LEVELS.map(function(l,i){return '<option value="'+i+'"'+(i===0?' selected':'')+'>'+l+'</option>';}).join('')+'</select><p class="hint" id="en-lvl-hint" style="margin:3px 0 0;font-size:11px">линейка пекаря</p></div>'+
       '<div class="field" style="margin:0"><label>Наставник</label><input type="text" id="en-mentor" placeholder="Светлана" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
+    '</div>'+
+    '<div class="grid g2" style="gap:10px;margin-top:8px">'+
+      '<div class="field" style="margin:0"><label>Телефон</label><input type="text" id="en-phone" placeholder="+381 60 123 4567" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
+      '<div class="field" style="margin:0"><label>Telegram</label><input type="text" id="en-tg" placeholder="@nickname" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
     '</div>'+
     '<div class="grid g2" style="gap:10px;margin-top:8px">'+
       '<div class="field" style="margin:0"><label>Дата начала работы</label><input type="date" id="en-started" value="'+today+'" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
@@ -4388,12 +4381,28 @@ function empNewSave(){
   TEAM.push({id:'u_'+Date.now(),n:name,first:name,last:(v('en-last')||'—'),role:role,pos:pos,dir:dir,
     started:v('en-started')||new Date().toISOString().slice(0,10), contractStart:v('en-contract')||'',
     mentor:(v('en-mentor')||'—'),level:parseInt(v('en-level'))||0,status:'Активный',
-    phone:'',tg:'',email:'',resp:'',good:'',skills:{},skillMeta:{},
+    phone:v('en-phone'),tg:v('en-tg'),email:'',resp:'',good:'',skills:{},skillMeta:{},docs:[],san:{},
     history:[[new Date().toISOString().slice(0,7),'Принят(а) в команду']],issues:[],praises:[],shiftScores:[]});
   var ov=document.getElementById('emp-new-modal'); if(ov)ov.remove();
   renderTeam(); renderHR();
 }
 
+function enLevels(){
+  var pos=(document.getElementById('en-pos')||{}).value||'', dir=(document.getElementById('en-dir')||{}).value||'';
+  var bar=(dir==='Бар')||/барист/i.test(pos);
+  var L=bar?LEVELS_BAR:LEVELS;
+  var sel=document.getElementById('en-level'); if(sel)sel.innerHTML=L.map(function(l,i){return '<option value="'+i+'">'+l+'</option>';}).join('');
+  var h=document.getElementById('en-lvl-hint'); if(h)h.textContent=bar?'линейка бара':'линейка пекаря';
+}
+function empLevel(id){
+  var p=empById(id); if(!p||!isChef())return;
+  var L=levelsFor(p);
+  var v=prompt('Уровень для «'+p.n+'»:\n'+L.map(function(l,i){return i+' — '+l;}).join('\n')+'\n\nВведи номер:', p.level);
+  if(v===null)return;
+  var n=parseInt(v);
+  if(isNaN(n)||n<0||n>=L.length){ alert('Нужен номер от 0 до '+(L.length-1)); return; }
+  p.level=n; empOpen(id); renderTeam();
+}
 /* --- легенда уровней --- */
 function renderLevelLegend(){
   var box=document.getElementById('team-legend'); if(!box)return;
@@ -4419,9 +4428,9 @@ function renderHR(){
   var active=TEAM.filter(function(p){return p.status!=='Архивный';});
   if(!HR_EMP||!active.some(function(p){return p.id===HR_EMP;})) HR_EMP=(active[0]||{}).id;
   sel.innerHTML=active.map(function(p){ return '<option value="'+p.id+'"'+(p.id===HR_EMP?' selected':'')+'>'+p.n+' · '+p.role+'</option>'; }).join('');
-  renderHRCond();
+  renderHRCond(); renderHRSan(); renderHRDocs();
 }
-function hrSelect(id){ HR_EMP=id; renderHRCond(); }
+function hrSelect(id){ HR_EMP=id; renderHRCond(); renderHRSan(); renderHRDocs(); }
 function renderHRCond(){
   var box=document.getElementById('hr-cond'); if(!box)return;
   var p=TEAM.filter(function(x){return x.id===HR_EMP;})[0];
@@ -4437,6 +4446,8 @@ function renderHRCond(){
     '<div class="pair"><span>Общий стаж</span><span><b>'+tenureText(p.started)+'</b></span></div>'+
     dfield('Дата начала контракта','contractStart')+
     '<div class="pair"><span>Стаж по контракту</span><span><b>'+(p.contractStart?tenureText(p.contractStart):'— контракт не указан')+'</b></span></div>'+
+    '<div class="pair"><span>Телефон</span><span>'+(chef?('<input type="text" value="'+tkEsc(p.phone||'')+'" placeholder="+381 60 123 4567" oninput="hrSetField(\'phone\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px;width:150px">'):telLink(p.phone))+'</span></div>'+
+    '<div class="pair"><span>Telegram</span><span>'+(chef?('<input type="text" value="'+tkEsc(p.tg||'')+'" placeholder="@nickname" oninput="hrSetField(\'tg\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px;width:150px">'):tgLink(p.tg))+'</span></div>'+
     '<div class="pair"><span>Зарплата</span><span class="tag warn">видит менеджер</span></div>'+
     '<div class="pair"><span>День рождения</span><span>'+(chef?('<input type="text" value="'+(p.bday||'')+'" placeholder="03.11" oninput="hrSetField(\'bday\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px;width:80px">'):('<b>'+(p.bday||'—')+'</b>'))+'</span></div>'+
     '<p class="hint" style="margin:8px 0 0">Общий стаж — с первого дня работы. Стаж по контракту — с даты оформления рабочего контракта.</p>';
@@ -4444,19 +4455,151 @@ function renderHRCond(){
 function hrSetDate(key,val){ var p=TEAM.filter(function(x){return x.id===HR_EMP;})[0]; if(p){ p[key]=val; renderHRCond(); } }
 function hrSetField(key,val){ var p=TEAM.filter(function(x){return x.id===HR_EMP;})[0]; if(p)p[key]=val; }
 
+/* ===== КОМАНДА v2: удаление, уровни по треку, легенда навыков, санкнижка, документы, фото ===== */
+
+/* --- загрузка любого файла на Диск (не только картинки) --- */
+function bvUploadFile(file, cb){
+  if(!BV_CLOUD_URL){ alert('Для загрузки файлов нужна общая база (Google Диск).'); cb(null); return; }
+  if(!file){ cb(null); return; }
+  if(file.size>7*1024*1024){ alert('Файл больше 7 МБ — загрузи файл поменьше.'); cb(null); return; }
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var b64=String(ev.target.result).split(',')[1];
+    fetch(BV_CLOUD_URL,{method:'POST',body:JSON.stringify({action:'uploadPhoto',name:(file.name||'file'),mimeType:(file.type||'application/octet-stream'),dataBase64:b64})})
+      .then(function(r){return r.json();})
+      .then(function(res){ if(res&&res.ok&&res.url)cb(res.url,res.id); else { alert('Не удалось загрузить файл.'); cb(null); } })
+      .catch(function(){ alert('Нет связи с базой — файл не загружен.'); cb(null); });
+  };
+  reader.onerror=function(){ alert('Не удалось прочитать файл.'); cb(null); };
+  reader.readAsDataURL(file);
+}
+
+/* --- уровни по треку (пекарь / бар) --- */
+function empIsBar(p){ return (p.dir==='Бар') || /барист/i.test(p.pos||''); }
+function levelsFor(p){ return empIsBar(p)?LEVELS_BAR:LEVELS; }
+function levelName(p){ var L=levelsFor(p); return L[p.level]!==undefined?L[p.level]:(p.level||'—'); }
+
+/* --- удаление сотрудника --- */
+function empDelete(id){
+  if(!isChef()){alert('Удалять сотрудников может шеф или менеджер.');return;}
+  var p=empById(id); if(!p)return;
+  if(!confirm('Удалить «'+p.n+'» навсегда?\n\nВся история, замечания и навыки будут стёрты без возможности вернуть.\nЕсли сотрудник просто уволился — лучше «В архив».'))return;
+  if(!confirm('Точно удалить? Это действие необратимо.'))return;
+  var i=TEAM.indexOf(p); if(i>=0)TEAM.splice(i,1);
+  empBack(); renderTeam(); renderHR();
+}
+
+/* --- фото сотрудника --- */
+var EMP_PHOTO_UP={};
+function empPhotoPick(id,inp){
+  if(!inp.files||!inp.files[0])return;
+  EMP_PHOTO_UP[id]=true; empOpen(id);
+  bvUploadPhoto(inp.files[0], function(url){ EMP_PHOTO_UP[id]=false; var p=empById(id); if(url&&p)p.photo=url; empOpen(id); renderTeam(); });
+}
+function empPhotoDel(id){ var p=empById(id); if(!p)return; if(!confirm('Убрать фото?'))return; p.photo=''; empOpen(id); renderTeam(); }
+function empPhotoHtml(p,size){
+  if(EMP_PHOTO_UP[p.id]) return '<div class="photo" style="width:'+size+'px;height:'+size+'px;border-radius:50%;flex-shrink:0;font-size:11px">Загрузка…</div>';
+  if(p.photo) return '<div style="position:relative;width:'+size+'px;height:'+size+'px;flex-shrink:0"><img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:1.5px solid var(--ink)">'+
+    (isChef()?'<button onclick="event.stopPropagation();empPhotoDel(\''+p.id+'\')" title="Убрать фото" style="position:absolute;bottom:-2px;right:-2px;background:rgba(0,0,0,.65);color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:11px">✕</button>':'')+'</div>';
+  if(isChef()) return '<label class="photo" style="width:'+size+'px;height:'+size+'px;border-radius:50%;flex-shrink:0;cursor:pointer;font-size:11px" title="Загрузить фото">+ фото<input type="file" accept="image/*" style="display:none" onchange="empPhotoPick(\''+p.id+'\',this)"></label>';
+  return '<div class="photo" style="width:'+size+'px;height:'+size+'px;border-radius:50%;flex-shrink:0">фото</div>';
+}
+
+/* --- легенда навыков --- */
+function skillLegendHtml(){
+  return '<details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;color:var(--accent)">❓ Как ставятся оценки навыков</summary>'+
+    '<div style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:6px;border-top:1.5px dashed var(--hair);padding-top:6px">'+
+    '<b style="color:var(--ink)">Это оценка шефа, а не автоматический расчёт.</b> Шеф ставит её вручную (кнопка ✎) по наблюдению за работой. Дата рядом с навыком — когда оценку поставили в последний раз.<br><br>'+
+    '<b style="color:var(--ink)">1</b> — не умеет, нужен показ<br>'+
+    '<b style="color:var(--ink)">2</b> — делает под присмотром<br>'+
+    '<b style="color:var(--ink)">3</b> — делает сам по техкарте<br>'+
+    '<b style="color:var(--ink)">4</b> — делает стабильно, без переделок<br>'+
+    '<b style="color:var(--ink)">5</b> — эталон, может научить другого<br><br>'+
+    'Чтобы оценка была честной, договоритесь пересматривать навыки раз в 1–3 месяца и после разбора факапов.'+
+    '</div></details>';
+}
+
+/* --- санитарная книжка --- */
+function sanCalc(p){
+  var s=p.san||{};
+  if(!s.issued) return null;
+  var months=parseInt(s.months)||6;
+  var d=new Date(s.issued); if(isNaN(d))return null;
+  var exp=new Date(d); exp.setMonth(exp.getMonth()+months);
+  var renew=new Date(exp); renew.setDate(renew.getDate()-30);
+  var now=new Date();
+  var days=Math.round((exp-now)/86400000);
+  var st = days<0 ? {t:'просрочена',c:'crit'} : (days<=30 ? {t:'пора обновить',c:'warn'} : {t:'в порядке',c:'ok'});
+  return {exp:exp,renew:renew,days:days,st:st,months:months};
+}
+function renderHRSan(){
+  var box=document.getElementById('hr-san'); if(!box)return;
+  var p=TEAM.filter(function(x){return x.id===HR_EMP;})[0];
+  if(!p){ box.innerHTML='<p class="hint">Выбери сотрудника.</p>'; return; }
+  if(!p.san)p.san={};
+  var chef=isChef(), c=sanCalc(p);
+  var head=
+    '<div class="pair"><span>Дата оформления / обновления</span><span>'+
+      (chef?('<input type="date" value="'+(p.san.issued||'')+'" onchange="hrSanSet(\'issued\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px">'):('<b>'+(tmDate(p.san.issued)||'—')+'</b>'))+'</span></div>'+
+    '<div class="pair"><span>Срок действия</span><span>'+
+      (chef?('<input type="number" min="1" max="24" value="'+(p.san.months||6)+'" onchange="hrSanSet(\'months\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px;width:60px"> мес'):('<b>'+(p.san.months||6)+' мес</b>'))+'</span></div>';
+  if(!c){ box.innerHTML=head+'<p class="hint" style="margin-top:8px">Впиши дату оформления — срок и статус посчитаются сами.</p>'; return; }
+  box.innerHTML=head+
+    '<div class="pair"><span>Актуальна до</span><span><b>'+tmDate(c.exp.toISOString().slice(0,10))+'</b></span></div>'+
+    '<div class="pair"><span>Обновить до</span><span><b>'+tmDate(c.renew.toISOString().slice(0,10))+'</b></span></div>'+
+    '<div class="pair"><span>Статус</span><span class="tag '+c.st.c+'">'+c.st.t+'</span></div>'+
+    '<p class="hint" style="margin:8px 0 0">'+(c.days<0?('Просрочена на '+Math.abs(c.days)+' дн.'):('Осталось '+c.days+' дн. Напоминание — за 30 дней до срока.'))+'</p>';
+}
+function hrSanSet(k,v){ var p=TEAM.filter(function(x){return x.id===HR_EMP;})[0]; if(!p)return; if(!p.san)p.san={}; p.san[k]=(k==='months')?(parseInt(v)||6):v; renderHRSan(); }
+
+/* --- документы сотрудника --- */
+var HR_DOC_UP=false;
+function renderHRDocs(){
+  var box=document.getElementById('hr-docs'); if(!box)return;
+  var p=TEAM.filter(function(x){return x.id===HR_EMP;})[0];
+  if(!p){ box.innerHTML='<p class="hint">Выбери сотрудника.</p>'; return; }
+  if(!p.docs)p.docs=[];
+  var chef=isChef();
+  var list=p.docs.length? p.docs.map(function(d,i){
+    return '<div class="pair"><span>'+tkEsc(d.name)+'<br><span style="color:var(--muted);font-size:11px">'+(d.date||'')+'</span></span><span style="display:flex;gap:6px;align-items:center">'+
+      '<a href="'+d.url+'" target="_blank" class="btn" style="padding:3px 10px;font-size:12px;text-decoration:none">Открыть</a>'+
+      (chef?'<button class="btn" style="padding:3px 8px;font-size:12px;color:#C0392B" onclick="hrDocDel('+i+')">✕</button>':'')+'</span></div>';
+  }).join('') : '<p class="hint" style="margin:4px 0">Документов пока нет. Загрузи контракт, копию паспорта, ВНЖ — они сохранятся на Google Диске и будут доступны команде.</p>';
+  box.innerHTML=list+(HR_DOC_UP?'<p class="hint">Загрузка…</p>':'')+
+    (chef?'<div class="btn-row" style="margin-top:10px"><label class="btn" style="cursor:pointer">+ Загрузить документ<input type="file" style="display:none" onchange="hrDocPick(this)"></label></div>':'');
+}
+function hrDocPick(inp){
+  if(!inp.files||!inp.files[0])return;
+  var f=inp.files[0], nm=prompt('Название документа:', f.name)||f.name;
+  HR_DOC_UP=true; renderHRDocs();
+  bvUploadFile(f, function(url){
+    HR_DOC_UP=false;
+    var p=TEAM.filter(function(x){return x.id===HR_EMP;})[0];
+    if(url&&p){ if(!p.docs)p.docs=[]; p.docs.push({name:nm,url:url,date:new Date().toLocaleDateString('ru-RU')}); }
+    renderHRDocs();
+  });
+}
+function hrDocDel(i){
+  var p=TEAM.filter(function(x){return x.id===HR_EMP;})[0]; if(!p||!p.docs)return;
+  if(!confirm('Убрать «'+p.docs[i].name+'» из списка? Файл останется на Google Диске.'))return;
+  p.docs.splice(i,1); renderHRDocs();
+}
+
+function tgLink(tg){ if(!tg)return '—'; var u=String(tg).replace(/^@/,'').replace(/^https?:\/\/t\.me\//i,''); if(!u)return '—'; return '<a href="https://t.me/'+encodeURIComponent(u)+'" target="_blank" style="color:var(--accent)">@'+tkEsc(u)+'</a>'; }
+function telLink(ph){ if(!ph)return '—'; var clean=String(ph).replace(/[^\d+]/g,''); if(!clean)return '—'; return '<a href="tel:'+clean+'" style="color:var(--accent)">'+tkEsc(ph)+'</a>'; }
 function renderTeam(){
   var active=TEAM.filter(function(p){return p.status!=='Архивный';});
   document.getElementById('team-grid').innerHTML=active.map(function(p){
     var openIss=(p.issues||[]).filter(function(x){return x.status!=='Закрыто';}).length;
     var avg=shiftAvg(p);
     return '<div class="card click" onclick="empOpen(\''+p.id+'\')"><div style="display:flex;gap:14px;align-items:flex-start">'+
-      '<div class="photo" style="width:64px;height:64px;flex-shrink:0;border-radius:50%">фото</div>'+
+      ''+(p.photo?('<img src="'+p.photo+'" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:50%;border:1.5px solid var(--ink);flex-shrink:0">'):'<div class="photo" style="width:64px;height:64px;flex-shrink:0;border-radius:50%">фото</div>')+''+
       '<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="card-t" style="font-size:19px">'+p.n+'</h3>'+statusBadge(p.status)+'</div>'+
       '<p style="color:var(--muted);font-size:13px;margin:2px 0 8px">'+p.role+'</p>'+
       '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
       (openIss?'<span class="tag crit">⚠️ замечаний: '+openIss+'</span>':'')+
       (avg!=null?'<span class="tag">★ смены '+avg+'</span>':'')+
-      '<span class="tag warn">Ур. '+(typeof LEVELS!=='undefined'?LEVELS[p.level]:p.level)+'</span></div>'+
+      '<span class="tag warn">Ур. '+levelName(p)+'</span></div>'+
       '<div style="text-align:right;margin-top:8px;font-size:13px;color:var(--accent)"><b>Открыть карточку ›</b></div>'+
       '</div></div></div>';
   }).join('');
@@ -5275,14 +5418,14 @@ function empOpen(id){
   var devHtmlFull=(p.history||[]).slice().reverse().map(function(h){return '<div style="font-size:13px;padding:6px 0;border-top:1.5px dashed var(--hair)"><b>'+h[0]+'</b> — '+h[1]+'</div>';}).join('')||'<p class="hint">Пусто.</p>';
   var avg=shiftAvg(p);
   d.innerHTML='<button class="btn" onclick="empBack()" style="margin-bottom:14px">← Все сотрудники</button>'+
-    '<div class="card" style="margin-bottom:16px"><div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap"><div class="photo" style="width:90px;height:90px;border-radius:50%;flex-shrink:0">фото</div>'+
+    '<div class="card" style="margin-bottom:16px"><div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">'+empPhotoHtml(p,90)+''+
     '<div style="flex:1;min-width:200px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="font-size:24px">'+p.first+' '+(p.last&&p.last!=='—'?p.last:'')+'</h2>'+statusBadge(p.status)+'</div>'+
     '<p style="color:var(--muted);font-size:13.5px;margin-top:2px">'+p.role+' · '+p.pos+'</p>'+
-    '<div class="tk" style="grid-template-columns:1fr 1fr;margin-top:10px"><div><div class="pair"><span>Направление</span><span>'+p.dir+'</span></div><div class="pair"><span>Стаж</span><span>'+stazh(p.started)+'</span></div><div class="pair"><span>Уровень</span><span>'+(typeof LEVELS!=='undefined'?LEVELS[p.level]:p.level)+'</span></div></div>'+
-    '<div><div class="pair"><span>Наставник</span><span>'+p.mentor+'</span></div><div class="pair chef-only"><span>Telegram</span><span>'+(p.tg||'—')+'</span></div><div class="pair chef-only"><span>Телефон</span><span>'+(p.phone||'—')+'</span></div></div></div>'+
-    (isChef()?'<div class="btn-row chef-only" style="width:100%"><button class="btn" onclick="empStatus(\''+p.id+'\')">Сменить статус</button><button class="btn" onclick="empAddIssue(\''+p.id+'\')">+ Замечание</button><button class="btn" onclick="empAddPraise(\''+p.id+'\')">+ Похвала</button>'+(p.status!=='Архивный'?'<button class="btn" onclick="empArchive(\''+p.id+'\')">В архив</button>':'')+'</div>':'')+
+    '<div class="tk" style="grid-template-columns:1fr 1fr;margin-top:10px"><div><div class="pair"><span>Направление</span><span>'+p.dir+'</span></div><div class="pair"><span>Стаж</span><span>'+stazh(p.started)+'</span></div><div class="pair"><span>Уровень</span><span>'+levelName(p)+(isChef()?(' <button class="btn" style="padding:0 7px;font-size:11px" onclick="empLevel(\''+p.id+'\')">✎</button>'):'')+'</span></div></div>'+
+    '<div><div class="pair"><span>Наставник</span><span>'+p.mentor+'</span></div><div class="pair chef-only"><span>Telegram</span><span>'+tgLink(p.tg)+'</span></div><div class="pair chef-only"><span>Телефон</span><span>'+telLink(p.phone)+'</span></div></div></div>'+
+    (isChef()?'<div class="btn-row chef-only" style="width:100%;margin-top:14px;gap:8px;flex-wrap:wrap"><button class="btn" onclick="empStatus(\''+p.id+'\')">Сменить статус</button><button class="btn" onclick="empAddIssue(\''+p.id+'\')">+ Замечание</button><button class="btn" onclick="empAddPraise(\''+p.id+'\')">+ Похвала</button>'+(p.status!=='Архивный'?'<button class="btn" onclick="empArchive(\''+p.id+'\')">В архив</button>':'')+'<button class="btn" style="color:#C0392B" onclick="empDelete(\''+p.id+'\')">🗑 Удалить</button></div>':'')+
     '</div></div>'+
-    '<div class="grid g2"><div class="card"><b style="font-size:15px">Навыки (1–5)</b><div style="margin-top:10px">'+skillGroups+'</div></div>'+
+    '<div class="grid g2"><div class="card"><b style="font-size:15px">Навыки (1–5)</b><div style="margin-top:10px">'+skillGroups+skillLegendHtml()+'</div></div>'+
     '<div><div class="card bg-pink"><b style="font-size:15px">⚠️ Активные замечания</b><div style="margin-top:6px">'+issHtml+'</div></div>'+
     '<div class="card bg-green" style="margin-top:16px"><b style="font-size:15px">🌟 Похвалы</b><div style="margin-top:6px">'+prHtml+'</div></div></div></div>'+
     '<div class="grid g2" style="margin-top:16px"><div class="card"><b style="font-size:15px">📈 История развития</b><div style="margin-top:6px">'+devHtmlFull+'</div></div>'+
