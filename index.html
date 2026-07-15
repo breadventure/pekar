@@ -348,7 +348,7 @@
     <button data-v="regl" data-group="kb"><span class="ico">📚</span>База знаний</button>
     <button data-v="team" data-group="team"><span class="ico">👥</span>Команда</button>
   </nav>
-  <div class="side-foot"><div class="motto">Контроль сегодня.<br>Качество завтра.</div><div id="bv-store-note" style="margin-top:12px;font-size:10px;color:var(--muted);line-height:1.5">💾 Данные сохраняются в этом браузере<br><a onclick="bvReset()" id="bv-reset-link" style="cursor:pointer;text-decoration:underline">Сбросить к демо</a></div></div>
+  <div class="side-foot"><div class="motto">Контроль сегодня.<br>Качество завтра.</div><div id="bv-store-note" style="margin-top:12px;font-size:10px;color:var(--muted);line-height:1.5">💾 Данные сохраняются в этом браузере<br><a onclick="bvReset()" id="bv-reset-link" style="cursor:pointer;text-decoration:underline">Сбросить к демо</a><br><a onclick="bvPing()" style="cursor:pointer;text-decoration:underline">Проверить базу</a></div></div>
 </aside>
 
 <div id="menu-overlay" onclick="toggleMenu()"></div>
@@ -4574,6 +4574,29 @@ function bvToast(msg, ok){
   t.textContent=msg;
   t.style.display='block';
   clearTimeout(window._bvTT); window._bvTT=setTimeout(function(){ t.style.display='none'; }, 2600);
+}
+function bvPing(){
+  if(!BV_CLOUD_URL){ alert('Адрес базы не задан.'); return; }
+  bvToast('Проверяю базу…');
+  fetch(BV_CLOUD_URL+'?action=ping',{method:'GET'})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(!res){ alert('База не ответила.'); return; }
+      var v=res.version||'(версия не указана)';
+      var photo=res.photoSupport?'да':'НЕТ';
+      var drive=res.drive||'неизвестно';
+      var msg='Ответ базы:\n\nВерсия кода: '+v+'\nЗагрузка фото: '+photo+'\nДоступ к Диску: '+drive;
+      if(!res.photoSupport || v==='(версия не указана)'){
+        msg+='\n\n⚠️ На /exec работает СТАРЫЙ код.\nВ Apps Script: Развернуть → Управление развёртываниями → карандаш → Версия: НОВАЯ → Развернуть.';
+      } else if(String(drive).indexOf('ошибка')>=0){
+        msg+='\n\n⚠️ Скрипту не выдан доступ к Google Диску.\nВ Apps Script выбери функцию АВТОРИЗОВАТЬ_ДИСК и нажми ▶ Выполнить, затем разреши доступ.';
+      } else {
+        msg+='\n\n✓ Всё на месте — фото должны загружаться.';
+      }
+      alert(msg);
+      bvToast('Проверка завершена');
+    })
+    .catch(function(e){ alert('Не удалось связаться с базой.\n\nПроверь: адрес заканчивается на /exec, доступ «Все», есть интернет.'); });
 }
 function bvSaveNow(){
   try{ bvSave(); }catch(e){}
