@@ -105,6 +105,10 @@
   .bdg-lock{opacity:.32;filter:grayscale(1)}
   .bdg-pick{cursor:pointer;border:1.5px solid transparent;border-radius:10px;padding:7px 3px;transition:background .1s}
   .bdg-pick:hover{background:var(--yellow-soft);border-color:var(--hair)}
+  .bdg-line{display:flex;gap:11px;align-items:flex-start;padding:9px;margin-top:6px;border:1.5px solid var(--hair);border-radius:11px;background:var(--card);cursor:pointer}
+  .bdg-line:hover{border-color:var(--ink)}
+  .bdg-line-off{opacity:.55}
+  .bdg-book{display:flex;gap:11px;align-items:flex-start;padding:9px;margin-top:6px;border:1.5px solid var(--hair);border-radius:11px;background:var(--card)}
   .row .date{margin-left:auto;color:var(--muted);font-size:12.5px;white-space:nowrap}
   .task{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1.5px dashed var(--hair);cursor:pointer}
   .task:last-child{border-bottom:none}
@@ -1170,6 +1174,7 @@
   <div class="tabpane active" id="team-people"><div id="team-list-wrap"><div id="team-legend"></div><div class="btn-row chef-only" style="margin-bottom:14px"><button class="btn primary" onclick="empNew()">+ Добавить сотрудника</button></div><div id="team-grid" class="grid g2"></div><div id="team-archived"></div></div><div id="team-detail" style="display:none"></div></div>
   <div class="tabpane" id="team-ach">
     <div class="note" style="margin-bottom:16px">🏅 Система оценивает рабочие показатели и вклад, а не личность. Помогает видеть надёжность и рост команды, и снижать зависимость от одного человека.<br><span style="font-size:12px">Список берётся из карточек сотрудников. Оценка смен, стаж, похвалы и замечания считаются сами; остальные показатели ведёт шеф.</span></div>
+    <div class="btn-row chef-only" style="margin-bottom:14px"><button class="btn" onclick="achZeroAll()">🧹 Обнулить показатели всей команды</button></div>
     <div id="ach-grid" class="grid g2"></div>
   </div>
 </section>
@@ -1246,6 +1251,13 @@
     </div>
     <div id="ob-graduate-out"></div>
   </div>
+</section>
+
+<!-- ===== СПРАВОЧНИК БЕЙДЖЕЙ ===== -->
+<section class="view" id="v-badges">
+  <div class="crumbs"><a onclick="go('dash')">Главная</a> / Команда / Бейджи</div>
+  <div class="note" style="margin-bottom:16px">🏅 Что можно заработать и за что. Бейджи по показателям появляются сами, как только выполнено условие. Синие присваивает шеф — за то, что цифрой не измеряется.</div>
+  <div id="badge-book"></div>
 </section>
 
 <!-- ===== ДАННЫЕ КОМПАНИИ ===== -->
@@ -1672,7 +1684,7 @@
 
 /* ===== РЕЖИМ ШЕФА ===== */
 
-var TITLES={dash:['Пекарь','Все стандарты и знания в одном месте.'],recipes:['Рецептуры','Все рецепты и формулы наших продуктов.'],tk:['Рецептура','Раскладка, шаги, версии и экономика продукта.'],regl:['Регламенты работы','Правила и процедуры ежедневной работы.'],err:['Критические ошибки','Частые ошибки производства и как их избежать.'],san:['Санитарные правила','Гигиена, защита и поддержание чистоты.'],oborud:['Оборудование','Настройка, обслуживание и правила безопасности.'],check:['Чек-листы смен','Открытие и закрытие смены с отчётом в чат.'],plan:['Планирование','План замеса на день и отпёки на неделю.'],hr:['Личные данные','Документы, сан.книжки и условия работы.'],updates:['Обновления','Что изменилось в базе знаний.'],fails:['Жёсткие факапы','Истории провалов, решения и выводы.'],team:['Наша команда','Кто за что отвечает и в чём хорош.'],rarch:['Архив рецептур','Снятые с производства рецепты.'],scripts:['Скрипты сервиса','Что говорить клиентам в разных ситуациях.'],drinks:['Напитки','Карта бара: состав, технология, подача.'],handoff:['Передача смены','Что предыдущая смена оставила следующей.'],breport:['Отчёт дня','Закрытие дня бариста: продажи, остатки, Njuppa.'],roles:['Права доступа','Кто что видит и редактирует. Настраивает шеф.'],company:['Данные компании','Реквизиты и документы BreadVenture.'],products:['Карточки продукта','Что говорить клиенту о каждом изделии.'],vitrina:['Витрина дня','Что на продажу, что в ресторан и когда.'],vitcon:['Конструктор витрины','Состав витрины по формуле, вкусы без повторов.'],bakeplan:['Планировщик печи','Загрузка печи, последовательность отпёков и тайминг.'],mixplan:['Планировщик замесов','Распределение замесов по тестомесу и планетарке.'],partners:['Партнёры','Профиль заведений, история отгрузок и статистика.'],remind:['Регулярные работы','Сервисы, сан.книжки и сроки обслуживания. Доступно только шефу.'],rtest:['Тесты рецептур','Разработка: итерации, оценки, перевод в производство.'],onboard:['Онбординг','Путь нового пекаря от первого дня до самостоятельной смены.'],news:['Новости пекарни','Кто чем отличился и что мы внедрили.'],calc:['Калькуляторы','Расчёты заквасок и рецептур.'],sched:['График смен','Смены команды на текущую неделю.'],train:['Обучение и тесты','Проверь знания и прокачай навыки.'],faq:['FAQ','Знания пекарни — кратко и ясно.']};
+var TITLES={dash:['Пекарь','Все стандарты и знания в одном месте.'],recipes:['Рецептуры','Все рецепты и формулы наших продуктов.'],tk:['Рецептура','Раскладка, шаги, версии и экономика продукта.'],regl:['Регламенты работы','Правила и процедуры ежедневной работы.'],err:['Критические ошибки','Частые ошибки производства и как их избежать.'],san:['Санитарные правила','Гигиена, защита и поддержание чистоты.'],oborud:['Оборудование','Настройка, обслуживание и правила безопасности.'],check:['Чек-листы смен','Открытие и закрытие смены с отчётом в чат.'],plan:['Планирование','План замеса на день и отпёки на неделю.'],hr:['Личные данные','Документы, сан.книжки и условия работы.'],updates:['Обновления','Что изменилось в базе знаний.'],fails:['Жёсткие факапы','Истории провалов, решения и выводы.'],team:['Наша команда','Кто за что отвечает и в чём хорош.'],rarch:['Архив рецептур','Снятые с производства рецепты.'],scripts:['Скрипты сервиса','Что говорить клиентам в разных ситуациях.'],drinks:['Напитки','Карта бара: состав, технология, подача.'],handoff:['Передача смены','Что предыдущая смена оставила следующей.'],breport:['Отчёт дня','Закрытие дня бариста: продажи, остатки, Njuppa.'],roles:['Права доступа','Кто что видит и редактирует. Настраивает шеф.'],company:['Данные компании','Реквизиты и документы BreadVenture.'],badges:['Бейджи','Что можно заработать и за что.'],products:['Карточки продукта','Что говорить клиенту о каждом изделии.'],vitrina:['Витрина дня','Что на продажу, что в ресторан и когда.'],vitcon:['Конструктор витрины','Состав витрины по формуле, вкусы без повторов.'],bakeplan:['Планировщик печи','Загрузка печи, последовательность отпёков и тайминг.'],mixplan:['Планировщик замесов','Распределение замесов по тестомесу и планетарке.'],partners:['Партнёры','Профиль заведений, история отгрузок и статистика.'],remind:['Регулярные работы','Сервисы, сан.книжки и сроки обслуживания. Доступно только шефу.'],rtest:['Тесты рецептур','Разработка: итерации, оценки, перевод в производство.'],onboard:['Онбординг','Путь нового пекаря от первого дня до самостоятельной смены.'],news:['Новости пекарни','Кто чем отличился и что мы внедрили.'],calc:['Калькуляторы','Расчёты заквасок и рецептур.'],sched:['График смен','Смены команды на текущую неделю.'],train:['Обучение и тесты','Проверь знания и прокачай навыки.'],faq:['FAQ','Знания пекарни — кратко и ясно.']};
 var NAV_STACK=[];var CURRENT_VIEW='dash';
 
 var GROUPS={
@@ -1833,7 +1845,8 @@ function applyRoleNav(){
     GROUPS.prod.views=pv;
   }
   /* личные данные — только шеф/менеджер */
-  GROUPS.team.views=GROUPS.team.views.filter(function(v){return v[1]!=='hr'&&v[1]!=='roles'&&v[1]!=='company';});
+  GROUPS.team.views=GROUPS.team.views.filter(function(v){return v[1]!=='hr'&&v[1]!=='roles'&&v[1]!=='company'&&v[1]!=='badges';});
+  GROUPS.team.views.push(['Бейджи','badges']);
   if(R.edit)GROUPS.team.views.push(['Личные данные','hr']);
   if(R.edit)GROUPS.team.views.push(['Данные компании','company']);
   if(R.permsView)GROUPS.team.views.push(['Права доступа','roles']);
@@ -4623,6 +4636,14 @@ function hrSetField(key,val){ var p=TEAM.filter(function(x){return x.id===HR_EMP
 /* ===== КОМАНДА v2: удаление, уровни по треку, легенда навыков, санкнижка, документы, фото ===== */
 
 /* --- загрузка любого файла на Диск (не только картинки) --- */
+/* Диск отдаёт превью (thumbnail) — для PDF это картинка ТОЛЬКО первой страницы.
+   Для документов нужна ссылка на сам файл. ID есть в обоих видах ссылок. */
+function driveId(u){
+  u=String(u||'');
+  var m=u.match(/[?&]id=([\w-]+)/) || u.match(/\/d\/([\w-]+)/) || u.match(/\/file\/d\/([\w-]+)/);
+  return m?m[1]:'';
+}
+function driveView(u){ var id=driveId(u); return id?('https://drive.google.com/file/d/'+id+'/view'):String(u||''); }
 function bvUploadFile(file, cb){
   if(!BV_CLOUD_URL){ alert('Для загрузки файлов нужна общая база (Google Диск).'); cb(null); return; }
   if(!file){ cb(null); return; }
@@ -4632,7 +4653,10 @@ function bvUploadFile(file, cb){
     var b64=String(ev.target.result).split(',')[1];
     fetch(BV_CLOUD_URL,{method:'POST',body:JSON.stringify({action:'uploadPhoto',name:(file.name||'file'),mimeType:(file.type||'application/octet-stream'),dataBase64:b64})})
       .then(function(r){return r.json();})
-      .then(function(res){ if(res&&res.ok&&res.url)cb(res.url,res.id); else { alert('Не удалось загрузить файл.'); cb(null); } })
+      .then(function(res){
+        if(res&&res.ok&&(res.id||res.url)){ cb(driveView(res.url||('id='+res.id)) || res.url, res.id); }
+        else { alert('Не удалось загрузить файл.'); cb(null); }
+      })
       .catch(function(){ alert('Нет связи с базой — файл не загружен.'); cb(null); });
   };
   reader.onerror=function(){ alert('Не удалось прочитать файл.'); cb(null); };
@@ -4786,7 +4810,7 @@ function renderHRDocs(){
   var chef=isChef();
   var list=p.docs.length? p.docs.map(function(d,i){
     return '<div class="pair"><span>'+tkEsc(d.name)+'<br><span style="color:var(--muted);font-size:11px">'+(d.date||'')+'</span></span><span style="display:flex;gap:6px;align-items:center">'+
-      '<a href="'+d.url+'" target="_blank" class="btn" style="padding:3px 10px;font-size:12px;text-decoration:none">Открыть</a>'+
+      '<a href="'+driveView(d.url)+'" target="_blank" class="btn" style="padding:3px 10px;font-size:12px;text-decoration:none">Открыть</a>'+
       (chef?'<button class="btn" style="padding:3px 8px;font-size:12px;color:#C0392B" onclick="hrDocDel('+i+')">✕</button>':'')+'</span></div>';
   }).join('') : '<p class="hint" style="margin:4px 0">Документов пока нет. Загрузи контракт, копию паспорта, ВНЖ — они сохранятся на Google Диске и будут доступны команде.</p>';
   box.innerHTML=list+(HR_DOC_UP?'<p class="hint">Загрузка…</p>':'')+
@@ -5185,7 +5209,7 @@ function remPlan(i){
 }
 function remDone(i){
   REMINDERS[i].last='2026-06-10';
-  renderReminders();remNotifs();renderRtest();renderAch();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();applyChkDirections();renderProducts();renderVitrina();
+  renderReminders();remNotifs();renderRtest();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();applyChkDirections();renderProducts();renderVitrina();
 }
 function addReminder(){
   var n=document.getElementById('rf2-name').value.trim();
@@ -5193,7 +5217,7 @@ function addReminder(){
   REMINDERS.push({name:n,n:parseInt(document.getElementById('rf2-n').value)||1,u:document.getElementById('rf2-u').value,last:document.getElementById('rf2-last').value,note:''});
   document.getElementById('rf2-name').value='';
   document.getElementById('rem-form').style.display='none';
-  renderReminders();remNotifs();renderRtest();renderAch();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();applyChkDirections();renderProducts();renderVitrina();
+  renderReminders();remNotifs();renderRtest();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();applyChkDirections();renderProducts();renderVitrina();
 }
 function remStage(days,total){
   if(days<0)return 'просрочено на '+(-days)+' дн';
@@ -5472,50 +5496,56 @@ var ACH_MIG={done:false,badges:false};
    tracks — для каких линеек (null = для всех) */
 var BADGES=[
   /* — общие — */
-  {id:'year1',   ic:'🥖', t:'Год в BreadVenture',   tier:'silver', tracks:null, rule:'Стаж 1 год',                 auto:function(p,a){ return (tenureMonths(p.started)||0)>=12; }},
-  {id:'year2',   ic:'🥖', t:'2 года в BreadVenture',tier:'gold',   tracks:null, rule:'Стаж 2 года',                auto:function(p,a){ return (tenureMonths(p.started)||0)>=24; }},
-  {id:'year5',   ic:'👑', t:'5 лет в BreadVenture', tier:'gold',   tracks:null, rule:'Стаж 5 лет',                 auto:function(p,a){ return (tenureMonths(p.started)||0)>=60; }},
-  {id:'star45',  ic:'⭐', t:'Оценка 4.5+',          tier:'gold',   tracks:null, rule:'Средняя оценка смен ≥ 4.5 при 5+ оценках', auto:function(p,a){ var v=shiftAvg(p); return v!=null&&(p.shiftScores||[]).length>=5&&v>=4.5; }},
-  {id:'praise5', ic:'🌟', t:'5 похвал',             tier:'silver', tracks:null, rule:'5 похвал в карточке',        auto:function(p,a){ return (p.praises||[]).length>=5; }},
-  {id:'praise15',ic:'🌟', t:'15 похвал',            tier:'gold',   tracks:null, rule:'15 похвал в карточке',       auto:function(p,a){ return (p.praises||[]).length>=15; }},
-  {id:'late30',  ic:'⏰', t:'30 дней без опозданий',tier:'bronze', tracks:null, rule:'30 дней без опозданий',      auto:function(p,a){ return (a.noLate||0)>=30; }},
-  {id:'late100', ic:'⏰', t:'100 дней без опозданий',tier:'gold',  tracks:null, rule:'100 дней без опозданий',     auto:function(p,a){ return (a.noLate||0)>=100; }},
-  {id:'mentor1', ic:'🧑‍🏫', t:'Наставник',          tier:'silver', tracks:null, rule:'Обучил хотя бы одного',      auto:function(p,a){ return (a.mentored||0)>=1; }},
-  {id:'mentor3', ic:'🧑‍🏫', t:'Наставник команды',   tier:'gold',   tracks:null, rule:'Обучил троих и больше',      auto:function(p,a){ return (a.mentored||0)>=3; }},
+  {id:'year1',   ic:'🥖', t:'Год в BreadVenture',   tier:'silver', tracks:null, rule:'Стаж 1 год',  d:'Проработал год. Знает пекарню, а не только свою смену.', auto:function(p,a){ return (tenureMonths(p.started)||0)>=12; }},
+  {id:'year2',   ic:'🥖', t:'2 года в BreadVenture',tier:'gold',   tracks:null, rule:'Стаж 2 года', d:'Два года. Прошёл все сезоны, пики и переезды меню.', auto:function(p,a){ return (tenureMonths(p.started)||0)>=24; }},
+  {id:'year5',   ic:'👑', t:'5 лет в BreadVenture', tier:'gold',   tracks:null, rule:'Стаж 5 лет',  d:'Пять лет. Часть истории пекарни.', auto:function(p,a){ return (tenureMonths(p.started)||0)>=60; }},
+  {id:'star45',  ic:'⭐', t:'Оценка 4.5+',          tier:'gold',   tracks:null, rule:'Средняя оценка смен ≥ 4.5 при 5+ оценках', d:'Смены стабильно закрываются хорошо — не разово, а как правило.', auto:function(p,a){ var v=shiftAvg(p); return v!=null&&(p.shiftScores||[]).length>=5&&v>=4.5; }},
+  {id:'praise5', ic:'🌟', t:'5 похвал',             tier:'silver', tracks:null, rule:'5 похвал в карточке',  d:'Пять раз сделал заметно больше, чем требовалось.', auto:function(p,a){ return (p.praises||[]).length>=5; }},
+  {id:'praise15',ic:'🌟', t:'15 похвал',            tier:'gold',   tracks:null, rule:'15 похвал в карточке', d:'Пятнадцать похвал. Это уже не везение, а характер.', auto:function(p,a){ return (p.praises||[]).length>=15; }},
+  {id:'late30',  ic:'⏰', t:'30 дней без опозданий',tier:'bronze', tracks:null, rule:'30 дней без опозданий',  d:'Месяц вовремя. Смена начинается с того, что человек на месте.', auto:function(p,a){ return (a.noLate||0)>=30; }},
+  {id:'late100', ic:'⏰', t:'100 дней без опозданий',tier:'gold',  tracks:null, rule:'100 дней без опозданий', d:'Сто дней вовремя. На него можно ставить график и не перепроверять.', auto:function(p,a){ return (a.noLate||0)>=100; }},
+  {id:'mentor1', ic:'🧑‍🏫', t:'Наставник',          tier:'silver', tracks:null, rule:'Обучил хотя бы одного', d:'Вывел новичка на самостоятельную смену.', auto:function(p,a){ return (a.mentored||0)>=1; }},
+  {id:'mentor3', ic:'🧑‍🏫', t:'Наставник команды',   tier:'gold',   tracks:null, rule:'Обучил троих и больше',  d:'Обучил троих. Через него прошла треть команды.', auto:function(p,a){ return (a.mentored||0)>=3; }},
   /* — пекарь — */
-  {id:'noerr5',  ic:'🎯', t:'5 смен без ошибок',    tier:'bronze', tracks:['baker'], rule:'5 смен подряд без ошибок',  auto:function(p,a){ return (a.noErr||0)>=5; }},
-  {id:'noerr15', ic:'🎯', t:'15 смен без ошибок',   tier:'silver', tracks:['baker'], rule:'15 смен подряд без ошибок', auto:function(p,a){ return (a.noErr||0)>=15; }},
-  {id:'noerr30', ic:'🏆', t:'30 смен без ошибок',   tier:'gold',   tracks:['baker'], rule:'30 смен подряд без ошибок', auto:function(p,a){ return (a.noErr||0)>=30; }},
-  {id:'noerr100',ic:'💯', t:'100 смен без ошибок',  tier:'gold',   tracks:['baker'], rule:'100 смен подряд без ошибок',auto:function(p,a){ return (a.noErr||0)>=100; }},
-  {id:'stable',  ic:'📐', t:'Стабильная выпечка',   tier:'silver', tracks:['baker'], rule:'≥90% стабильных отпёков при 10+', auto:function(p,a){ return (a.stable1||0)>=10 && (a.stable0||0)/(a.stable1||1)>=0.9; }},
-  {id:'author',  ic:'💡', t:'Автор рецептуры',      tier:'gold',   tracks:['baker'], rule:'Довёл рецептуру до производства', auto:function(p,a){ return (a.toProd||0)>=1; }},
-  {id:'author3', ic:'📖', t:'Три рецептуры',        tier:'gold',   tracks:['baker'], rule:'Довёл 3 рецептуры до производства', auto:function(p,a){ return (a.toProd||0)>=3; }},
+  {id:'noerr5',  ic:'🎯', t:'5 смен без ошибок',    tier:'bronze', tracks:['baker'], rule:'5 смен подряд без ошибок',  d:'Пять смен без брака и переделок подряд.', auto:function(p,a){ return (a.noErr||0)>=5; }},
+  {id:'noerr15', ic:'🎯', t:'15 смен без ошибок',   tier:'silver', tracks:['baker'], rule:'15 смен подряд без ошибок', d:'Пятнадцать чистых смен. Руки поставлены.', auto:function(p,a){ return (a.noErr||0)>=15; }},
+  {id:'noerr30', ic:'🏆', t:'30 смен без ошибок',   tier:'gold',   tracks:['baker'], rule:'30 смен подряд без ошибок', d:'Месяц смен без единой ошибки.', auto:function(p,a){ return (a.noErr||0)>=30; }},
+  {id:'noerr100',ic:'💯', t:'100 смен без ошибок',  tier:'gold',   tracks:['baker'], rule:'100 смен подряд без ошибок',d:'Сто смен без ошибок. Редкая история.', auto:function(p,a){ return (a.noErr||0)>=100; }},
+  {id:'stable',  ic:'📐', t:'Стабильная выпечка',   tier:'silver', tracks:['baker'], rule:'≥90% стабильных отпёков при 10+', d:'Хлеб выходит одинаковым. Клиент получает то же, что вчера.', auto:function(p,a){ return (a.stable1||0)>=10 && (a.stable0||0)/(a.stable1||1)>=0.9; }},
+  {id:'author',  ic:'💡', t:'Автор рецептуры',      tier:'gold',   tracks:['baker'], rule:'Довёл рецептуру до производства', d:'Придумал и довёл рецепт до витрины, а не до папки «идеи».', auto:function(p,a){ return (a.toProd||0)>=1; }},
+  {id:'author3', ic:'📖', t:'Три рецептуры',        tier:'gold',   tracks:['baker'], rule:'Довёл 3 рецептуры до производства', d:'Три рецепта в производстве. Это уже линейка, а не случай.', auto:function(p,a){ return (a.toProd||0)>=3; }},
   /* — бар — */
-  {id:'bar100',  ic:'☕', t:'100 смен на баре',     tier:'gold',   tracks:['bar'], rule:'100 смен на баре',        auto:function(p,a){ return (a.shiftsBar||0)>=100; }},
-  {id:'latte',   ic:'🎨', t:'Латте-арт',            tier:'silver', tracks:['bar'], rule:'≥90% удачных при 10+',    auto:function(p,a){ return (a.latte1||0)>=10 && (a.latte0||0)/(a.latte1||1)>=0.9; }},
-  {id:'service', ic:'🤝', t:'Стабильный сервис',    tier:'silver', tracks:['bar'], rule:'≥90% оценок «ок» при 10+',auto:function(p,a){ return (a.serv1||0)>=10 && (a.serv0||0)/(a.serv1||1)>=0.9; }},
-  {id:'upsell',  ic:'📈', t:'Апселлер',             tier:'bronze', tracks:['bar'], rule:'25 удачных апселлов',     auto:function(p,a){ return (a.upsell||0)>=25; }},
+  {id:'bar100',  ic:'☕', t:'100 смен на баре',     tier:'gold',   tracks:['bar'], rule:'100 смен на баре', d:'Сто смен за стойкой. Видел любой поток.', auto:function(p,a){ return (a.shiftsBar||0)>=100; }},
   /* — менеджер — */
-  {id:'improve', ic:'🔧', t:'Внедрил улучшение',    tier:'silver', tracks:['mgr'], rule:'Внедрено хотя бы одно улучшение', auto:function(p,a){ return (a.toProd||0)>=1; }},
+  {id:'improve', ic:'🔧', t:'Внедрил улучшение',    tier:'silver', tracks:['mgr'], rule:'Внедрено хотя бы одно улучшение', d:'Изменил процесс так, что стало легче всей смене.', auto:function(p,a){ return (a.toProd||0)>=1; }},
   /* — только вручную — */
-  {id:'hero',    ic:'🦸', t:'Герой недели',         tier:'blue', tracks:null, rule:'Присваивает шеф',  auto:null},
-  {id:'save',    ic:'🚑', t:'Спас смену',           tier:'blue', tracks:null, rule:'Присваивает шеф',  auto:null},
-  {id:'reliable',ic:'🛡', t:'Надёжный пекарь',      tier:'blue', tracks:null, rule:'Присваивает шеф',  auto:null},
-  {id:'shaping', ic:'✋', t:'Мастер формовки',      tier:'blue', tracks:null, rule:'Присваивает шеф',  auto:null},
-  {id:'idea',    ic:'✨', t:'Идея года',            tier:'blue', tracks:null, rule:'Присваивает шеф',  auto:null},
-  {id:'face',    ic:'😊', t:'Лицо пекарни',         tier:'blue', tracks:null, rule:'Присваивает шеф',  auto:null}
+  {id:'hero',    ic:'🦸', t:'Герой недели',    tier:'blue', tracks:null, rule:'Присваивает шеф', d:'Вытащил неделю: закрыл пик, подменил, спас план.', auto:null},
+  {id:'save',    ic:'🚑', t:'Спас смену',      tier:'blue', tracks:null, rule:'Присваивает шеф', d:'Когда всё пошло не так — сделал так, что клиент не заметил.', auto:null},
+  {id:'reliable',ic:'🛡', t:'Надёжный',        tier:'blue', tracks:null, rule:'Присваивает шеф', d:'Сказал — сделал. Можно не проверять.', auto:null},
+  {id:'shaping', ic:'✋', t:'Мастер формовки', tier:'blue', tracks:null, rule:'Присваивает шеф', d:'Формовка, которую не стыдно ставить на витрину без отбора.', auto:null},
+  {id:'idea',    ic:'✨', t:'Идея года',       tier:'blue', tracks:null, rule:'Присваивает шеф', d:'Предложил то, что изменило пекарню, а не одну смену.', auto:null},
+  {id:'face',    ic:'😊', t:'Лицо пекарни',    tier:'blue', tracks:null, rule:'Присваивает шеф', d:'К нему возвращаются клиенты. Не за хлебом — за ним.', auto:null},
+  {id:'clean',   ic:'🧼', t:'Чистый цех',      tier:'blue', tracks:null, rule:'Присваивает шеф', d:'После его смены цех принимать не страшно.', auto:null},
+  {id:'calm',    ic:'🧊', t:'Холодная голова', tier:'blue', tracks:null, rule:'Присваивает шеф', d:'В пик работает так же ровно, как в пустой понедельник.', auto:null}
 ];
 function badgeById(id){ return BADGES.filter(function(b){return b.id===id;})[0]; }
 function badgeEarned(b,p,a){ if(!b.auto)return false; try{ return !!b.auto(p,a); }catch(e){ return false; } }
 function badgeFits(b,tk){ return !b.tracks || b.tracks.indexOf(tk)>=0; }
 /* что показывать у сотрудника: заработанные + присвоенные вручную */
+function badgeState(p,b){
+  var a=achOf(p);
+  var auto=badgeEarned(b,p,a);
+  var off=(a.off||[]).indexOf(b.id)>=0;
+  var man=(a.manual||[]).indexOf(b.id)>=0;
+  return { auto:auto, off:off, man:man, on:(!off&&(auto||man)) };
+}
 function achBadges(p){
-  var a=achOf(p), tk=trackOf(p), out=[];
+  var tk=trackOf(p), out=[];
+  if(tk==='none')return out;              /* у владельца бейджей нет */
   BADGES.forEach(function(b){
     if(!badgeFits(b,tk))return;
-    var auto=badgeEarned(b,p,a);
-    var man=(a.manual||[]).indexOf(b.id)>=0;
-    if(auto||man)out.push({b:b,auto:auto});
+    var st=badgeState(p,b);
+    if(st.on)out.push({b:b,auto:st.auto&&!st.man});
   });
   return out;
 }
@@ -5541,7 +5571,7 @@ function badgeMigrate(){
   });
   ACH_MIG.badges=true;
 }
-function achOf(p){ if(!p.ach||typeof p.ach!=='object')p.ach={}; if(!p.ach.badges)p.ach.badges=[]; if(!p.ach.manual)p.ach.manual=[]; if(!p.ach.custom)p.ach.custom=[]; return p.ach; }
+function achOf(p){ if(!p.ach||typeof p.ach!=='object')p.ach={}; if(!p.ach.badges)p.ach.badges=[]; if(!p.ach.manual)p.ach.manual=[]; if(!p.ach.custom)p.ach.custom=[]; if(!p.ach.off)p.ach.off=[]; return p.ach; }
 /* однократно переносим показатели из старого списка в карточки сотрудников */
 function achMigrate(){
   if(!ACH_MIG||ACH_MIG.done)return;
@@ -5550,10 +5580,7 @@ function achMigrate(){
     var p=TEAM.filter(function(x){return x.n===o.n;})[0]; if(!p)return;
     var a=achOf(p);
     if(o.bar){
-      a.shiftsBar=o.shiftsBar; a.noLate=o.noLate;
-      a.latte0=o.latteScore[0]; a.latte1=o.latteScore[1];
-      a.serv0=o.serviceScore[0]; a.serv1=o.serviceScore[1];
-      a.drinksServed=o.drinksServed; a.upsell=o.upsell;
+      a.shiftsBar=o.shiftsBar; a.noLate=o.noLate; a.drinksServed=o.drinksServed;
     } else {
       a.noErr=o.noErr; a.noLate=o.noLate;
       a.stable0=o.stable[0]; a.stable1=o.stable[1];
@@ -5566,25 +5593,11 @@ function achMigrate(){
 /* какие показатели ведём вручную — по линейке */
 var ACH_FIELDS={
   baker:[['noErr','Смен без ошибок подряд'],['noLate','Дней без опозданий'],['stable0','Стабильных отпёков'],['stable1','Отпёков всего'],['proposed','Предложено рецептур'],['toProd','Доведено до производства'],['mentored','Обучил сотрудников']],
-  bar:[['shiftsBar','Смен на баре'],['noLate','Дней без опозданий'],['latte0','Латте-арт: удачных'],['latte1','Латте-арт: всего'],['serv0','Сервис: оценок «ок»'],['serv1','Сервис: оценок всего'],['drinksServed','Напитков приготовлено'],['upsell','Удачных апселлов']],
+  bar:[['shiftsBar','Смен на баре'],['noLate','Дней без опозданий'],['drinksServed','Напитков приготовлено']],
   mgr:[['noLate','Дней без опозданий'],['mentored','Обучил сотрудников'],['proposed','Предложено улучшений'],['toProd','Внедрено улучшений']],
   none:[['mentored','Обучил сотрудников'],['proposed','Предложено рецептур'],['toProd','Доведено до производства']]
 };
 function noErrTier(n){var t=[5,10,15,30,50,100];var cur=0;t.forEach(function(x){if(n>=x)cur=x;});return cur;}
-function achBaristaCard_unused(p){
-  var latte=p.latteScore[1]?Math.round(p.latteScore[0]/p.latteScore[1]*100):null;
-  var serv=p.serviceScore[1]?Math.round(p.serviceScore[0]/p.serviceScore[1]*100):null;
-  var m='';
-  m+='<div class="pair"><span>Смен на баре</span><span><b>'+p.shiftsBar+'</b></span></div>';
-  m+='<div class="pair"><span>Дней без опозданий</span><span><b>'+p.noLate+'</b></span></div>';
-  if(latte!=null)m+='<div class="pair"><span>Качество латте-арт</span><span><b>'+p.latteScore[0]+'/'+p.latteScore[1]+'</b> · '+latte+'%</span></div>';
-  if(serv!=null)m+='<div class="pair"><span>Оценка сервиса</span><span><b>'+p.serviceScore[0]+'/'+p.serviceScore[1]+'</b> · '+serv+'%</span></div>';
-  m+='<div class="pair"><span>Напитков приготовлено</span><span><b>'+p.drinksServed+'</b></span></div>';
-  m+='<div class="pair"><span>Удачных апселлов</span><span><b>'+p.upsell+'</b></span></div>';
-  var badges=p.badges.map(function(b){return '<span class="tag ok" style="margin:2px 4px 2px 0">🏅 '+b+'</span>';}).join('');
-  return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><b style="font-size:19px">'+p.n+' <span class="tag" style="font-size:11px">бариста</span></b><span class="tag warn">Уровень: '+LEVELS_BAR[p.levelBar]+'</span></div>'+
-    '<div style="margin-top:10px">'+m+'</div>'+(badges?'<div style="margin-top:10px">'+badges+'</div>':'')+'</div>';
-}
 function achRow(l,v,extra){ return '<div class="pair"><span>'+l+'</span><span><b>'+v+'</b>'+(extra||'')+'</span></div>'; }
 function achManual(p){
   var a=achOf(p), tk=trackOf(p), m='';
@@ -5592,8 +5605,7 @@ function achManual(p){
   function ratio(k0,k1,l){ var x=a[k0]||0,y=a[k1]||0; if(y)m+=achRow(l,x+'/'+y,' · '+Math.round(x/y*100)+'%'); }
   if(tk==='bar'){
     num('shiftsBar','Смен на баре'); num('noLate','Дней без опозданий');
-    ratio('latte0','latte1','Качество латте-арт'); ratio('serv0','serv1','Оценка сервиса');
-    num('drinksServed','Напитков приготовлено'); num('upsell','Удачных апселлов');
+    num('drinksServed','Напитков приготовлено');
   } else if(tk==='mgr'){
     num('noLate','Дней без опозданий'); num('mentored','Обучил сотрудников');
     num('proposed','Предложено улучшений'); num('toProd','Внедрено улучшений');
@@ -5612,6 +5624,12 @@ function renderAch(){
   if(!list.length){ box.innerHTML='<p class="hint">Сотрудников пока нет.</p>'; return; }
   box.innerHTML=list.map(function(p){
     var a=achOf(p), tk=trackOf(p), T=TRACKS[tk];
+    if(tk==='none'){
+      return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">'+
+        '<b style="font-size:19px">'+tkEsc(empName(p))+'</b><span class="tag" style="font-size:11px">'+tkEsc(p.pos||'—')+'</span></div>'+
+        '<div style="margin-top:10px">'+achRow('Стаж',tenureText(p.started))+achRow('Человек в команде',TEAM.filter(function(x){return x.status!=='Архивный';}).length)+'</div>'+
+        '<p class="hint" style="margin-top:10px;border-top:1.5px dashed var(--hair);padding-top:8px">🥖 Владелец сам себе бейджи не выдаёт и смены себе не оценивает. Показатель тут один — что пекарня открыта, а команда растёт.</p></div>';
+    }
     /* — реальные данные из карточки — */
     var real='';
     var avg=shiftAvg(p);
@@ -5622,7 +5640,7 @@ function renderAch(){
     if(iss)real+=achRow('⚠️ Активных замечаний',iss);
     var man=achManual(p);
     var got=achBadges(p);
-    var badges=got.map(function(g){ return badgeHtml(g.b,g.auto,p.id,isChef()&&!g.auto); }).join('');
+    var badges=got.map(function(g){ return badgeHtml(g.b,g.auto,p.id,isChef()); }).join('');
     badges+=(a.custom||[]).map(function(c,i){
       return '<span class="tag" style="margin:2px 4px 2px 0;display:inline-flex;align-items:center;gap:4px">'+tkEsc(c)+
         (isChef()?'<button onclick="achCustomDel(\''+p.id+'\','+i+')" title="Убрать" style="border:none;background:none;cursor:pointer;font-size:10px;padding:0 2px;color:#C0392B">✕</button>':'')+'</span>';
@@ -5647,23 +5665,48 @@ function achCustomDel(id,i){
   if(!confirm('Убрать старый бейдж «'+a.custom[i]+'» у '+empName(p)+'?'))return;
   a.custom.splice(i,1); renderAch(); bvSaveNow();
 }
-function achBadgeOff(id,bid){
+function achBadgeOff(id,bid){ achBadgeToggle(id,bid,true); }
+function achBadgeToggle(id,bid,ask){
   if(!isChef())return; var p=empById(id); if(!p)return;
   var a=achOf(p), b=badgeById(bid); if(!b)return;
-  if(b.auto){ alert('«'+b.t+'» выдаётся автоматически по показателям — снять его вручную нельзя.\n\nУсловие: '+b.rule); return; }
-  var i=a.manual.indexOf(bid); if(i<0)return;
-  if(!confirm('Снять бейдж «'+b.t+'» у '+empName(p)+'?'))return;
-  a.manual.splice(i,1);
-  var m=document.getElementById('bdg-modal'); if(m)achBadgePick(id);
-  renderAch(); bvSaveNow();
+  var st=badgeState(p,b);
+  if(st.on){
+    if(ask&&!confirm('Снять бейдж «'+b.t+'» у '+empName(p)+'?'+(st.auto?'\n\nОн заработан по показателям — вернуть можно тем же нажатием.':'')))return;
+    if(st.auto&&a.off.indexOf(bid)<0)a.off.push(bid);
+    var i=a.manual.indexOf(bid); if(i>=0)a.manual.splice(i,1);
+  } else {
+    var j=a.off.indexOf(bid); if(j>=0)a.off.splice(j,1);
+    st=badgeState(p,b);
+    if(!st.on&&a.manual.indexOf(bid)<0)a.manual.push(bid);
+  }
+  if(document.getElementById('bdg-modal'))achBadgePick(id);
+  renderAch(); renderBadgeBook(); bvSaveNow();
 }
-function achBadgeToggle(id,bid){
-  if(!isChef())return; var p=empById(id); if(!p)return;
-  var a=achOf(p), b=badgeById(bid); if(!b)return;
-  if(b.auto){ alert('«'+b.t+'» зарабатывается сам — вручную его не выдать и не снять.\n\nУсловие: '+b.rule+'\n\n'+(badgeEarned(b,p,a)?'Сейчас условие выполнено — бейдж есть.':'Условие пока не выполнено. Чтобы бейдж появился, поменяй показатели.')); return; }
-  var i=a.manual.indexOf(bid);
-  if(i>=0)a.manual.splice(i,1); else a.manual.push(bid);
-  achBadgePick(id); renderAch(); bvSaveNow();
+function renderBadgeBook(){
+  var box=document.getElementById('badge-book'); if(!box)return;
+  function card(b){
+    return '<div class="bdg-book"><span class="bdg-m bdg-'+b.tier+'" style="flex-shrink:0">'+b.ic+'</span>'+
+      '<span style="flex:1;min-width:0"><b style="font-size:13.5px">'+tkEsc(b.t)+'</b>'+
+      '<div style="font-size:12px;color:var(--muted);line-height:1.45;margin-top:2px">'+tkEsc(b.d)+'</div>'+
+      '<div style="font-size:11px;margin-top:3px"><b>'+(b.auto?'Условие':'Когда даёт шеф')+':</b> <span style="color:var(--muted)">'+tkEsc(b.rule)+'</span></div>'+
+      '<div style="font-size:11px;margin-top:3px;color:var(--muted)">Есть у: '+whoHas(b)+'</div></span></div>';
+  }
+  function whoHas(b){
+    var who=TEAM.filter(function(p){ return p.status!=='Архивный' && achBadges(p).some(function(g){return g.b.id===b.id;}); }).map(function(p){return tkEsc(empName(p));});
+    return who.length?who.join(', '):'<i>пока ни у кого</i>';
+  }
+  function grp(title,note,arr){
+    if(!arr.length)return '';
+    return '<div class="card" style="margin-bottom:16px"><b style="font-size:15px">'+title+'</b>'+(note?'<p class="hint" style="margin:2px 0 4px">'+note+'</p>':'')+arr.map(card).join('')+'</div>';
+  }
+  var byTrack=function(tk){ return BADGES.filter(function(b){ return b.auto && b.tracks && b.tracks.indexOf(tk)>=0; }); };
+  box.innerHTML=
+    grp('⭐ Для всех','Считаются автоматически у любой должности.',BADGES.filter(function(b){return b.auto&&!b.tracks;}))+
+    grp('🥖 Пекарь','Только на линейке пекаря.',byTrack('baker'))+
+    grp('☕ Бар','Только на линейке бара.',byTrack('bar'))+
+    grp('📋 Менеджер','Только на линейке менеджера.',byTrack('mgr'))+
+    grp('🎖 Присваивает шеф','За то, что цифрой не померить.',BADGES.filter(function(b){return !b.auto;}))+
+    '<p class="hint">Линейка определяется должностью. У владельца бейджей нет — см. «Достижения и рост».</p>';
 }
 function achBadgePick(id){
   if(!isChef())return; var p=empById(id); if(!p)return;
@@ -5671,20 +5714,28 @@ function achBadgePick(id){
   var ov=document.getElementById('bdg-modal');
   if(!ov){ ov=document.createElement('div'); ov.id='bdg-modal'; ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px'; document.body.appendChild(ov); }
   var list=BADGES.filter(function(b){return badgeFits(b,tk);});
+  function line(b){
+    var st=badgeState(p,b);
+    var tag = st.off ? '<span class="tag crit" style="font-size:10px">снят шефом</span>'
+            : st.on ? (st.auto&&!st.man?'<span class="tag ok" style="font-size:10px">заработан</span>':'<span class="tag warn" style="font-size:10px">выдан вручную</span>')
+            : (b.auto?'<span class="tag" style="font-size:10px;opacity:.7">не заработан</span>':'<span class="tag" style="font-size:10px;opacity:.7">не выдан</span>');
+    return '<div class="bdg-line'+(st.on?'':' bdg-line-off')+'" onclick="achBadgeToggle(\''+p.id+'\',\''+b.id+'\')">'+
+      '<span class="bdg-m bdg-'+b.tier+(st.on?'':' bdg-lock')+'" style="flex-shrink:0">'+b.ic+'</span>'+
+      '<span style="flex:1;min-width:0"><span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><b style="font-size:13px">'+tkEsc(b.t)+'</b>'+tag+'</span>'+
+      '<div style="font-size:11.5px;color:var(--muted);line-height:1.4;margin-top:2px">'+tkEsc(b.d)+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:2px"><b>Условие:</b> '+tkEsc(b.rule)+'</div></span></div>';
+  }
   function sect(title,arr,note){
     if(!arr.length)return '';
     return '<div style="margin-top:14px"><b style="font-size:13px">'+title+'</b>'+(note?'<p class="hint" style="margin:2px 0 6px">'+note+'</p>':'')+
-      '<div class="bdgs">'+arr.map(function(b){
-        var auto=badgeEarned(b,p,a), man=a.manual.indexOf(b.id)>=0, on=auto||man;
-        return '<span class="bdg-pick'+(on?'':' bdg-lock')+'" onclick="achBadgeToggle(\''+p.id+'\',\''+b.id+'\')" title="'+tkEsc(b.rule)+'">'+badgeHtml(b,auto,p.id,false)+'</span>';
-      }).join('')+'</div></div>';
+      arr.map(line).join('')+'</div>';
   }
   var autoB=list.filter(function(b){return b.auto;});
   var manB=list.filter(function(b){return !b.auto;});
   ov.innerHTML='<div style="background:var(--bg);border:1.5px solid var(--ink);border-radius:16px;max-width:560px;width:100%;padding:20px;box-shadow:4px 4px 0 var(--ink)">'+
     '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">🏅 Бейджи — '+tkEsc(empName(p))+'</b><button onclick="document.getElementById(\'bdg-modal\').remove()" style="border:none;background:none;font-size:20px;cursor:pointer">✕</button></div>'+
-    '<p class="hint" style="margin:4px 0 0">Линейка «'+tkEsc(TRACKS[tk].title.toLowerCase())+'». Наведи на бейдж — увидишь условие.</p>'+
-    sect('Зарабатываются сами',autoB,'Выдаются по показателям. Выдать или снять вручную нельзя — меняй показатели.')+
+    '<p class="hint" style="margin:4px 0 0">Линейка «'+tkEsc(TRACKS[tk].title.toLowerCase())+'». Нажми на бейдж, чтобы выдать или снять — решение шефа главнее автоматики.</p>'+
+    sect('Зарабатываются по показателям',autoB,'Появляются сами. Можно снять вручную — тогда бейджа не будет, пока не вернёшь.')+
     sect('Присваивает шеф',manB,'Нажми, чтобы выдать или снять.')+
     ((a.custom||[]).length?('<div style="margin-top:14px"><b style="font-size:13px">Старые бейджи</b><p class="hint" style="margin:2px 0 6px">Из прежней системы, вне каталога. Можно убрать.</p>'+
       a.custom.map(function(c,i){ return '<span class="tag" style="margin:2px 4px 2px 0;display:inline-flex;align-items:center;gap:4px">'+tkEsc(c)+'<button onclick="achCustomDel(\''+p.id+'\','+i+');achBadgePick(\''+p.id+'\')" style="border:none;background:none;cursor:pointer;font-size:10px;padding:0 2px;color:#C0392B">✕</button></span>'; }).join('')+'</div>'):'')+
@@ -5716,6 +5767,19 @@ function achSave(id){
   });
   var m=document.getElementById('ach-modal'); if(m)m.remove();
   renderAch(); bvSaveNow();
+}
+function achZeroAll(){
+  if(!isChef())return;
+  if(!confirm('Начать с чистого листа по всей команде?\n\nУйдут:\n• все показатели (смены без ошибок, опоздания, стабильность, рецептуры, обучил…)\n• все бейджи — и заработанные, и выданные вручную\n\nОстанутся: стаж, оценки смен, похвалы, замечания, навыки, уровни.'))return;
+  if(!confirm('Точно? Отменить это нельзя.'))return;
+  TEAM.forEach(function(p){
+    var a=achOf(p);
+    Object.keys(ACH_FIELDS).forEach(function(k){ ACH_FIELDS[k].forEach(function(f){ a[f[0]]=0; }); });
+    a.custom=[]; a.manual=[]; a.off=[]; a.badges=[];
+  });
+  var m=document.getElementById('ach-modal'); if(m)m.remove();
+  renderAch(); renderBadgeBook(); bvSaveNow();
+  alert('Готово. Показатели и бейджи обнулены — можно начинать с чистого листа.\n\nБейджи начнут появляться сами, как только пойдут реальные цифры.');
 }
 function achZero(id){
   var p=empById(id); if(!p)return;
@@ -5989,7 +6053,8 @@ function searchIndex(){
   if(typeof REGL!=='undefined')Object.keys(REGL).forEach(function(k){idx.push({t:REGL[k].t,sub:'Регламент',act:"go('regl');setTimeout(function(){reglOpen('"+k+"')},30)"});});
   if(typeof GROUPS!=='undefined')Object.keys(GROUPS).forEach(function(g){GROUPS[g].views.forEach(function(v){if(viewAllowed(v[1]))idx.push({t:v[0],sub:'Раздел · '+GROUPS[g].label,act:"go('"+v[1]+"')"});});});
   // доп. разделы вне групп
-  [['Передача смены','handoff'],['Достижения и рост','team'],['Обучение и тесты','train']].forEach(function(v){idx.push({t:v[0],sub:'Раздел',act:"go('"+v[1]+"')"});});
+  [['Передача смены','handoff'],['Достижения и рост','team'],['Обучение и тесты','train'],['Бейджи','badges']].forEach(function(v){idx.push({t:v[0],sub:'Раздел',act:"go('"+v[1]+"')"});});
+  if(typeof BADGES!=='undefined')BADGES.forEach(function(b){ idx.push({t:b.ic+' '+b.t,sub:'Бейдж · '+(b.auto?b.rule:'присваивает шеф'),act:"go('badges')"}); });
   return idx;
 }
 function doSearch(q){
@@ -6102,7 +6167,7 @@ function empOpen(id,keep){
     '<div><div class="card bg-pink"><b style="font-size:15px">⚠️ Активные замечания</b><div style="margin-top:6px">'+issHtml+'</div></div>'+
     '<div class="card bg-green" style="margin-top:16px"><b style="font-size:15px">🌟 Похвалы</b><div style="margin-top:6px">'+prHtml+'</div></div></div></div>'+
     '<div class="grid g2" style="margin-top:16px"><div class="card"><b style="font-size:15px">📈 История развития</b><div style="margin-top:6px">'+devHtmlFull+'</div></div>'+
-    '<div class="card"><b style="font-size:15px">⭐ Последние оценки смен</b>'+(avg!=null?'<p style="font-size:30px;font-weight:700;margin:8px 0 0">'+avg+' <span style="font-size:14px;color:var(--muted);font-weight:400">средний за '+Math.min(10,p.shiftScores.length)+' смен</span></p>':'<p class="hint" style="margin-top:8px">Оценок пока нет.</p>')+'</div></div>';
+    (hasLevels(p)?('<div class="card"><b style="font-size:15px">⭐ Последние оценки смен</b>'+(avg!=null?'<p style="font-size:30px;font-weight:700;margin:8px 0 0">'+avg+' <span style="font-size:14px;color:var(--muted);font-weight:400">средний за '+Math.min(10,p.shiftScores.length)+' смен</span></p>':'<p class="hint" style="margin-top:8px">Оценок пока нет.</p>')+'</div>'):('<div class="card"><b style="font-size:15px">🥖 Владелец</b><p class="hint" style="margin-top:8px">Себе смены не оценивают. Результат владельца — вся эта таблица целиком.</p></div>'))+'</div>';
   if(keep)window.scrollTo(0,_sy); else window.scrollTo({top:0});
 }
 function empBack(){document.getElementById('team-detail').style.display='none';document.getElementById('team-list-wrap').style.display='';document.querySelector('#v-team .tabs').style.display='';renderTeam();}
@@ -6358,8 +6423,20 @@ function rolesBoot(){
     if(!ROLES[k].label) ROLES[k].label=k;
     if(typeof ROLES[k].bar==='undefined') ROLES[k].bar=!!ROLES[k].baronly;
   }
-  for(var pin in PIN_MAP_BASE){ if(!PIN_MAP[pin]) PIN_MAP[pin]=JSON.parse(JSON.stringify(PIN_MAP_BASE[pin])); }
   for(var p2 in PIN_MAP){ if(!PIN_MAP[p2]||!ROLES[PIN_MAP[p2].roleKey]) delete PIN_MAP[p2]; }
+  /* Базовые PIN восстанавливаем ТОЛЬКО как страховку от блокировки:
+     если входов не осталось совсем, либо ни один не даёт настраивать права.
+     Иначе закрытый шефом вход воскресал бы после перезагрузки. */
+  var _pins=Object.keys(PIN_MAP);
+  var _admin=_pins.some(function(x){ var r=ROLES[PIN_MAP[x].roleKey]; return r&&r.permsEdit; });
+  if(!_pins.length){
+    for(var pin in PIN_MAP_BASE) PIN_MAP[pin]=JSON.parse(JSON.stringify(PIN_MAP_BASE[pin]));
+  } else if(!_admin){
+    for(var pin2 in PIN_MAP_BASE){
+      var rb=ROLES[PIN_MAP_BASE[pin2].roleKey];
+      if(rb&&rb.permsEdit&&!PIN_MAP[pin2]) PIN_MAP[pin2]=JSON.parse(JSON.stringify(PIN_MAP_BASE[pin2]));
+    }
+  }
   /* страховка от самоблокировки */
   if(!Object.keys(ROLES).some(function(x){return ROLES[x].permsEdit;}) && ROLES.chef) ROLES.chef.permsEdit=true;
   if(!Object.keys(ROLES).some(function(x){return ROLES[x].permsView;}) && ROLES.chef) ROLES.chef.permsView=true;
@@ -6377,13 +6454,22 @@ function renderRolesMatrix(){
       return '<td style="text-align:center;'+(canEdit?'cursor:pointer':'')+'" '+(canEdit?'onclick="togglePerm(\''+rk+'\',\''+pf[0]+'\')"':'')+'>'+(on?'<span style="color:#2E7D32;font-weight:700">✓</span>':'<span style="color:#bbb">—</span>')+'</td>';
     }).join('')+'</tr>';
   }).join('');
-  var pins=Object.keys(PIN_MAP).map(function(pn){ return '<div class="pair"><span>'+tkEsc(PIN_MAP[pn].name)+' · '+tkEsc((ROLES[PIN_MAP[pn].roleKey]||{}).label||'?')+'</span><span><b>'+pn+'</b></span></div>'; }).join('');
+  var pins=Object.keys(PIN_MAP).sort(function(x,y){ return String(PIN_MAP[x].name||'').localeCompare(String(PIN_MAP[y].name||''),'ru'); }).map(function(pn){
+    var e=PIN_MAP[pn], r=ROLES[e.roleKey]||{};
+    var me=(typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.name===e.name&&CUR_ROLE===e.roleKey);
+    return '<div class="pair"><span>'+tkEsc(e.name)+' <span style="color:var(--muted)">· '+tkEsc(r.label||'?')+'</span>'+(me?' <span class="tag ok" style="font-size:10px">это ты</span>':'')+'</span>'+
+      '<span style="display:flex;gap:6px;align-items:center"><b style="letter-spacing:.09em;font-size:14px">'+pn+'</b>'+
+      '<button class="btn" style="padding:2px 8px;font-size:11px" onclick="pinEdit(\''+pn+'\')" title="Сменить PIN, имя или роль">✎</button>'+
+      '<button class="btn" style="padding:2px 8px;font-size:11px;color:#C0392B" onclick="pinDel(\''+pn+'\')" title="Закрыть вход">🗑</button></span></div>';
+  }).join('');
   box.innerHTML='<div class="sched"><table><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>'+
     (canEdit
       ? '<div class="btn-row" style="margin-top:12px"><button class="btn primary" onclick="roleNew()">+ Новая роль</button></div>'+
         '<p class="hint" style="margin-top:10px">Нажми ✓/— чтобы изменить право. Изменения уходят в общую базу.</p>'+
-        '<div class="card" style="margin-top:14px"><b style="font-size:14px">🔑 PIN-коды входа</b><div style="margin-top:6px">'+pins+'</div>'+
-        '<p class="hint" style="margin:8px 0 0">PIN выдаётся при создании роли. Базовые PIN-коды менять нельзя.</p></div>'
+        '<div class="card" style="margin-top:14px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><b style="font-size:14px">🔑 PIN-коды входа</b>'+
+        '<button class="btn primary" style="padding:3px 12px;font-size:12px" onclick="pinAdd()">+ Выдать вход</button></div>'+
+        '<div style="margin-top:8px">'+pins+'</div>'+
+        '<p class="hint" style="margin:8px 0 0"><b>✎</b> — сменить PIN, имя или роль. <b>🗑</b> — закрыть вход: PIN перестаёт работать сразу, данные сотрудника остаются.<br>Уволился человек — закрой вход. Утёк PIN — смени его через ✎.</p></div>'
       : '<p class="hint" style="margin-top:10px">Ты видишь права, но менять их может только роль с правом «Права доступа: настраивать».</p>');
 }
 function togglePerm(rk,flag){
@@ -6399,6 +6485,76 @@ function togglePerm(rk,flag){
   renderRolesMatrix();
   if(rk===CUR_ROLE)setRole(CUR_ROLE);
   bvSaveNow();
+}
+/* ===== PIN-КОДЫ: выдать / изменить / закрыть вход ===== */
+function pinGuard(){
+  if(!can('permsEdit')){ alert('Управлять входами может только роль с правом «Права доступа: настраивать».'); return false; }
+  return true;
+}
+function pinAsk(cur,skip){
+  var v=prompt('PIN из 4 цифр:',cur||''); if(v===null)return null;
+  v=String(v).trim();
+  if(!/^\d{4}$/.test(v)){ alert('PIN должен быть ровно из 4 цифр.'); return null; }
+  if(PIN_MAP[v]&&v!==skip){ alert('PIN '+v+' уже занят: '+PIN_MAP[v].name+'.\n\nПридумай другой.'); return null; }
+  return v;
+}
+function rolePick(cur){
+  var keys=Object.keys(ROLES);
+  var v=prompt('Какая роль (что человек сможет делать):\n\n'+keys.map(function(k,i){return (i+1)+'. '+ROLES[k].label;}).join('\n')+'\n\nНомер:', cur?String(keys.indexOf(cur)+1):'');
+  if(v===null)return null;
+  var i=parseInt(v)-1;
+  if(isNaN(i)||!keys[i]){ alert('Нет такой роли.'); return null; }
+  return keys[i];
+}
+function pinAdmins(skip){
+  return Object.keys(PIN_MAP).filter(function(x){
+    if(x===skip)return false;
+    var r=ROLES[PIN_MAP[x].roleKey];
+    return r&&r.permsEdit;
+  });
+}
+function pinAdd(){
+  if(!pinGuard())return;
+  var act=TEAM.filter(function(p){return p.status!=='Архивный';});
+  var v=prompt('Кому выдать вход?\n\n'+act.map(function(p,i){return (i+1)+'. '+empName(p)+' \u00B7 '+(p.pos||'\u2014');}).join('\n')+'\n0. Другой человек — вписать имя\n\nНомер:');
+  if(v===null)return;
+  var i=parseInt(v), who='';
+  if(i===0){ who=(prompt('Имя для экрана входа:','')||'').trim(); if(!who)return; }
+  else { var p=act[i-1]; if(!p){ alert('Нет такого номера.'); return; } who=empName(p); }
+  var rk=rolePick(); if(!rk)return;
+  var pin=pinAsk(''); if(!pin)return;
+  PIN_MAP[pin]={name:who,ava:who.charAt(0).toUpperCase(),role:ROLES[rk].label,shift:'',roleKey:rk};
+  renderRolesMatrix(); bvSaveNow();
+  alert('Вход выдан.\n\n'+who+' \u00B7 '+ROLES[rk].label+'\nPIN: '+pin+'\n\nПередай PIN лично — он работает сразу.');
+}
+function pinEdit(pin){
+  if(!pinGuard())return;
+  var e=PIN_MAP[pin]; if(!e)return;
+  var who=prompt('Имя для экрана входа:',e.name); if(who===null)return;
+  who=String(who).trim()||e.name;
+  var rk=rolePick(e.roleKey); if(!rk)return;
+  if(ROLES[e.roleKey]&&ROLES[e.roleKey].permsEdit&&!ROLES[rk].permsEdit&&!pinAdmins(pin).length){
+    alert('Это последний вход, который может настраивать права.\n\nЕсли сменить роль — в настройки больше никто не попадёт. Сначала выдай такой вход кому-то ещё.');
+    return;
+  }
+  var np=pinAsk(pin,pin); if(np===null)return;
+  delete PIN_MAP[pin];
+  PIN_MAP[np]={name:who,ava:who.charAt(0).toUpperCase(),role:ROLES[rk].label,shift:e.shift||'',roleKey:rk};
+  renderRolesMatrix(); bvSaveNow();
+  alert('Готово.\n\n'+who+' \u00B7 '+ROLES[rk].label+'\nPIN: '+np+(np!==pin?('\n\nСтарый PIN '+pin+' больше не работает.'):''));
+}
+function pinDel(pin){
+  if(!pinGuard())return;
+  var e=PIN_MAP[pin]; if(!e)return;
+  var r=ROLES[e.roleKey];
+  if(r&&r.permsEdit&&!pinAdmins(pin).length){
+    alert('Это последний вход, который может настраивать права.\n\nЕсли его закрыть — в настройки больше никто не попадёт. Сначала выдай такой вход кому-то ещё.');
+    return;
+  }
+  if(!confirm('Закрыть вход для «'+e.name+'» ('+(r?r.label:'?')+')?\n\nPIN '+pin+' перестанет работать сразу.\nКарточка сотрудника, его смены и данные останутся на месте.'))return;
+  delete PIN_MAP[pin];
+  renderRolesMatrix(); bvSaveNow();
+  alert('Вход закрыт. PIN '+pin+' больше не работает.');
 }
 function roleNew(){
   if(!can('permsEdit')){alert('Создавать роли может только роль с правом «Права доступа: настраивать».');return;}
@@ -6523,7 +6679,7 @@ function renderCompanyDocs(){
   var chef=isChef();
   var list=COMPANY.docs.length? COMPANY.docs.map(function(d,i){
     return '<div class="pair"><span>'+tkEsc(d.name)+'<br><span style="color:var(--muted);font-size:11px">'+(d.date||'')+'</span></span><span style="display:flex;gap:6px;align-items:center">'+
-      '<a href="'+d.url+'" target="_blank" class="btn" style="padding:3px 10px;font-size:12px;text-decoration:none">Открыть</a>'+
+      '<a href="'+driveView(d.url)+'" target="_blank" class="btn" style="padding:3px 10px;font-size:12px;text-decoration:none">Открыть</a>'+
       (chef?'<button class="btn" style="padding:3px 8px;font-size:12px;color:#C0392B" onclick="coDocDel('+i+')">✕</button>':'')+'</span></div>';
   }).join('') : '<p class="hint" style="margin:4px 0">Документов пока нет. Загрузи выписку из АПР, устав, договор аренды, решения — они сохранятся на Google Диске.</p>';
   box.innerHTML=list+(CO_DOC_UP?'<p class="hint">Загрузка…</p>':'')+
@@ -8037,7 +8193,7 @@ function bvBootCloud(){
   }).catch(function(e){});
 }
 bvBootCloud();bvLoad();try{if(typeof rolesBoot==='function')rolesBoot();}catch(e){}try{if(typeof teamBoot==='function')teamBoot();}catch(e){}try{if(typeof coMigrate==='function')coMigrate();}catch(e){}try{if(typeof achMigrate==='function'){achMigrate();badgeMigrate();}}catch(e){}try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} var _sn=document.getElementById('bv-store-note'); var _rl=document.getElementById('bv-reset-link'); if(BV_CLOUD_URL){ if(_sn)_sn.innerHTML='☁️ Данные в общей базе<br><span style="opacity:.8">общие для команды</span><br><a onclick="bvPing()" style="cursor:pointer;text-decoration:underline">Проверить базу</a>'; if(_rl)_rl.style.display='none'; } bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
-renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAch();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();rolesBoot();teamBoot();coMigrate();achMigrate();badgeMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
+renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderBadgeBook();rolesBoot();teamBoot();coMigrate();achMigrate();badgeMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
 
 calcKalk();calcAkt();calcHidr();calcBP();
 
