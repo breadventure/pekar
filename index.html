@@ -4324,8 +4324,12 @@ function statusBadge(st){
   return '<span class="tag '+cls+'">'+st+'</span>';
 }
 /* ===== КОМАНДА: добавление с должностью, стаж, легенда уровней ===== */
-var POS_LIST=['Стажёр','Пекарь','Старший пекарь','Пекарь-кондитер','Бариста','Менеджер','Технолог','Владелица'];
-var DIR_LIST=['Хлеб','Сдоба','Бар','Производство','Управление'];
+var POS_LIST_BASE=['Стажёр','Пекарь','Старший пекарь','Пекарь-кондитер','Бариста','Менеджер','Технолог','Владелица'];
+var DIR_LIST_BASE=['Хлеб','Сдоба','Бар','Производство','Управление'];
+var ROLE_TAGS_BASE=['Владелица','Менеджер','Технолог','Старший пекарь','Пекарь','Пекарь-кондитер','Бариста','Стажёр','хлеб','сдоба','бар','закваска','кондитерка','декор','Б2Б','обучение'];
+var POS_LIST=POS_LIST_BASE.slice();
+var DIR_LIST=DIR_LIST_BASE.slice();
+var ROLE_TAGS=ROLE_TAGS_BASE.slice();
 
 function tmDate(d){ if(!d)return ''; var p=String(d).slice(0,10).split('-'); return p.length===3?(p[2]+'.'+p[1]+'.'+p[0]):d; }
 function tenureMonths(from){
@@ -4361,10 +4365,10 @@ function empNew(){
       '<div class="field" style="margin:0"><label>Фамилия</label><input type="text" id="en-last" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
     '</div>'+
     '<div class="grid g2" style="gap:10px;margin-top:8px">'+
-      '<div class="field" style="margin:0"><label>Должность</label><select id="en-pos" onchange="enLevels()" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+POS_LIST.map(function(p){return '<option'+(p==='Пекарь'?' selected':'')+'>'+p+'</option>';}).join('')+'</select></div>'+
-      '<div class="field" style="margin:0"><label>Направление</label><select id="en-dir" onchange="enLevels()" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+DIR_LIST.map(function(p){return '<option>'+p+'</option>';}).join('')+'</select></div>'+
+      '<div class="field" style="margin:0"><label>Должность <a onclick="dictNew(\'pos\',\'en-pos\')" style="color:var(--accent);cursor:pointer;font-size:11px;text-decoration:underline">+ своя</a></label><select id="en-pos" onchange="enLevels()" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+selOpts(POS_LIST,POS_LIST_BASE,'Пекарь')+'</select></div>'+
+      '<div class="field" style="margin:0"><label>Направление <a onclick="dictNew(\'dir\',\'en-dir\')" style="color:var(--accent);cursor:pointer;font-size:11px;text-decoration:underline">+ своё</a></label><select id="en-dir" onchange="enLevels()" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+selOpts(DIR_LIST,DIR_LIST_BASE,DIR_LIST[0])+'</select></div>'+
     '</div>'+
-    '<div class="field" style="margin:8px 0 0"><label>Описание роли (как показывать в карточке)</label><input type="text" id="en-role" placeholder="Пекарь · хлеб" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
+    '<div class="field" style="margin:8px 0 0"><label>Роли (как показывать в карточке)</label><div id="en-roles" style="border:1.5px solid var(--hair);border-radius:10px;padding:9px;background:#fff"></div></div>'+
     '<div class="grid g2" style="gap:10px;margin-top:8px">'+
       '<div class="field" style="margin:0"><label>Уровень</label><select id="en-level" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+LEVELS.map(function(l,i){return '<option value="'+i+'"'+(i===0?' selected':'')+'>'+l+'</option>';}).join('')+'</select><p class="hint" id="en-lvl-hint" style="margin:3px 0 0;font-size:11px">линейка пекаря</p></div>'+
       '<div class="field" style="margin:0"><label>Наставник</label><input type="text" id="en-mentor" placeholder="Светлана" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
@@ -4379,14 +4383,16 @@ function empNew(){
     '</div>'+
     '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn primary" onclick="empNewSave()">Добавить</button><button class="btn" onclick="document.getElementById(\'emp-new-modal\').remove()">Отмена</button></div>'+
     '</div>';
+  _ROLE_SEL['en']=[]; renderRoleChips('en');
 }
 function empNewSave(){
   function v(id){ var el=document.getElementById(id); return el?el.value:''; }
   var name=(v('en-name')||'').trim();
   if(!name){ alert('Впиши имя сотрудника.'); return; }
   var pos=v('en-pos'), dir=v('en-dir');
-  var role=(v('en-role')||'').trim() || (pos + (dir&&dir!=='Управление'?(' · '+dir.toLowerCase()):''));
-  TEAM.push({id:'u_'+Date.now(),n:name,first:name,last:(v('en-last')||'—'),role:role,pos:pos,dir:dir,
+  var rt=(_ROLE_SEL['en']||[]).slice();
+  var role=rt.join(' · ') || (pos + (dir&&dir!=='Управление'?(' · '+dir.toLowerCase()):''));
+  TEAM.push({id:'u_'+Date.now(),n:name,first:name,last:(v('en-last')||'—'),role:role,roleTags:rt,pos:pos,dir:dir,
     started:v('en-started')||new Date().toISOString().slice(0,10), contractStart:v('en-contract')||'',
     mentor:(v('en-mentor')||'—'),level:parseInt(v('en-level'))||0,status:'Активный',
     phone:v('en-phone'),tg:v('en-tg'),email:'',resp:'',good:'',skills:{},skillMeta:{},docs:[],san:{},
@@ -4435,7 +4441,7 @@ function renderHR(){
   var sel=document.getElementById('hr-emp'); if(!sel)return;
   var active=TEAM.filter(function(p){return p.status!=='Архивный';});
   if(!HR_EMP||!active.some(function(p){return p.id===HR_EMP;})) HR_EMP=(active[0]||{}).id;
-  sel.innerHTML=active.map(function(p){ return '<option value="'+p.id+'"'+(p.id===HR_EMP?' selected':'')+'>'+p.n+' · '+p.role+'</option>'; }).join('');
+  sel.innerHTML=active.map(function(p){ return '<option value="'+p.id+'"'+(p.id===HR_EMP?' selected':'')+'>'+p.n+' · '+tkEsc(roleLine(p))+'</option>'; }).join('');
   renderHRCond(); renderHRSan(); renderHRDocs();
 }
 function hrSelect(id){ HR_EMP=id; renderHRCond(); renderHRSan(); renderHRDocs(); }
@@ -4480,6 +4486,63 @@ function bvUploadFile(file, cb){
   };
   reader.onerror=function(){ alert('Не удалось прочитать файл.'); cb(null); };
   reader.readAsDataURL(file);
+}
+
+/* --- РОЛИ КАК ТЕГИ (выбор из списка + своя категория) --- */
+var _ROLE_SEL={};
+function dictMerge(list,base){ for(var i=0;i<base.length;i++){ if(list.indexOf(base[i])<0)list.push(base[i]); } return list; }
+function selOpts(list,base,cur){ dictMerge(list,base); return list.map(function(x){ return '<option'+(x===cur?' selected':'')+'>'+tkEsc(x)+'</option>'; }).join(''); }
+function dictNew(which,selId){
+  var L=(which==='pos')?POS_LIST:DIR_LIST, base=(which==='pos')?POS_LIST_BASE:DIR_LIST_BASE;
+  var t=prompt(which==='pos'?'Новая должность:':'Новое направление:',''); t=(t||'').trim(); if(!t)return;
+  if(L.indexOf(t)<0)L.push(t);
+  var el=document.getElementById(selId);
+  if(el){ el.innerHTML=selOpts(L,base,t); el.value=t; if(typeof el.onchange==='function')el.onchange(); }
+  bvSaveNow();
+}
+function roleTagsOf(p){
+  if(p.roleTags&&p.roleTags.length) return p.roleTags.slice();
+  return String(p.role||'').split('\u00B7').map(function(x){return x.trim();}).filter(Boolean);
+}
+function roleLine(p){ var a=roleTagsOf(p); return a.length?a.join(' \u00B7 '):(p.pos||'\u2014'); }
+function roleDict(){ dictMerge(ROLE_TAGS,ROLE_TAGS_BASE); TEAM.forEach(function(p){ roleTagsOf(p).forEach(function(t){ if(ROLE_TAGS.indexOf(t)<0)ROLE_TAGS.push(t); }); }); return ROLE_TAGS; }
+function renderRoleChips(pref){
+  var box=document.getElementById(pref+'-roles'); if(!box)return;
+  roleDict();
+  var sel=_ROLE_SEL[pref]||[];
+  var chosen=sel.length? sel.map(function(t,i){
+      return '<span class="tag warn" style="display:inline-flex;align-items:center;gap:5px;padding:4px 5px 4px 10px">'+tkEsc(t)+
+             '<button onclick="roleChipDel(\''+pref+'\','+i+')" title="Убрать" style="border:none;background:none;cursor:pointer;font-size:11px;line-height:1;padding:0 3px;color:var(--ink)">\u2715</button></span>';
+    }).join(' ')
+    : '<span style="font-size:12px;color:var(--muted)">Пока пусто \u2014 нажми на роль ниже.</span>';
+  var rest=ROLE_TAGS.map(function(t,i){ return [t,i]; }).filter(function(x){ return sel.indexOf(x[0])<0; }).map(function(x){
+      var own=ROLE_TAGS_BASE.indexOf(x[0])<0;
+      return '<span style="display:inline-flex;align-items:center;gap:1px">'+
+             '<button class="tag" style="background:#fff;cursor:pointer;font-weight:400" onclick="roleChipAdd(\''+pref+'\','+x[1]+')">+ '+tkEsc(x[0])+'</button>'+
+             (own?'<button onclick="roleTagKill('+x[1]+',\''+pref+'\')" title="Удалить из списка совсем" style="border:none;background:none;cursor:pointer;color:#C0392B;font-size:10px;padding:0 2px">\uD83D\uDDD1</button>':'')+
+             '</span>';
+    }).join(' ');
+  box.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:24px">'+chosen+'</div>'+
+    '<div style="border-top:1.5px dashed var(--hair);margin:8px 0 7px"></div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">'+rest+
+    '<button class="btn" style="padding:2px 10px;font-size:11.5px" onclick="roleTagNew(\''+pref+'\')">+ своя</button></div>'+
+    '<p class="hint" style="margin:6px 0 0;font-size:11px">Порядок в карточке \u2014 в каком порядке нажимала.</p>';
+}
+function roleChipAdd(pref,i){ var t=ROLE_TAGS[i]; if(!t)return; if(!_ROLE_SEL[pref])_ROLE_SEL[pref]=[]; if(_ROLE_SEL[pref].indexOf(t)<0)_ROLE_SEL[pref].push(t); renderRoleChips(pref); }
+function roleChipDel(pref,i){ if(!_ROLE_SEL[pref])return; _ROLE_SEL[pref].splice(i,1); renderRoleChips(pref); }
+function roleTagNew(pref){
+  var t=prompt('Новая роль (как показывать в карточке):',''); t=(t||'').trim(); if(!t)return;
+  if(ROLE_TAGS.indexOf(t)<0)ROLE_TAGS.push(t);
+  if(!_ROLE_SEL[pref])_ROLE_SEL[pref]=[];
+  if(_ROLE_SEL[pref].indexOf(t)<0)_ROLE_SEL[pref].push(t);
+  renderRoleChips(pref); bvSaveNow();
+}
+function roleTagKill(i,pref){
+  var t=ROLE_TAGS[i]; if(!t)return;
+  var used=TEAM.filter(function(p){ return roleTagsOf(p).indexOf(t)>=0; });
+  if(used.length){ alert('Роль \u00AB'+t+'\u00BB стоит у: '+used.map(function(p){return p.n;}).join(', ')+'.\n\nСначала убери её у них, потом можно удалить из списка.'); return; }
+  if(!confirm('Убрать \u00AB'+t+'\u00BB из списка ролей совсем?'))return;
+  ROLE_TAGS.splice(i,1); renderRoleChips(pref); bvSaveNow();
 }
 
 /* --- уровни по треку (пекарь / бар) --- */
@@ -4668,10 +4731,10 @@ function empEdit(id){
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b style="font-size:17px">✎ Карточка сотрудника</b><button onclick="document.getElementById(\'emp-edit-modal\').remove()" style="border:none;background:none;font-size:20px;cursor:pointer">✕</button></div>'+
     '<div class="grid g2" style="gap:10px">'+f('Имя','first')+f('Фамилия','last')+'</div>'+
     '<div class="grid g2" style="gap:10px;margin-top:8px">'+
-      '<div class="field" style="margin:0"><label>Должность</label><select id="ee-pos" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+POS_LIST.map(function(x){return '<option'+(p.pos===x?' selected':'')+'>'+x+'</option>';}).join('')+'</select></div>'+
-      '<div class="field" style="margin:0"><label>Направление</label><select id="ee-dir" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+DIR_LIST.map(function(x){return '<option'+(p.dir===x?' selected':'')+'>'+x+'</option>';}).join('')+'</select></div>'+
+      '<div class="field" style="margin:0"><label>Должность <a onclick="dictNew(\'pos\',\'ee-pos\')" style="color:var(--accent);cursor:pointer;font-size:11px;text-decoration:underline">+ своя</a></label><select id="ee-pos" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+selOpts(POS_LIST,POS_LIST_BASE,p.pos)+'</select></div>'+
+      '<div class="field" style="margin:0"><label>Направление <a onclick="dictNew(\'dir\',\'ee-dir\')" style="color:var(--accent);cursor:pointer;font-size:11px;text-decoration:underline">+ своё</a></label><select id="ee-dir" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+selOpts(DIR_LIST,DIR_LIST_BASE,p.dir)+'</select></div>'+
     '</div>'+
-    '<div style="margin-top:8px">'+f('Описание роли','role','Пекарь · хлеб')+'</div>'+
+    '<div class="field" style="margin:8px 0 0"><label>Роли (строка под именем)</label><div id="ee-roles" style="border:1.5px solid var(--hair);border-radius:10px;padding:9px;background:#fff"></div></div>'+
     '<div class="grid g2" style="gap:10px;margin-top:8px">'+
       '<div class="field" style="margin:0"><label>Уровень ('+(bar?'бар':'пекарь')+')</label><select id="ee-level" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+L.map(function(l,i){return '<option value="'+i+'"'+(p.level===i?' selected':'')+'>'+l+'</option>';}).join('')+'</select></div>'+
       f('Наставник','mentor')+
@@ -4682,6 +4745,7 @@ function empEdit(id){
     '<div style="margin-top:8px">'+f('В чём хорош','good')+'</div>'+
     '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn primary" onclick="empEditSave(\''+p.id+'\')">💾 Сохранить</button><button class="btn" onclick="document.getElementById(\'emp-edit-modal\').remove()">Отмена</button></div>'+
     '</div>';
+  _ROLE_SEL['ee']=roleTagsOf(p); renderRoleChips('ee');
 }
 function empEditSave(id){
   var p=empById(id); if(!p)return;
@@ -4690,7 +4754,8 @@ function empEditSave(id){
   if(!first){ alert('Имя не может быть пустым.'); return; }
   p.first=first; p.n=first; p.last=v('last')||'—';
   p.pos=v('pos'); p.dir=v('dir');
-  p.role=(v('role')||'').trim()|| (p.pos+(p.dir&&p.dir!=='Управление'?(' · '+p.dir.toLowerCase()):''));
+  p.roleTags=(_ROLE_SEL['ee']||[]).slice();
+  p.role=p.roleTags.join(' · ') || (p.pos+(p.dir&&p.dir!=='Управление'?(' · '+p.dir.toLowerCase()):''));
   p.level=parseInt(v('level'))||0;
   p.mentor=v('mentor')||'—';
   p.phone=v('phone'); p.tg=v('tg');
@@ -4708,7 +4773,7 @@ function renderTeam(){
     return '<div class="card click" onclick="empOpen(\''+p.id+'\')"><div style="display:flex;gap:14px;align-items:flex-start">'+
       ''+(p.photo?('<img src="'+p.photo+'" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:50%;border:1.5px solid var(--ink);flex-shrink:0">'):'<div class="photo" style="width:64px;height:64px;flex-shrink:0;border-radius:50%">фото</div>')+''+
       '<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="card-t" style="font-size:19px">'+p.n+'</h3>'+statusBadge(p.status)+'</div>'+
-      '<p style="color:var(--muted);font-size:13px;margin:2px 0 8px">'+p.role+'</p>'+
+      '<p style="color:var(--muted);font-size:13px;margin:2px 0 8px">'+tkEsc(roleLine(p))+'</p>'+
       '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
       (openIss?'<span class="tag crit">⚠️ замечаний: '+openIss+'</span>':'')+
       (avg!=null?'<span class="tag">★ смены '+avg+'</span>':'')+
@@ -4718,7 +4783,7 @@ function renderTeam(){
   }).join('');
   var archd=TEAM.filter(function(p){return p.status==='Архивный';});
   var ag=document.getElementById('team-archived');
-  if(ag)ag.innerHTML=archd.length?('<p class="hint" style="margin:10px 0 6px">Архив сотрудников:</p>'+archd.map(function(p){return '<div class="card" style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>'+p.n+'</b><span style="display:flex;gap:8px"><span class="tag">'+p.role+'</span>'+(isChef()?'<button class="btn" style="padding:3px 10px;font-size:12px" onclick="empRestore(\''+p.id+'\')">Вернуть</button>':'')+'</span></div></div>';}).join('')):'';
+  if(ag)ag.innerHTML=archd.length?('<p class="hint" style="margin:10px 0 6px">Архив сотрудников:</p>'+archd.map(function(p){return '<div class="card" style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>'+p.n+'</b><span style="display:flex;gap:8px"><span class="tag">'+tkEsc(roleLine(p))+'</span>'+(isChef()?'<button class="btn" style="padding:3px 10px;font-size:12px" onclick="empRestore(\''+p.id+'\')">Вернуть</button>':'')+'</span></div></div>';}).join('')):'';
 }
 function shiftAvg(p){
   if(!p.shiftScores||!p.shiftScores.length)return null;
@@ -5531,10 +5596,10 @@ function empOpen(id){
   var devHtmlFull=(p.history||[]).slice().reverse().map(function(h){return '<div style="font-size:13px;padding:6px 0;border-top:1.5px dashed var(--hair)"><b>'+h[0]+'</b> — '+h[1]+'</div>';}).join('')||'<p class="hint">Пусто.</p>';
   var avg=shiftAvg(p);
   d.innerHTML='<button class="btn" onclick="empBack()" style="margin-bottom:14px">← Все сотрудники</button>'+
-    '<div class="card" style="margin-bottom:22px"><div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">'+empPhotoHtml(p,90)+''+
+    '<div class="card" style="margin-bottom:22px"><div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">'+empPhotoHtml(p,135)+''+
     '<div style="flex:1;min-width:200px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="font-size:24px">'+p.first+' '+(p.last&&p.last!=='—'?p.last:'')+'</h2>'+statusBadge(p.status)+'</div>'+
-    '<p style="color:var(--muted);font-size:13.5px;margin-top:2px">'+p.role+' · '+p.pos+'</p>'+
-    '<div class="tk" style="grid-template-columns:1fr 1fr;margin-top:10px"><div><div class="pair"><span>Направление</span><span>'+p.dir+'</span></div><div class="pair"><span>Стаж</span><span>'+stazh(p.started)+'</span></div><div class="pair"><span>Уровень</span><span>'+levelName(p)+(isChef()?(' <button class="btn" style="padding:0 7px;font-size:11px" onclick="empLevel(\''+p.id+'\')">✎</button>'):'')+'</span></div></div>'+
+    '<p style="color:var(--muted);font-size:13.5px;margin-top:2px">'+tkEsc(roleLine(p))+'</p>'+
+    '<div class="tk" style="grid-template-columns:1fr 1fr;margin-top:10px"><div><div class="pair"><span>Должность</span><span>'+tkEsc(p.pos||'\u2014')+'</span></div><div class="pair"><span>Направление</span><span>'+p.dir+'</span></div><div class="pair"><span>Стаж</span><span>'+stazh(p.started)+'</span></div><div class="pair"><span>Уровень</span><span>'+levelName(p)+(isChef()?(' <button class="btn" style="padding:0 7px;font-size:11px" onclick="empLevel(\''+p.id+'\')">✎</button>'):'')+'</span></div></div>'+
     '<div><div class="pair"><span>Наставник</span><span>'+p.mentor+'</span></div><div class="pair chef-only"><span>Telegram</span><span>'+tgLink(p.tg)+'</span></div><div class="pair chef-only"><span>Телефон</span><span>'+telLink(p.phone)+'</span></div></div></div>'+
     (isChef()?'<div class="btn-row chef-only" style="width:100%;margin-top:16px;margin-bottom:2px;gap:8px;flex-wrap:wrap"><button class="btn" onclick="empEdit(\''+p.id+'\')">✎ Редактировать</button><button class="btn" onclick="empStatus(\''+p.id+'\')">Сменить статус</button><button class="btn" onclick="empAddIssue(\''+p.id+'\')">+ Замечание</button><button class="btn" onclick="empAddPraise(\''+p.id+'\')">+ Похвала</button>'+(p.status!=='Архивный'?'<button class="btn" onclick="empArchive(\''+p.id+'\')">В архив</button>':'')+'<button class="btn" style="color:#C0392B" onclick="empDelete(\''+p.id+'\')">🗑 Удалить</button></div>':'')+
     '</div></div>'+
@@ -7202,7 +7267,7 @@ function sendChk(){
 }
 /* ===================== СОХРАНЕНИЕ В БРАУЗЕРЕ (localStorage) ===================== */
 var BV_KEY='bv_pekar_store_v1';
-var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS'];
+var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','ROLE_TAGS','POS_LIST','DIR_LIST'];
 function bvSnapshot(){ var o={}; for(var i=0;i<BV_PERSIST.length;i++){ var k=BV_PERSIST[i]; try{ if(typeof window[k]!=='undefined') o[k]=window[k]; }catch(e){} } return o; }
 function bvSave(){ try{ localStorage.setItem(BV_KEY, JSON.stringify(bvSnapshot())); }catch(e){} }
 function bvLoad(){ try{ var raw=localStorage.getItem(BV_KEY); if(!raw)return false; var o=JSON.parse(raw); var n=0; for(var k in o){ if(o.hasOwnProperty(k) && BV_PERSIST.indexOf(k)>=0){ try{ window[k]=o[k]; n++; }catch(e){} } } return n>0; }catch(e){ return false; } }
