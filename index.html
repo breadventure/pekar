@@ -1114,10 +1114,12 @@
     <div class="card">
       <b style="font-size:15px">🩺 Санитарная книжка</b>
       <div id="hr-san" style="margin-top:8px"></div>
+      <div class="btn-row chef-only" style="margin-top:14px"><button class="btn primary" onclick="bvSaveNow()">💾 Сохранить</button></div>
     </div>
     <div class="card">
       <b style="font-size:15px">💼 Условия</b>
       <div id="hr-cond" style="margin-top:8px"></div>
+      <div class="btn-row chef-only" style="margin-top:14px"><button class="btn primary" onclick="bvSaveNow()">💾 Сохранить</button></div>
     </div>
   </div>
 </section>
@@ -1359,6 +1361,7 @@
 <!-- ===== НАПИТКИ ===== -->
 <section class="view" id="v-drinks">
   <div class="crumbs"><a onclick="go('dash')">Главная</a> / База знаний / Напитки</div>
+  <div class="btn-row chef-only" style="margin-bottom:12px"><button class="btn primary" onclick="drinkAdd()">+ Добавить напиток</button></div>
   <div class="filters" id="drinks-filters"></div>
   <div id="drinks-grid" class="grid g2" style="margin-top:14px"></div>
   <div id="drinks-detail" style="display:none"></div>
@@ -1662,7 +1665,7 @@ function renderSubnav(name){
 
 /* ===== РОЛЕВАЯ МОДЕЛЬ ===== */
 var ROLES={
-  chef:{label:'Шеф-пекарь',edit:true,prod:true,recipes:true,tests:true,cost:true,baronly:true,bar:false},
+  chef:{label:'Шеф-пекарь',edit:true,prod:true,recipes:true,tests:true,cost:true,baronly:true,bar:true},
   manager:{label:'Менеджер',edit:true,prod:true,recipes:false,tests:false,cost:true,baronly:true,bar:true},
   baker:{label:'Пекарь',edit:false,prod:true,recipes:true,tests:true,cost:false,baronly:false,bar:false},
   barista:{label:'Бариста',edit:false,prod:false,recipes:false,tests:false,cost:false,baronly:true,bar:true}
@@ -2265,8 +2268,13 @@ function bvUploadPhoto(file, cb){
       var b64=cv.toDataURL('image/jpeg',0.85).split(',')[1];
       fetch(BV_CLOUD_URL,{method:'POST',body:JSON.stringify({action:'uploadPhoto',name:(file.name||'photo.jpg'),mimeType:'image/jpeg',dataBase64:b64})})
         .then(function(r){return r.json();})
-        .then(function(res){ if(res&&res.ok&&res.url)cb(res.url); else { alert('Не удалось загрузить фото.'); cb(null); } })
-        .catch(function(e){ alert('Нет связи с базой — фото не загружено.'); cb(null); });
+        .then(function(res){
+          if(res&&res.ok&&res.url){ cb(res.url); return; }
+          var why=(res&&res.error)?('\n\nОтвет базы: '+res.error):'';
+          alert('Фото не загрузилось.'+why+'\n\nСкорее всего в Apps Script не обновлён код или не опубликована НОВАЯ ВЕРСИЯ:\n1) вставь свежий pekar-baza.gs\n2) Развернуть → Управление развёртываниями → карандаш → Версия: Новая → Развернуть\n3) разреши доступ к Google Диску, когда попросит.');
+          cb(null);
+        })
+        .catch(function(e){ alert('Нет связи с базой — фото не загружено. Проверь интернет.'); cb(null); });
     };
     img.onerror=function(){ alert('Не удалось прочитать изображение.'); cb(null); };
     img.src=ev.target.result;
@@ -4520,36 +4528,6 @@ function skillLegendHtml(){
 }
 
 /* --- санитарная книжка --- */
-function sanCalc(p){
-  var s=p.san||{};
-  if(!s.issued) return null;
-  var months=parseInt(s.months)||6;
-  var d=new Date(s.issued); if(isNaN(d))return null;
-  var exp=new Date(d); exp.setMonth(exp.getMonth()+months);
-  var renew=new Date(exp); renew.setDate(renew.getDate()-30);
-  var now=new Date();
-  var days=Math.round((exp-now)/86400000);
-  var st = days<0 ? {t:'просрочена',c:'crit'} : (days<=30 ? {t:'пора обновить',c:'warn'} : {t:'в порядке',c:'ok'});
-  return {exp:exp,renew:renew,days:days,st:st,months:months};
-}
-function renderHRSan(){
-  var box=document.getElementById('hr-san'); if(!box)return;
-  var p=TEAM.filter(function(x){return x.id===HR_EMP;})[0];
-  if(!p){ box.innerHTML='<p class="hint">Выбери сотрудника.</p>'; return; }
-  if(!p.san)p.san={};
-  var chef=isChef(), c=sanCalc(p);
-  var head=
-    '<div class="pair"><span>Дата оформления / обновления</span><span>'+
-      (chef?('<input type="date" value="'+(p.san.issued||'')+'" onchange="hrSanSet(\'issued\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px">'):('<b>'+(tmDate(p.san.issued)||'—')+'</b>'))+'</span></div>'+
-    '<div class="pair"><span>Срок действия</span><span>'+
-      (chef?('<input type="number" min="1" max="24" value="'+(p.san.months||6)+'" onchange="hrSanSet(\'months\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px;width:60px"> мес'):('<b>'+(p.san.months||6)+' мес</b>'))+'</span></div>';
-  if(!c){ box.innerHTML=head+'<p class="hint" style="margin-top:8px">Впиши дату оформления — срок и статус посчитаются сами.</p>'; return; }
-  box.innerHTML=head+
-    '<div class="pair"><span>Актуальна до</span><span><b>'+tmDate(c.exp.toISOString().slice(0,10))+'</b></span></div>'+
-    '<div class="pair"><span>Обновить до</span><span><b>'+tmDate(c.renew.toISOString().slice(0,10))+'</b></span></div>'+
-    '<div class="pair"><span>Статус</span><span class="tag '+c.st.c+'">'+c.st.t+'</span></div>'+
-    '<p class="hint" style="margin:8px 0 0">'+(c.days<0?('Просрочена на '+Math.abs(c.days)+' дн.'):('Осталось '+c.days+' дн. Напоминание — за 30 дней до срока.'))+'</p>';
-}
 function hrSanSet(k,v){ var p=TEAM.filter(function(x){return x.id===HR_EMP;})[0]; if(!p)return; if(!p.san)p.san={}; p.san[k]=(k==='months')?(parseInt(v)||6):v; renderHRSan(); }
 
 /* --- документы сотрудника --- */
@@ -4587,6 +4565,118 @@ function hrDocDel(i){
 
 function tgLink(tg){ if(!tg)return '—'; var u=String(tg).replace(/^@/,'').replace(/^https?:\/\/t\.me\//i,''); if(!u)return '—'; return '<a href="https://t.me/'+encodeURIComponent(u)+'" target="_blank" style="color:var(--accent)">@'+tkEsc(u)+'</a>'; }
 function telLink(ph){ if(!ph)return '—'; var clean=String(ph).replace(/[^\d+]/g,''); if(!clean)return '—'; return '<a href="tel:'+clean+'" style="color:var(--accent)">'+tkEsc(ph)+'</a>'; }
+/* ===== Уведомление «сохранено» ===== */
+function bvToast(msg, ok){
+  var t=document.getElementById('bv-toast');
+  if(!t){ t=document.createElement('div'); t.id='bv-toast'; t.style.cssText='position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:99999;padding:10px 18px;border-radius:12px;border:1.5px solid var(--ink);box-shadow:3px 3px 0 var(--ink);font-size:13.5px;font-weight:600;display:none'; document.body.appendChild(t); }
+  t.style.background=(ok===false)?'#F8D7DA':'#DCF3E4';
+  t.style.color=(ok===false)?'#7A1F1F':'#14532D';
+  t.textContent=msg;
+  t.style.display='block';
+  clearTimeout(window._bvTT); window._bvTT=setTimeout(function(){ t.style.display='none'; }, 2600);
+}
+function bvSaveNow(){
+  try{ bvSave(); }catch(e){}
+  if(BV_CLOUD_URL){
+    bvToast('Сохраняю…');
+    fetch(BV_CLOUD_URL,{method:'POST',body:JSON.stringify({action:'save',data:bvSnapshot()})})
+      .then(function(r){return r.json();})
+      .then(function(res){ bvToast((res&&res.ok)?('✓ Сохранено в общую базу '+bvNow()):'Ошибка сохранения в базе', !!(res&&res.ok)); })
+      .catch(function(){ bvToast('Нет связи — сохранено только на этом устройстве', false); });
+  } else {
+    bvToast('✓ Сохранено на этом устройстве');
+  }
+}
+
+/* ===== Санитарная книжка: корректные пороги ===== */
+function sanCalc(p){
+  var s=p.san||{};
+  if(!s.issued) return null;
+  var months=parseInt(s.months)||6;
+  var d=new Date(s.issued); if(isNaN(d))return null;
+  var exp=new Date(d); exp.setMonth(exp.getMonth()+months);
+  var now=new Date();
+  var days=Math.round((exp-now)/86400000);
+  var st;
+  if(days<0) st={t:'просрочена — вход в цех закрыт',c:'crit'};
+  else if(days<=7) st={t:'срочно обновить!',c:'crit'};
+  else if(days<=21) st={t:'пора записаться на обновление',c:'warn'};
+  else st={t:'в порядке',c:'ok'};
+  return {exp:exp,days:days,st:st,months:months};
+}
+function renderHRSan(){
+  var box=document.getElementById('hr-san'); if(!box)return;
+  var p=TEAM.filter(function(x){return x.id===HR_EMP;})[0];
+  if(!p){ box.innerHTML='<p class="hint">Выбери сотрудника.</p>'; return; }
+  if(!p.san)p.san={};
+  var chef=isChef(), c=sanCalc(p);
+  var head=
+    '<div class="pair"><span>Дата оформления / обновления</span><span>'+
+      (chef?('<input type="date" value="'+(p.san.issued||'')+'" onchange="hrSanSet(\'issued\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px">'):('<b>'+(tmDate(p.san.issued)||'—')+'</b>'))+'</span></div>'+
+    '<div class="pair"><span>Срок действия</span><span>'+
+      (chef?('<input type="number" min="1" max="24" value="'+(p.san.months||6)+'" onchange="hrSanSet(\'months\',this.value)" style="border:1.5px solid var(--hair);border-radius:8px;padding:4px 6px;font-size:12.5px;width:60px"> мес'):('<b>'+(p.san.months||6)+' мес</b>'))+'</span></div>';
+  if(!c){ box.innerHTML=head+'<p class="hint" style="margin-top:8px">Впиши дату оформления — срок и статус посчитаются сами.</p>'; return; }
+  var note;
+  if(c.days<0) note='<div class="note" style="border-color:#C0392B;color:#C0392B;margin:8px 0 0">🚫 Просрочена на '+Math.abs(c.days)+' дн. Работать в цеху нельзя до обновления книжки.</div>';
+  else if(c.days<=7) note='<div class="note" style="border-color:#C0392B;color:#C0392B;margin:8px 0 0">⏰ Осталось '+c.days+' дн. Напоминания каждый день. Если не обновить до '+tmDate(c.exp.toISOString().slice(0,10))+' — вход в цех и работа будут заблокированы.</div>';
+  else if(c.days<=21) note='<div class="note" style="margin:8px 0 0">📅 Осталось '+c.days+' дн. Напоминания уже идут — пора записаться на обновление, чтобы спокойно спланировать время.</div>';
+  else note='<p class="hint" style="margin:8px 0 0">Осталось '+c.days+' дн. Напоминания начнутся за 3 недели до срока.</p>';
+  box.innerHTML=head+
+    '<div class="pair"><span>Обновить до</span><span><b>'+tmDate(c.exp.toISOString().slice(0,10))+'</b></span></div>'+
+    '<div class="pair"><span>Статус</span><span class="tag '+c.st.c+'">'+c.st.t+'</span></div>'+
+    note+
+    '<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;color:var(--accent)">Как работают напоминания</summary>'+
+    '<div style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:6px">'+
+    '<b style="color:var(--ink)">За 3 недели</b> — первое напоминание: записаться на обновление.<br>'+
+    '<b style="color:var(--ink)">За неделю</b> — напоминание каждый день + предупреждение о блокировке.<br>'+
+    '<b style="color:var(--ink)">После срока</b> — вход в цех закрыт до обновления книжки.<br>'+
+    '<span style="opacity:.8">Автоматическая отправка в Telegram появится вместе с ботом; сейчас статус виден здесь и в карточке.</span>'+
+    '</div></details>';
+}
+
+/* ===== Редактирование карточки сотрудника ===== */
+function empEdit(id){
+  var p=empById(id); if(!p||!isChef())return;
+  var ov=document.getElementById('emp-edit-modal');
+  if(!ov){ ov=document.createElement('div'); ov.id='emp-edit-modal'; ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px'; document.body.appendChild(ov); }
+  var bar=empIsBar(p), L=bar?LEVELS_BAR:LEVELS;
+  function f(label,key,ph,type){ return '<div class="field" style="margin:0"><label>'+label+'</label><input type="'+(type||'text')+'" id="ee-'+key+'" value="'+tkEsc(p[key]||'')+'" placeholder="'+(ph||'')+'" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'; }
+  ov.innerHTML='<div style="background:var(--bg);border:1.5px solid var(--ink);border-radius:16px;max-width:560px;width:100%;padding:20px;box-shadow:4px 4px 0 var(--ink)">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b style="font-size:17px">✎ Карточка сотрудника</b><button onclick="document.getElementById(\'emp-edit-modal\').remove()" style="border:none;background:none;font-size:20px;cursor:pointer">✕</button></div>'+
+    '<div class="grid g2" style="gap:10px">'+f('Имя','first')+f('Фамилия','last')+'</div>'+
+    '<div class="grid g2" style="gap:10px;margin-top:8px">'+
+      '<div class="field" style="margin:0"><label>Должность</label><select id="ee-pos" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+POS_LIST.map(function(x){return '<option'+(p.pos===x?' selected':'')+'>'+x+'</option>';}).join('')+'</select></div>'+
+      '<div class="field" style="margin:0"><label>Направление</label><select id="ee-dir" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+DIR_LIST.map(function(x){return '<option'+(p.dir===x?' selected':'')+'>'+x+'</option>';}).join('')+'</select></div>'+
+    '</div>'+
+    '<div style="margin-top:8px">'+f('Описание роли','role','Пекарь · хлеб')+'</div>'+
+    '<div class="grid g2" style="gap:10px;margin-top:8px">'+
+      '<div class="field" style="margin:0"><label>Уровень ('+(bar?'бар':'пекарь')+')</label><select id="ee-level" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+L.map(function(l,i){return '<option value="'+i+'"'+(p.level===i?' selected':'')+'>'+l+'</option>';}).join('')+'</select></div>'+
+      f('Наставник','mentor')+
+    '</div>'+
+    '<div class="grid g2" style="gap:10px;margin-top:8px">'+f('Телефон','phone','+381 60 123 4567')+f('Telegram','tg','@nickname')+'</div>'+
+    '<div class="grid g2" style="gap:10px;margin-top:8px">'+f('Дата начала работы','started','','date')+f('Дата начала контракта','contractStart','','date')+'</div>'+
+    '<div style="margin-top:8px">'+f('За что отвечает','resp')+'</div>'+
+    '<div style="margin-top:8px">'+f('В чём хорош','good')+'</div>'+
+    '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn primary" onclick="empEditSave(\''+p.id+'\')">💾 Сохранить</button><button class="btn" onclick="document.getElementById(\'emp-edit-modal\').remove()">Отмена</button></div>'+
+    '</div>';
+}
+function empEditSave(id){
+  var p=empById(id); if(!p)return;
+  function v(k){ var el=document.getElementById('ee-'+k); return el?el.value:''; }
+  var first=(v('first')||'').trim();
+  if(!first){ alert('Имя не может быть пустым.'); return; }
+  p.first=first; p.n=first; p.last=v('last')||'—';
+  p.pos=v('pos'); p.dir=v('dir');
+  p.role=(v('role')||'').trim()|| (p.pos+(p.dir&&p.dir!=='Управление'?(' · '+p.dir.toLowerCase()):''));
+  p.level=parseInt(v('level'))||0;
+  p.mentor=v('mentor')||'—';
+  p.phone=v('phone'); p.tg=v('tg');
+  p.started=v('started'); p.contractStart=v('contractStart');
+  p.resp=v('resp'); p.good=v('good');
+  var ov=document.getElementById('emp-edit-modal'); if(ov)ov.remove();
+  empOpen(id); renderTeam(); renderHR(); bvSaveNow();
+}
+
 function renderTeam(){
   var active=TEAM.filter(function(p){return p.status!=='Архивный';});
   document.getElementById('team-grid').innerHTML=active.map(function(p){
@@ -5418,12 +5508,12 @@ function empOpen(id){
   var devHtmlFull=(p.history||[]).slice().reverse().map(function(h){return '<div style="font-size:13px;padding:6px 0;border-top:1.5px dashed var(--hair)"><b>'+h[0]+'</b> — '+h[1]+'</div>';}).join('')||'<p class="hint">Пусто.</p>';
   var avg=shiftAvg(p);
   d.innerHTML='<button class="btn" onclick="empBack()" style="margin-bottom:14px">← Все сотрудники</button>'+
-    '<div class="card" style="margin-bottom:16px"><div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">'+empPhotoHtml(p,90)+''+
+    '<div class="card" style="margin-bottom:22px"><div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">'+empPhotoHtml(p,90)+''+
     '<div style="flex:1;min-width:200px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="font-size:24px">'+p.first+' '+(p.last&&p.last!=='—'?p.last:'')+'</h2>'+statusBadge(p.status)+'</div>'+
     '<p style="color:var(--muted);font-size:13.5px;margin-top:2px">'+p.role+' · '+p.pos+'</p>'+
     '<div class="tk" style="grid-template-columns:1fr 1fr;margin-top:10px"><div><div class="pair"><span>Направление</span><span>'+p.dir+'</span></div><div class="pair"><span>Стаж</span><span>'+stazh(p.started)+'</span></div><div class="pair"><span>Уровень</span><span>'+levelName(p)+(isChef()?(' <button class="btn" style="padding:0 7px;font-size:11px" onclick="empLevel(\''+p.id+'\')">✎</button>'):'')+'</span></div></div>'+
     '<div><div class="pair"><span>Наставник</span><span>'+p.mentor+'</span></div><div class="pair chef-only"><span>Telegram</span><span>'+tgLink(p.tg)+'</span></div><div class="pair chef-only"><span>Телефон</span><span>'+telLink(p.phone)+'</span></div></div></div>'+
-    (isChef()?'<div class="btn-row chef-only" style="width:100%;margin-top:14px;gap:8px;flex-wrap:wrap"><button class="btn" onclick="empStatus(\''+p.id+'\')">Сменить статус</button><button class="btn" onclick="empAddIssue(\''+p.id+'\')">+ Замечание</button><button class="btn" onclick="empAddPraise(\''+p.id+'\')">+ Похвала</button>'+(p.status!=='Архивный'?'<button class="btn" onclick="empArchive(\''+p.id+'\')">В архив</button>':'')+'<button class="btn" style="color:#C0392B" onclick="empDelete(\''+p.id+'\')">🗑 Удалить</button></div>':'')+
+    (isChef()?'<div class="btn-row chef-only" style="width:100%;margin-top:16px;margin-bottom:2px;gap:8px;flex-wrap:wrap"><button class="btn" onclick="empEdit(\''+p.id+'\')">✎ Редактировать</button><button class="btn" onclick="empStatus(\''+p.id+'\')">Сменить статус</button><button class="btn" onclick="empAddIssue(\''+p.id+'\')">+ Замечание</button><button class="btn" onclick="empAddPraise(\''+p.id+'\')">+ Похвала</button>'+(p.status!=='Архивный'?'<button class="btn" onclick="empArchive(\''+p.id+'\')">В архив</button>':'')+'<button class="btn" style="color:#C0392B" onclick="empDelete(\''+p.id+'\')">🗑 Удалить</button></div>':'')+
     '</div></div>'+
     '<div class="grid g2"><div class="card"><b style="font-size:15px">Навыки (1–5)</b><div style="margin-top:10px">'+skillGroups+skillLegendHtml()+'</div></div>'+
     '<div><div class="card bg-pink"><b style="font-size:15px">⚠️ Активные замечания</b><div style="margin-top:6px">'+issHtml+'</div></div>'+
@@ -6625,22 +6715,61 @@ function renderDrinks(){
   }).join(''):'<p class="hint">В этой категории напитков нет.</p>';
 }
 function drinkFilter(c){_drinkCat=c;renderDrinks();}
+/* ===== НАПИТКИ: редактирование (шеф/менеджер) ===== */
+var DRINK_UP={};
+function drinkFieldSet(id,key,val){ var d=DRINKS.filter(function(x){return x.id===id;})[0]; if(d)d[key]=val; }
+function drinkPhotoPick(id,inp){
+  if(!inp.files||!inp.files[0])return;
+  DRINK_UP[id]=true; drinkOpen(id);
+  bvUploadPhoto(inp.files[0], function(url){ DRINK_UP[id]=false; var d=DRINKS.filter(function(x){return x.id===id;})[0]; if(url&&d)d.photo=url; drinkOpen(id); });
+}
+function drinkPhotoDel(id){ var d=DRINKS.filter(function(x){return x.id===id;})[0]; if(!d)return; if(!confirm('Убрать фото эталона?'))return; d.photo=''; drinkOpen(id); }
+function drinkAdd(){
+  if(!isChef()){alert('Добавлять напитки может шеф или менеджер.');return;}
+  var n=prompt('Название напитка:'); if(!n||!n.trim())return;
+  var d={id:'dr'+Date.now(),name:n.trim(),cat:'Другое',sostav:'',gram:'',tech:'',podacha:'',errors:'',note:'',photo:''};
+  DRINKS.push(d); renderDrinks(); drinkOpen(d.id); bvSaveNow();
+}
+function drinkDel(id){
+  if(!isChef())return;
+  var d=DRINKS.filter(function(x){return x.id===id;})[0]; if(!d)return;
+  if(!confirm('Удалить напиток «'+d.name+'»? Это необратимо.'))return;
+  var i=DRINKS.indexOf(d); if(i>=0)DRINKS.splice(i,1);
+  drinkBack(); renderDrinks(); bvSaveNow();
+}
 function drinkOpen(id){
-  var d=DRINKS.find(function(x){return x.id===id;});
+  var d=DRINKS.filter(function(x){return x.id===id;})[0]; if(!d)return;
   document.getElementById('drinks-filters').style.display='none';
   document.getElementById('drinks-grid').style.display='none';
   var det=document.getElementById('drinks-detail');det.style.display='';
+  var chef=isChef();
+  function row(label,key,ph){
+    if(!chef) return d[key]?('<div class="pair"><span>'+label+'</span><span style="text-align:right;max-width:60%">'+tkEsc(d[key])+'</span></div>'):'';
+    return '<div class="field" style="margin:0 0 8px"><label>'+label+'</label><textarea oninput="drinkFieldSet(\''+d.id+'\',\''+key+'\',this.value)" placeholder="'+(ph||'')+'" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;min-height:40px;box-sizing:border-box">'+tkEsc(d[key]||'')+'</textarea></div>';
+  }
+  var photo;
+  if(DRINK_UP[d.id]) photo='<div class="photo" style="height:160px;margin:12px 0">Загрузка…</div>';
+  else if(d.photo) photo='<div style="position:relative;margin:12px 0"><img src="'+d.photo+'" style="width:100%;max-height:220px;object-fit:cover;border-radius:12px;border:1.5px solid var(--ink)">'+(chef?'<button onclick="drinkPhotoDel(\''+d.id+'\')" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:8px;padding:2px 8px;cursor:pointer;font-size:12px">✕</button>':'')+'</div>';
+  else if(chef) photo='<label class="photo" style="height:160px;margin:12px 0;cursor:pointer;display:flex;align-items:center;justify-content:center">+ фото эталона<input type="file" accept="image/*" style="display:none" onchange="drinkPhotoPick(\''+d.id+'\',this)"></label>';
+  else photo='<div class="photo" style="height:160px;margin:12px 0">фото эталона</div>';
+  var head = chef
+    ? '<div class="grid g2" style="gap:10px"><div class="field" style="margin:0"><label>Название</label><input type="text" value="'+tkEsc(d.name)+'" oninput="drinkFieldSet(\''+d.id+'\',\'name\',this.value)" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box"></div>'+
+      '<div class="field" style="margin:0"><label>Категория</label><select oninput="drinkFieldSet(\''+d.id+'\',\'cat\',this.value)" style="width:100%;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:13px;box-sizing:border-box">'+DRINK_CATS.filter(function(c){return c!=='Все';}).map(function(c){return '<option'+(d.cat===c?' selected':'')+'>'+c+'</option>';}).join('')+'</select></div></div>'
+    : '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="font-size:24px">'+tkEsc(d.name)+'</h2><span class="tag">'+tkEsc(d.cat)+'</span></div>';
   det.innerHTML='<button class="btn" onclick="drinkBack()" style="margin-bottom:14px">← Все напитки</button>'+
-    '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="font-size:24px">'+d.name+'</h2><span class="tag">'+d.cat+'</span></div>'+
-    '<div class="photo" style="height:160px;margin:12px 0">фото эталона</div>'+
-    '<div class="pair"><span>Состав</span><span style="text-align:right;max-width:60%">'+d.sostav+'</span></div>'+
-    '<div class="pair"><span>Граммовки</span><span style="text-align:right;max-width:60%">'+d.gram+'</span></div>'+
-    '<div class="pair"><span>Технология</span><span style="text-align:right;max-width:60%">'+d.tech+'</span></div>'+
-    '<div class="pair"><span>Подача</span><span style="text-align:right;max-width:60%">'+d.podacha+'</span></div>'+
-    '<div class="pair"><span>Типовые ошибки</span><span style="text-align:right;max-width:60%">'+d.errors+'</span></div>'+
-    (d.note?'<div class="note" style="margin-top:10px">👨‍🍳 '+d.note+'</div>':'')+'</div>';
+    '<div class="card">'+head+photo+
+    row('Состав','sostav','эспрессо + молоко 1:1')+
+    row('Граммовки','gram','18 г / 36 г / 25–30 сек')+
+    row('Технология','tech','как готовить')+
+    row('Подача','podacha','посуда, подача')+
+    row('Типовые ошибки','errors','что чаще всего портит напиток')+
+    row('Комментарий шефа','note','')+
+    (chef?'<div class="btn-row" style="margin-top:14px;gap:8px"><button class="btn primary" onclick="bvSaveNow()">💾 Сохранить</button><button class="btn" style="color:#C0392B" onclick="drinkDel(\''+d.id+'\')">🗑 Удалить напиток</button></div>':'')+
+    ((!chef&&d.note)?'<div class="note" style="margin-top:10px">👨‍🍳 '+tkEsc(d.note)+'</div>':'')+
+    '</div>';
   window.scrollTo({top:0});
 }
+
 function drinkBack(){document.getElementById('drinks-detail').style.display='none';document.getElementById('drinks-filters').style.display='';document.getElementById('drinks-grid').style.display='';}
 
 /* ===== ОНБОРДИНГ ===== */
