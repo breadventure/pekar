@@ -114,6 +114,10 @@
   .sp-saytext{font-size:10pt;line-height:1.45}
   .sp-saytext+.sp-saytext{margin-top:3pt;padding-top:3pt;border-top:.7pt dashed rgba(29,29,27,.25)}
   .sp-foot{margin-top:9pt;padding-top:6pt;border-top:1pt solid #1D1D1B;font-size:8pt;color:#6b6b66;text-align:center}
+  .eq-figs{display:flex;gap:6pt;flex-wrap:wrap;margin-top:5pt}
+  .eq-fig{margin:0;width:31%}
+  .eq-fig img{width:100%;height:52pt;object-fit:cover;border-radius:4pt;border:.8pt solid #1D1D1B;display:block}
+  .eq-fig figcaption{font-size:7pt;color:#6b6b66;margin-top:2pt;line-height:1.3}
   /* ===== БЕЙДЖИ ===== */
   .bdgs{display:flex;flex-wrap:wrap;gap:12px 10px;margin-top:4px}
   .bdg{position:relative;display:inline-flex;flex-direction:column;align-items:center;width:78px;text-align:center}
@@ -702,7 +706,7 @@
   <div class="card" id="san-detail">
     <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
       <h2 style="font-size:24px" id="san-title">Мытьё рук</h2>
-      <button class="btn" onclick="alert('Экспорт PDF — в боевой версии')">Скачать PDF</button>
+      <button class="btn" onclick="sanPdf()">🖨 Скачать PDF</button>
     </div>
     <p style="color:var(--muted);font-size:13px;margin:2px 0 14px" id="san-sub"></p>
     <div class="tk" style="grid-template-columns:1.2fr .8fr">
@@ -729,32 +733,16 @@
 <section class="view" id="v-oborud">
   <div class="crumbs"><a onclick="go('dash')">Главная</a> / Оборудование</div>
 
-  <div class="grid g3" id="eq-grid" style="margin-bottom:22px">
-    <div class="card click baronly-only" onclick="alert('Кофемашина Rocket: ежедневный бэкфлеш, чистка групп раз в неделю, декальцинация раз в год. Видят бариста и менеджер.')"><div class="photo">фото</div><h3 class="card-t" style="font-size:15px">Кофемашина Rocket</h3><p>Эспрессо · бэкфлеш ежедневно, сервис раз в год</p><div class="meta"><span class="tag ok">Исправна</span><b>›</b></div></div>
-    <div class="card click recipe-only" onclick="eqOpen('pech')"><div class="photo">фото</div><h3 class="card-t" style="font-size:15px">Подовая печь Fines</h3><p>Выпечка хлеба · ежедневное и недельное обслуживание</p><div class="meta"><span class="tag ok">Исправна</span><b>›</b></div></div>
-    <div class="card click recipe-only" onclick="eqOpen('mikser')"><div class="photo">фото</div><h3 class="card-t" style="font-size:15px">Планетарный миксер</h3><p>Замес кремов и сдобного теста</p><div class="meta"><span class="tag ok">Исправен</span><b>›</b></div></div>
-    <div class="card click recipe-only" onclick="eqOpen('testomes')"><div class="photo">фото</div><h3 class="card-t" style="font-size:15px">Спиральный тестомес</h3><p>Замес хлебного теста</p><div class="meta"><span class="tag warn">ТО до 15.06</span><b>›</b></div></div>
-    <div class="card click recipe-only" onclick="eqOpen('rasstoyka')"><div class="photo">фото</div><h3 class="card-t" style="font-size:15px">Расстоечный шкаф</h3><p>Контроль температуры и влажности расстойки</p><div class="meta"><span class="tag ok">Исправен</span><b>›</b></div></div>
-    <div class="card click" onclick="eqOpen('holod')"><div class="photo">фото</div><h3 class="card-t" style="font-size:15px">Холодильник ретардации</h3><p>Холодная ферментация 4 °C</p><div class="meta"><span class="tag ok">Исправен</span><b>›</b></div></div>
-    <div class="card click" onclick="eqOpen('vesy')"><div class="photo">фото</div><h3 class="card-t" style="font-size:15px">Весы и делитель</h3><p>Взвешивание сырья и деление теста</p><div class="meta"><span class="tag ok">Исправны</span><b>›</b></div></div>
-  </div>
-
+  <div class="btn-row chef-only" style="margin-bottom:12px"><button class="btn" onclick="eqNew()">+ Добавить оборудование</button></div>
+  <div class="grid g3" id="eq-grid" style="margin-bottom:22px"></div>
   <div class="card" id="eq-detail">
     <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
       <h2 style="font-size:20px" id="eq-title">Подовая печь Fines</h2>
-      <button class="btn" onclick="alert('Экспорт PDF — в боевой версии')">Скачать PDF</button>
+      <span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn chef-only" onclick="eqEditor()">✎ Редактировать</button><button class="btn" onclick="eqPdf()">🖨 Скачать PDF</button></span>
     </div>
-    <p style="color:var(--muted);font-size:13px;margin:2px 0 14px" id="eq-sub">Регламент работы · актуален с 05.06.2026</p>
-    <div class="tabs" style="margin-top:0">
-      <button class="on" onclick="tab(this,'eq-setup')">Настройка</button>
-      <button onclick="tab(this,'eq-service')">Обслуживание</button>
-      <button onclick="tab(this,'eq-forbidden')">Запрещено</button>
-      <button onclick="tab(this,'eq-attention')">На что обращать внимание</button>
-    </div>
-    <div class="tabpane active" id="eq-setup"></div>
-    <div class="tabpane" id="eq-service"></div>
-    <div class="tabpane" id="eq-forbidden"></div>
-    <div class="tabpane" id="eq-attention"></div>
+    <p style="color:var(--muted);font-size:13px;margin:2px 0 14px" id="eq-sub">Регламент работы</p>
+    <div class="tabs" style="margin-top:0" id="eq-tabs"></div>
+    <div id="eq-panes"></div>
   </div>
 
   <div class="card" style="margin-top:6px">
@@ -1980,7 +1968,7 @@ function setRole(r){
   if(typeof renderMyShifts==='function')renderMyShifts();
   /* разделы, где кнопки правки зависят от роли: без этого у новой роли
      остаются кнопки предыдущей */
-  ['renderFaq','renderScripts','renderReminders','renderAch','renderBadgeBook','renderRolesMatrix','renderCompany','renderAttest','renderOnboard','renderHR','renderLevelLegend','renderToday','renderDrinks','renderProducts'].forEach(function(fn){
+  ['renderFaq','renderScripts','renderReminders','renderAch','renderBadgeBook','renderRolesMatrix','renderCompany','renderAttest','renderOnboard','renderHR','renderLevelLegend','renderToday','renderDrinks','renderProducts','renderEqGrid','renderSanGrid'].forEach(function(fn){
     try{ if(typeof window[fn]==='function')window[fn](); }catch(e){}
   });
   if(typeof CURRENT_VIEW!=='undefined'&&!viewAllowed(CURRENT_VIEW))go('dash');
@@ -2281,20 +2269,7 @@ var SAN={
   bad:['Переполненный бак без крышки','Пакет с отходами «у двери на минутку»','Слив теста в раковину'],
   how:['Баки только с крышками, педальные','Вынос по заполнении и обязательно в конце смены','Тесто и органика — отдельно от упаковки','После выноса — новый пакет сразу']}
 };
-function sanOpen(key){
-  var d=SAN[key];
-  document.getElementById('san-title').textContent=d.t;
-  document.getElementById('san-sub').textContent=d.sub;
-  function block(tag,cls,title,arr){
-    return '<div style="margin-bottom:14px"><span class="tag '+cls+'">'+title+'</span>'+arr.map(function(x){
-      return '<div style="padding:8px 0;border-bottom:1.5px dashed var(--hair);font-size:13.5px">'+x+'</div>';}).join('')+'</div>';
-  }
-  document.getElementById('san-body').innerHTML=
-    '<p style="font-size:14px;margin-bottom:14px"><b>Зачем:</b> '+d.why+'</p>'+
-    block('ok','ok','Как правильно',d.how)+
-    block('crit','crit','Частые нарушения',d.bad);
-  document.getElementById('san-detail').scrollIntoView({behavior:'smooth',block:'start'});
-}
+
 
 /* ===== Оборудование ===== */
 var EQ={
@@ -2334,17 +2309,7 @@ function eqBlock(items,cls){
     return '<div style="padding:11px 0;border-bottom:1px dashed var(--line)"><b style="font-size:13.5px">'+(cls?'<span class="tag '+cls+'" style="margin-right:8px">'+({crit:'Запрещено',warn:'Внимание'}[cls]||'')+'</span>':'')+i[0]+'</b><p style="color:var(--muted);font-size:13px;margin-top:3px">'+i[1]+'</p></div>';
   }).join('');
 }
-function eqOpen(key){
-  var d=EQ[key];
-  document.getElementById('eq-title').textContent=d.t;
-  document.getElementById('eq-sub').textContent=d.sub;
-  document.getElementById('eq-setup').innerHTML=eqBlock(d.setup);
-  document.getElementById('eq-service').innerHTML=eqBlock(d.service);
-  document.getElementById('eq-forbidden').innerHTML=eqBlock(d.forbidden,'crit');
-  document.getElementById('eq-attention').innerHTML=eqBlock(d.attention,'warn');
-  document.getElementById('eq-detail').scrollIntoView({behavior:'smooth',block:'start'});
-}
-eqOpen('pech');sanOpen('ruki');
+
 
 
 /* ===== РЕЦЕПТУРЫ ИЗ GOOGLE-ТАБЛИЦ (раскладки, колонка «на 1») ===== */
@@ -3321,19 +3286,152 @@ var SAN={
   bad:['Переполненный бак без крышки','Пакет с отходами «у двери на минутку»','Слив теста в раковину'],
   how:['Баки только с крышками, педальные','Вынос по заполнении и обязательно в конце смены','Тесто и органика — отдельно от упаковки','После выноса — новый пакет сразу']}
 };
+/* ===== САНИТАРИЯ: фото «как правильно» / «как неправильно» ===== */
+var SAN_CUR='ruki';
+function sanNorm(){
+  if(!SAN||typeof SAN!=='object')SAN={};
+  Object.keys(SAN).forEach(function(k){
+    var d=SAN[k];
+    if(!d||typeof d!=='object'){ delete SAN[k]; return; }
+    if(!d.t)d.t=k; if(!d.sub)d.sub=''; if(!d.why)d.why='';
+    if(!Array.isArray(d.how))d.how=[];
+    if(!Array.isArray(d.bad))d.bad=[];
+    if(!Array.isArray(d.photos))d.photos=[];
+    d.photos.forEach(function(p){ if(p.kind!=='bad')p.kind='ok'; if(!p.cap)p.cap=''; });
+  });
+  if(!SAN[SAN_CUR])SAN_CUR=Object.keys(SAN)[0];
+  return SAN;
+}
+function sanPhotos(d,kind){
+  var list=(d.photos||[]).filter(function(p){ return p.url && p.kind===kind; });
+  if(!list.length)return '';
+  var col=(kind==='ok')?'#7EA66A':'#C0392B';
+  return '<div style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 4px">'+list.map(function(p){
+    var i=d.photos.indexOf(p);
+    return '<figure style="margin:0;width:170px"><img src="'+p.url+'" alt="" onclick="sanPhotoBig(\''+SAN_CUR+'\','+i+')" style="width:170px;height:120px;object-fit:cover;border-radius:10px;border:2px solid '+col+';cursor:zoom-in;display:block">'+
+      '<figcaption style="font-size:11px;margin-top:4px;line-height:1.35;color:'+col+';font-weight:600">'+(kind==='ok'?'✓ ':'✕ ')+tkEsc(p.cap||'')+'</figcaption></figure>';
+  }).join('')+'</div>';
+}
+function sanPhotoBig(key,i){
+  var d=SAN[key]; if(!d||!d.photos[i])return;
+  var p=d.photos[i];
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;cursor:zoom-out';
+  ov.onclick=function(){ ov.remove(); };
+  ov.innerHTML='<img src="'+p.url+'" style="max-width:96%;max-height:84%;object-fit:contain;border-radius:10px;border:2px solid '+(p.kind==='ok'?'#7EA66A':'#C0392B')+'">'+
+    '<div style="color:#fff;font-size:14px;margin-top:12px;text-align:center;max-width:640px">'+(p.kind==='ok'?'✓ Как правильно':'✕ Как неправильно')+(p.cap?' — '+tkEsc(p.cap):'')+'</div>';
+  document.body.appendChild(ov);
+}
 function sanOpen(key){
+  sanNorm();
+  if(!SAN[key])return;
+  SAN_CUR=key;
   var d=SAN[key];
   document.getElementById('san-title').textContent=d.t;
   document.getElementById('san-sub').textContent=d.sub;
-  function block(tag,cls,title,arr){
-    return '<div style="margin-bottom:14px"><span class="tag '+cls+'">'+title+'</span>'+arr.map(function(x){
-      return '<div style="padding:8px 0;border-bottom:1.5px dashed var(--hair);font-size:13.5px">'+x+'</div>';}).join('')+'</div>';
+  var chef=isChef();
+  function block(cls,title,arr,kind){
+    return '<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><span class="tag '+cls+'">'+title+'</span>'+
+      (chef?'<span style="display:flex;gap:5px"><button class="btn chef-only" style="padding:2px 9px;font-size:11px" onclick="sanRowAdd(\''+kind+'\')">+ пункт</button>'+
+      '<label class="btn chef-only" style="padding:2px 9px;font-size:11px;cursor:pointer">+ фото<input type="file" accept="image/*" style="display:none" onchange="sanPhotoPick(this,\''+kind+'\')"></label></span>':'')+'</div>'+
+      (arr.length?arr.map(function(x,i){
+        return '<div style="padding:8px 0;border-bottom:1.5px dashed var(--hair);font-size:13.5px;display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><span>'+tkEsc(x)+'</span>'+
+          (chef?'<span style="display:flex;gap:4px;flex-shrink:0"><button class="btn chef-only" style="padding:1px 7px;font-size:10.5px" onclick="sanRowEdit(\''+kind+'\','+i+')">✎</button>'+
+          '<button class="btn chef-only" style="padding:1px 7px;font-size:10.5px;color:#C0392B" onclick="sanRowDel(\''+kind+'\','+i+')">✕</button></span>':'')+'</div>';
+      }).join(''):'<p class="hint" style="margin:6px 0">Пока пусто.</p>')+
+      sanPhotos(d,kind)+'</div>';
   }
   document.getElementById('san-body').innerHTML=
-    '<p style="font-size:14px;margin-bottom:14px"><b>Зачем:</b> '+d.why+'</p>'+
-    block('ok','ok','Как правильно',d.how)+
-    block('crit','crit','Частые нарушения',d.bad);
+    '<p style="font-size:14px;margin-bottom:14px"><b>Зачем:</b> '+tkEsc(d.why)+
+    (chef?' <button class="btn chef-only" style="padding:1px 8px;font-size:11px" onclick="sanWhyEdit()">✎</button>':'')+'</p>'+
+    block('ok','✓ Как правильно',d.how,'ok')+
+    block('crit','✕ Как неправильно',d.bad,'bad')+
+    (chef?'<p class="hint">Фото «как правильно» обведены зелёным, «как неправильно» — красным. Нажми на фото — откроется крупно.</p>':'');
   document.getElementById('san-detail').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function sanER(){ sanOpen(SAN_CUR); renderSanGrid(); bvSaveNow(); }
+function sanPdf(){
+  sanNorm();
+  var d=SAN[SAN_CUR]; if(!d)return;
+  var pa=document.getElementById('print-area'); if(!pa){ alert('Печать недоступна.'); return; }
+  var co=(typeof COMPANY!=='undefined'&&COMPANY&&COMPANY.vals)?COMPANY.vals:{};
+  var name=co.short||co.name||'BreadVenture';
+  var dt=new Date();
+  function blk(title,arr,kind){
+    var rows=arr.map(function(x){ return '<div class="sp-line">'+(kind==='ok'?'✓ ':'✕ ')+tkEsc(x)+'</div>'; }).join('');
+    var ph=(d.photos||[]).filter(function(p){return p.kind===kind&&p.url;}).map(function(p){
+      return '<figure class="eq-fig"><img src="'+p.url+'" style="border-color:'+(kind==='ok'?'#7EA66A':'#C0392B')+'"><figcaption>'+(kind==='ok'?'✓ ':'✕ ')+tkEsc(p.cap||'')+'</figcaption></figure>';
+    }).join('');
+    if(!rows&&!ph)return '';
+    return '<div class="sp-card"><div class="sp-head"><span class="sp-sit">'+title+'</span></div>'+rows+(ph?'<div class="eq-figs">'+ph+'</div>':'')+'</div>';
+  }
+  pa.innerHTML='<div class="sp-doc">'+
+    '<div class="sp-top"><div><div class="sp-title">'+tkEsc(d.t)+'</div><div class="sp-sub">'+tkEsc(d.sub)+' · '+tkEsc(name)+'</div></div>'+
+    '<div class="sp-date">'+dt.toLocaleDateString('ru-RU')+'</div></div>'+
+    (d.why?'<div class="sp-note"><b>Зачем:</b> '+tkEsc(d.why)+'</div>':'')+
+    blk('✓ Как правильно',d.how,'ok')+
+    blk('✕ Как неправильно',d.bad,'bad')+
+    '<div class="sp-foot">'+tkEsc(name)+' · Контроль сегодня. Качество завтра.</div></div>';
+  pa.style.display='block';
+  setTimeout(function(){ window.print(); setTimeout(function(){ pa.innerHTML=''; pa.style.display='none'; },400); },60);
+}
+function renderSanGrid(){
+  sanNorm();
+  Object.keys(SAN).forEach(function(k){
+    var d=SAN[k];
+    var ok=(d.photos||[]).filter(function(p){return p.kind==='ok'&&p.url;})[0];
+    if(!ok)return;
+    var cards=document.querySelectorAll('[onclick="sanOpen(\''+k+'\')"] .photo');
+    for(var i=0;i<cards.length;i++){
+      var ph=cards[i];
+      var img=document.createElement('img');
+      img.src=ok.url; img.alt='';
+      img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:10px;display:block';
+      ph.innerHTML=''; ph.appendChild(img); ph.style.padding='0'; ph.style.border='1.5px solid var(--ink)';
+    }
+  });
+}
+function sanWhyEdit(){
+  if(!isChef())return; var d=SAN[SAN_CUR]; if(!d)return;
+  var v=prompt('Зачем это правило:',d.why); if(v===null)return;
+  v=String(v).trim(); if(!v)return;
+  d.why=v; sanER();
+}
+function sanRowAdd(kind){
+  if(!isChef()){ alert('Менять правила санитарии может шеф или менеджер.'); return; }
+  var d=SAN[SAN_CUR]; if(!d)return;
+  var arr=(kind==='ok')?d.how:d.bad;
+  var v=prompt(kind==='ok'?'Как правильно:':'Как неправильно (частое нарушение):',''); if(v===null)return;
+  v=String(v).trim(); if(!v){ alert('Пункт не может быть пустым.'); return; }
+  arr.push(v); sanER();
+}
+function sanRowEdit(kind,i){
+  if(!isChef())return; var d=SAN[SAN_CUR]; if(!d)return;
+  var arr=(kind==='ok')?d.how:d.bad; if(!arr[i])return;
+  var v=prompt('Текст:',arr[i]); if(v===null)return;
+  v=String(v).trim(); if(!v)return;
+  arr[i]=v; sanER();
+}
+function sanRowDel(kind,i){
+  if(!isChef())return; var d=SAN[SAN_CUR]; if(!d)return;
+  var arr=(kind==='ok')?d.how:d.bad; if(!arr[i])return;
+  if(!confirm('Удалить пункт?\n\n'+arr[i]))return;
+  arr.splice(i,1); sanER();
+}
+function sanPhotoPick(inp,kind){
+  if(!isChef())return;
+  if(!inp.files||!inp.files[0])return;
+  var d=SAN[SAN_CUR]; if(!d)return;
+  var cap=prompt(kind==='ok'?'Подпись: что показано как правильное:':'Подпись: что показано как ошибка:','')||'';
+  bvUploadPhoto(inp.files[0], function(url){
+    if(url){ d.photos.push({url:url,cap:String(cap).trim(),kind:kind}); sanER(); }
+    inp.value='';
+  });
+}
+function sanPhotoDel(i){
+  if(!isChef())return; var d=SAN[SAN_CUR]; if(!d||!d.photos[i])return;
+  if(!confirm('Убрать фото?\n\nСам файл останется на Google Диске.'))return;
+  d.photos.splice(i,1); sanER();
 }
 
 /* ===== Оборудование ===== */
@@ -3374,17 +3472,250 @@ function eqBlock(items,cls){
     return '<div style="padding:11px 0;border-bottom:1px dashed var(--line)"><b style="font-size:13.5px">'+(cls?'<span class="tag '+cls+'" style="margin-right:8px">'+({crit:'Запрещено',warn:'Внимание'}[cls]||'')+'</span>':'')+i[0]+'</b><p style="color:var(--muted);font-size:13px;margin-top:3px">'+i[1]+'</p></div>';
   }).join('');
 }
+/* ===== ОБОРУДОВАНИЕ: разделы, фото, редактор ===== */
+var EQ_SECS=[
+  ['tech','⚙️ Техописание','Мощность, ёмкость, габариты, подключение',''],
+  ['rules','✅ Правила пользования','Как работать правильно',''],
+  ['setup','🎛 Настройка','Параметры и режимы',''],
+  ['forbidden','⛔️ Запрещено','Чего делать нельзя','crit'],
+  ['attention','👀 На что обращать внимание','Признаки, которые нельзя пропускать','warn'],
+  ['problems','🔧 Если что-то пошло не так','Проблема → что делать','warn'],
+  ['service','🛠 Обслуживание','Регламент ТО',''],
+  ['cleanDaily','🧽 Чистка ежедневная','После каждой смены',''],
+  ['cleanWeekend','🧴 Чистка выходного дня','Раз в неделю',''],
+  ['cleanDeep','🧼 Чистка на генеральной уборке','Полная разборка и мойка','']
+];
+var EQ_CUR='pech';
+function eqNorm(){
+  if(!EQ||typeof EQ!=='object')EQ={};
+  Object.keys(EQ).forEach(function(k){
+    var d=EQ[k];
+    if(!d||typeof d!=='object'){ delete EQ[k]; return; }
+    if(!d.t)d.t=k;
+    if(!d.sub)d.sub='Регламент работы';
+    if(!d.card)d.card='';
+    if(!d.status)d.status='Исправно';
+    if(!Array.isArray(d.photos))d.photos=[];
+    EQ_SECS.forEach(function(sec){ if(!Array.isArray(d[sec[0]]))d[sec[0]]=[]; });
+    d.photos.forEach(function(p){ if(!p.sec)p.sec=''; if(!p.cap)p.cap=''; });
+  });
+  if(!EQ[EQ_CUR])EQ_CUR=Object.keys(EQ)[0];
+  return EQ;
+}
+function eqStatusTag(st){
+  var c=/испр/i.test(st||'')?'ok':(/ТО|сервис|ждёт/i.test(st||'')?'warn':'crit');
+  return '<span class="tag '+c+'">'+tkEsc(st||'—')+'</span>';
+}
+function renderEqGrid(){
+  var box=document.getElementById('eq-grid'); if(!box)return;
+  eqNorm();
+  box.innerHTML=Object.keys(EQ).map(function(k){
+    var d=EQ[k];
+    var ph=(d.photos&&d.photos[0]&&d.photos[0].url)
+      ? '<img src="'+d.photos[0].url+'" alt="" style="width:100%;height:120px;object-fit:cover;border-radius:10px;border:1.5px solid var(--ink)">'
+      : '<div class="photo" style="height:120px">фото</div>';
+    return '<div class="card click" onclick="eqOpen(\''+k+'\')">'+ph+
+      '<h3 class="card-t" style="font-size:15px;margin-top:8px">'+tkEsc(d.t)+'</h3>'+
+      '<p>'+tkEsc(d.card||d.sub)+'</p>'+
+      '<div class="meta">'+eqStatusTag(d.status)+'<b>›</b></div></div>';
+  }).join('') || '<p class="hint">Оборудования пока нет.</p>';
+}
+/* фото секции */
+function eqPhotos(d,secKey){
+  var list=(d.photos||[]).filter(function(p){ return p.url && (p.sec||'')===secKey; });
+  if(!list.length)return '';
+  return '<div style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 2px">'+list.map(function(p){
+    var i=d.photos.indexOf(p);
+    return '<figure style="margin:0;width:170px"><img src="'+p.url+'" alt="" onclick="eqPhotoBig(\''+EQ_CUR+'\','+i+')" style="width:170px;height:120px;object-fit:cover;border-radius:10px;border:1.5px solid var(--ink);cursor:zoom-in;display:block">'+
+      '<figcaption style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.35">'+tkEsc(p.cap||'')+'</figcaption></figure>';
+  }).join('')+'</div>';
+}
+function eqPhotoBig(key,i){
+  var d=EQ[key]; if(!d||!d.photos[i])return;
+  var p=d.photos[i];
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;cursor:zoom-out';
+  ov.onclick=function(){ ov.remove(); };
+  ov.innerHTML='<img src="'+p.url+'" style="max-width:96%;max-height:86%;object-fit:contain;border-radius:10px;border:1.5px solid #fff">'+
+    (p.cap?'<div style="color:#fff;font-size:13.5px;margin-top:12px;text-align:center;max-width:640px">'+tkEsc(p.cap)+'</div>':'');
+  document.body.appendChild(ov);
+}
 function eqOpen(key){
+  eqNorm();
+  if(!EQ[key])return;
+  EQ_CUR=key;
   var d=EQ[key];
   document.getElementById('eq-title').textContent=d.t;
   document.getElementById('eq-sub').textContent=d.sub;
-  document.getElementById('eq-setup').innerHTML=eqBlock(d.setup);
-  document.getElementById('eq-service').innerHTML=eqBlock(d.service);
-  document.getElementById('eq-forbidden').innerHTML=eqBlock(d.forbidden,'crit');
-  document.getElementById('eq-attention').innerHTML=eqBlock(d.attention,'warn');
+  var secs=EQ_SECS.filter(function(x){ return (d[x[0]]||[]).length || (d.photos||[]).some(function(p){return p.sec===x[0]&&p.url;}); });
+  if(!secs.length)secs=[EQ_SECS[0]];
+  var tabs=document.getElementById('eq-tabs');
+  if(tabs)tabs.innerHTML=secs.map(function(x,i){
+    return '<button'+(i===0?' class="on"':'')+' onclick="tab(this,\'eqp-'+x[0]+'\')">'+x[1]+'</button>';
+  }).join('');
+  var panes=document.getElementById('eq-panes');
+  if(panes)panes.innerHTML=secs.map(function(x,i){
+    var rows=(d[x[0]]||[]).length?eqBlock(d[x[0]],x[3]):'<p class="hint">Пока не заполнено.</p>';
+    return '<div class="tabpane'+(i===0?' active':'')+'" id="eqp-'+x[0]+'">'+
+      '<p class="hint" style="margin:0 0 8px">'+tkEsc(x[2])+'</p>'+rows+eqPhotos(d,x[0])+'</div>';
+  }).join('');
+  var common=eqPhotos(d,'');
+  if(common&&panes)panes.innerHTML+='<div style="border-top:1.5px dashed var(--hair);margin-top:12px;padding-top:10px"><b style="font-size:13px">📷 Общие фото</b>'+common+'</div>';
   document.getElementById('eq-detail').scrollIntoView({behavior:'smooth',block:'start'});
 }
-eqOpen('pech');sanOpen('ruki');
+/* ---------- редактор ---------- */
+function eqRefresh(){ renderEqGrid(); eqOpen(EQ_CUR); bvSaveNow(); }
+function eqNew(){
+  if(!isChef()){ alert('Добавлять оборудование может шеф или менеджер.'); return; }
+  var t=prompt('Название оборудования:',''); t=(t||'').trim(); if(!t)return;
+  var key='eq_'+Date.now();
+  EQ[key]={t:t,sub:'Регламент работы',card:'',status:'Исправно',photos:[]};
+  eqNorm(); EQ_CUR=key;
+  renderEqGrid(); eqOpen(key); bvSaveNow(); eqEditor();
+}
+function eqEditor(){
+  if(!isChef()){ alert('Менять регламент оборудования может шеф или менеджер.'); return; }
+  eqNorm();
+  var d=EQ[EQ_CUR]; if(!d)return;
+  var ov=document.getElementById('eqe-modal');
+  if(!ov){ ov=document.createElement('div'); ov.id='eqe-modal'; ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px'; document.body.appendChild(ov); }
+  var secs=EQ_SECS.map(function(x){
+    var rows=(d[x[0]]||[]).map(function(r,i){
+      return '<div class="pair" style="padding:4px 0"><span style="font-size:12.5px"><b>'+tkEsc(r[0])+'</b> — '+tkEsc(r[1])+'</span>'+
+        '<span style="display:flex;gap:4px"><button class="btn" style="padding:1px 7px;font-size:10.5px" onclick="eqRowMove(\''+x[0]+'\','+i+',-1)">↑</button>'+
+        '<button class="btn" style="padding:1px 7px;font-size:10.5px" onclick="eqRowMove(\''+x[0]+'\','+i+',1)">↓</button>'+
+        '<button class="btn" style="padding:1px 7px;font-size:10.5px" onclick="eqRowEdit(\''+x[0]+'\','+i+')">✎</button>'+
+        '<button class="btn" style="padding:1px 7px;font-size:10.5px;color:#C0392B" onclick="eqRowDel(\''+x[0]+'\','+i+')">✕</button></span></div>';
+    }).join('');
+    var ph=(d.photos||[]).filter(function(p){return (p.sec||'')===x[0];}).length;
+    return '<div style="border:1.5px solid var(--hair);border-radius:11px;padding:9px;margin-top:7px;background:var(--card)">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:13px">'+x[1]+'</b>'+
+      '<span style="display:flex;gap:5px"><button class="btn" style="padding:2px 9px;font-size:11px" onclick="eqRowAdd(\''+x[0]+'\')">+ пункт</button>'+
+      '<label class="btn" style="padding:2px 9px;font-size:11px;cursor:pointer">+ фото'+(ph?' ('+ph+')':'')+'<input type="file" accept="image/*" style="display:none" onchange="eqPhotoPick(this,\''+x[0]+'\')"></label></span></div>'+
+      (rows||'<p class="hint" style="margin:5px 0 0">Пусто.</p>')+'</div>';
+  }).join('');
+  var photos=(d.photos||[]).map(function(p,i){
+    var sec=EQ_SECS.filter(function(x){return x[0]===p.sec;})[0];
+    return '<div class="pair" style="padding:5px 0"><span style="display:flex;gap:8px;align-items:center">'+
+      (p.url?'<img src="'+p.url+'" style="width:52px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--ink)">':'')+
+      '<span style="font-size:12px"><b>'+tkEsc(sec?sec[1]:'📷 Общее')+'</b><br>'+tkEsc(p.cap||'без подписи')+'</span></span>'+
+      '<span style="display:flex;gap:4px"><button class="btn" style="padding:1px 7px;font-size:10.5px" onclick="eqPhotoCap('+i+')">✎ подпись</button>'+
+      '<button class="btn" style="padding:1px 7px;font-size:10.5px" onclick="eqPhotoSec('+i+')">↦ раздел</button>'+
+      '<button class="btn" style="padding:1px 7px;font-size:10.5px;color:#C0392B" onclick="eqPhotoDel('+i+')">✕</button></span></div>';
+  }).join('');
+  ov.innerHTML='<div style="background:var(--bg);border:1.5px solid var(--ink);border-radius:16px;max-width:660px;width:100%;padding:20px;box-shadow:4px 4px 0 var(--ink)">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">✎ '+tkEsc(d.t)+'</b><button onclick="document.getElementById(\'eqe-modal\').remove()" style="border:none;background:none;font-size:20px;cursor:pointer">✕</button></div>'+
+    '<div class="grid g2" style="gap:10px;margin-top:10px">'+
+    '<div class="field" style="margin:0"><label>Название</label><input type="text" value="'+tkEsc(d.t)+'" oninput="eqSet(\'t\',this.value)" onchange="eqRefreshSoft()"></div>'+
+    '<div class="field" style="margin:0"><label>Статус</label><input type="text" value="'+tkEsc(d.status)+'" oninput="eqSet(\'status\',this.value)" onchange="eqRefreshSoft()" placeholder="Исправно / ТО до 15.06"></div>'+
+    '<div class="field" style="margin:0"><label>Подпись в карточке</label><input type="text" value="'+tkEsc(d.card)+'" oninput="eqSet(\'card\',this.value)" onchange="eqRefreshSoft()" placeholder="Выпечка хлеба · ТО раз в год"></div>'+
+    '<div class="field" style="margin:0"><label>Подзаголовок регламента</label><input type="text" value="'+tkEsc(d.sub)+'" oninput="eqSet(\'sub\',this.value)" onchange="eqRefreshSoft()"></div>'+
+    '</div>'+
+    '<p class="hint" style="margin:10px 0 0">Фото можно привязать к разделу — тогда оно покажется прямо в нём. Кнопка «+ фото» внутри раздела.</p>'+
+    secs+
+    (photos?'<div style="margin-top:14px"><b style="font-size:13px">📷 Все фото</b>'+photos+'</div>':'')+
+    '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><label class="btn" style="cursor:pointer">+ Общее фото<input type="file" accept="image/*" style="display:none" onchange="eqPhotoPick(this,\'\')"></label>'+
+    '<button class="btn" style="color:#C0392B" onclick="eqDel()">🗑 Удалить оборудование</button>'+
+    '<button class="btn primary" onclick="document.getElementById(\'eqe-modal\').remove();eqRefresh()">Готово</button></div></div>';
+}
+function eqSet(k,v){ if(EQ[EQ_CUR])EQ[EQ_CUR][k]=v; }
+function eqRefreshSoft(){ renderEqGrid(); bvSave(); }
+function eqER(){ eqEditor(); renderEqGrid(); eqOpen(EQ_CUR); bvSaveNow(); }
+function eqRowAdd(sec){
+  if(!isChef())return; var d=EQ[EQ_CUR]; if(!d)return;
+  var t=prompt('Заголовок пункта:',''); if(t===null)return; t=String(t).trim();
+  if(!t){ alert('Заголовок не может быть пустым.'); return; }
+  var v=prompt('Текст:',''); if(v===null)return; v=String(v).trim();
+  if(!v){ alert('Текст не может быть пустым.'); return; }
+  d[sec].push([t,v]); eqER();
+}
+function eqRowEdit(sec,i){
+  if(!isChef())return; var d=EQ[EQ_CUR]; if(!d||!d[sec][i])return;
+  var t=prompt('Заголовок пункта:',d[sec][i][0]); if(t===null)return; t=String(t).trim(); if(!t)return;
+  var v=prompt('Текст:',d[sec][i][1]); if(v===null)return; v=String(v).trim(); if(!v)return;
+  d[sec][i]=[t,v]; eqER();
+}
+function eqRowDel(sec,i){
+  if(!isChef())return; var d=EQ[EQ_CUR]; if(!d||!d[sec][i])return;
+  if(!confirm('Удалить пункт «'+d[sec][i][0]+'»?'))return;
+  d[sec].splice(i,1); eqER();
+}
+function eqRowMove(sec,i,dl){
+  if(!isChef())return; var d=EQ[EQ_CUR]; if(!d)return;
+  var j=i+dl; if(j<0||j>=d[sec].length)return;
+  var t=d[sec][i]; d[sec][i]=d[sec][j]; d[sec][j]=t; eqER();
+}
+function eqPhotoPick(inp,sec){
+  if(!isChef())return;
+  if(!inp.files||!inp.files[0])return;
+  var d=EQ[EQ_CUR]; if(!d)return;
+  var cap=prompt('Подпись к фото — что на нём показано:','')||'';
+  bvUploadPhoto(inp.files[0], function(url){
+    if(url){ d.photos.push({url:url,cap:String(cap).trim(),sec:sec||''}); eqER(); }
+    inp.value='';
+  });
+}
+function eqPhotoCap(i){
+  if(!isChef())return; var d=EQ[EQ_CUR]; if(!d||!d.photos[i])return;
+  var c=prompt('Подпись к фото:',d.photos[i].cap||''); if(c===null)return;
+  d.photos[i].cap=String(c).trim(); eqER();
+}
+function eqPhotoSec(i){
+  if(!isChef())return; var d=EQ[EQ_CUR]; if(!d||!d.photos[i])return;
+  var v=prompt('К какому разделу привязать фото:\n\n0. Общее фото\n'+EQ_SECS.map(function(x,n){return (n+1)+'. '+x[1];}).join('\n')+'\n\nНомер:', String(EQ_SECS.map(function(x){return x[0];}).indexOf(d.photos[i].sec)+1));
+  if(v===null)return;
+  var n=parseInt(v);
+  if(isNaN(n)||n<0||n>EQ_SECS.length){ alert('Нет такого номера.'); return; }
+  d.photos[i].sec=(n===0)?'':EQ_SECS[n-1][0];
+  eqER();
+}
+function eqPhotoDel(i){
+  if(!isChef())return; var d=EQ[EQ_CUR]; if(!d||!d.photos[i])return;
+  if(!confirm('Убрать фото'+(d.photos[i].cap?(' «'+d.photos[i].cap+'»'):'')+'?\n\nСам файл останется на Google Диске.'))return;
+  d.photos.splice(i,1); eqER();
+}
+function eqDel(){
+  if(!isChef())return;
+  var d=EQ[EQ_CUR]; if(!d)return;
+  if(Object.keys(EQ).length<2){ alert('Это единственное оборудование — удалить нельзя.'); return; }
+  if(!confirm('Удалить «'+d.t+'» со всем регламентом и фото?'))return;
+  delete EQ[EQ_CUR];
+  var m=document.getElementById('eqe-modal'); if(m)m.remove();
+  EQ_CUR=Object.keys(EQ)[0];
+  renderEqGrid(); eqOpen(EQ_CUR); bvSaveNow();
+}
+/* ---------- PDF оборудования ---------- */
+function eqPdf(){
+  eqNorm();
+  var d=EQ[EQ_CUR]; if(!d)return;
+  var pa=document.getElementById('print-area'); if(!pa){ alert('Печать недоступна.'); return; }
+  var co=(typeof COMPANY!=='undefined'&&COMPANY&&COMPANY.vals)?COMPANY.vals:{};
+  var name=co.short||co.name||'BreadVenture';
+  var dt=new Date();
+  var secs=EQ_SECS.filter(function(x){ return (d[x[0]]||[]).length || (d.photos||[]).some(function(p){return p.sec===x[0]&&p.url;}); });
+  var body=secs.map(function(x){
+    var rows=(d[x[0]]||[]).map(function(r){
+      return '<div class="sp-line"><span class="sp-lab">'+tkEsc(r[0])+':</span> '+tkEsc(r[1])+'</div>';
+    }).join('');
+    var ph=(d.photos||[]).filter(function(p){return p.sec===x[0]&&p.url;}).map(function(p){
+      return '<figure class="eq-fig"><img src="'+p.url+'"><figcaption>'+tkEsc(p.cap||'')+'</figcaption></figure>';
+    }).join('');
+    return '<div class="sp-card"><div class="sp-head"><span class="sp-sit">'+tkEsc(x[1])+'</span></div>'+
+      rows+(ph?'<div class="eq-figs">'+ph+'</div>':'')+'</div>';
+  }).join('');
+  var common=(d.photos||[]).filter(function(p){return !p.sec&&p.url;}).map(function(p){
+    return '<figure class="eq-fig"><img src="'+p.url+'"><figcaption>'+tkEsc(p.cap||'')+'</figcaption></figure>';
+  }).join('');
+  pa.innerHTML='<div class="sp-doc">'+
+    '<div class="sp-top"><div><div class="sp-title">'+tkEsc(d.t)+'</div><div class="sp-sub">'+tkEsc(d.sub)+' · '+tkEsc(name)+'</div></div>'+
+    '<div class="sp-date">'+dt.toLocaleDateString('ru-RU')+'</div></div>'+
+    (body||'<p>Регламент пока не заполнен.</p>')+
+    (common?'<div class="sp-card"><div class="sp-head"><span class="sp-sit">📷 Общие фото</span></div><div class="eq-figs">'+common+'</div></div>':'')+
+    '<div class="sp-foot">'+tkEsc(name)+' · Контроль сегодня. Качество завтра.</div></div>';
+  pa.style.display='block';
+  setTimeout(function(){ window.print(); setTimeout(function(){ pa.innerHTML=''; pa.style.display='none'; },400); },60);
+}
+eqNorm();renderEqGrid();eqOpen('pech');sanOpen('ruki');renderSanGrid();
 
 
 /* ===== РЕЦЕПТУРЫ ИЗ GOOGLE-ТАБЛИЦ (раскладки, колонка «на 1») ===== */
@@ -9150,7 +9481,7 @@ function sendChk(){
 }
 /* ===================== СОХРАНЕНИЕ В БРАУЗЕРЕ (localStorage) ===================== */
 var BV_KEY='bv_pekar_store_v1';
-var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','REMINDERS','SCRIPTS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','ACH_MIG','SKILL_GROUPS','TRACK_SKILLS','BADGE_CUSTOM','BADGE_EDITS','BADGE_HIDDEN','ATTEST','OB_TRACKS','OB_VERSIONS','FAQ','FAQ_ASK'];
+var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','REMINDERS','SCRIPTS','EQ','SAN','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','ACH_MIG','SKILL_GROUPS','TRACK_SKILLS','BADGE_CUSTOM','BADGE_EDITS','BADGE_HIDDEN','ATTEST','OB_TRACKS','OB_VERSIONS','FAQ','FAQ_ASK'];
 function bvSnapshot(){ var o={}; for(var i=0;i<BV_PERSIST.length;i++){ var k=BV_PERSIST[i]; try{ if(typeof window[k]!=='undefined') o[k]=window[k]; }catch(e){} } return o; }
 function bvSave(){ try{ localStorage.setItem(BV_KEY, JSON.stringify(bvSnapshot())); }catch(e){} }
 function bvLoad(){ try{ var raw=localStorage.getItem(BV_KEY); if(!raw)return false; var o=JSON.parse(raw); var n=0; for(var k in o){ if(o.hasOwnProperty(k) && BV_PERSIST.indexOf(k)>=0){ try{ window[k]=o[k]; n++; }catch(e){} } } return n>0; }catch(e){ return false; } }
@@ -9199,6 +9530,8 @@ function bvFixups(){
   try{ if(typeof attBoot==='function')attBoot(); }catch(e){}
   try{ if(typeof obTracksClean==='function')obTracksClean(); }catch(e){}
   try{ if(typeof faqNorm==='function')faqNorm(); }catch(e){}
+  try{ if(typeof eqNorm==='function')eqNorm(); }catch(e){}
+  try{ if(typeof sanNorm==='function')sanNorm(); }catch(e){}
 }
 function bvRerender(){
   ['renderTeam','renderHR','renderAch','renderBadgeBook','renderRolesMatrix','renderCompany','renderReminders','renderAttest','renderOnboard','renderLevelLegend','renderNotifs'].forEach(function(fn){
