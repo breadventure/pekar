@@ -6455,7 +6455,12 @@ function driveView(u){ var id=driveId(u); return id?('https://drive.google.com/f
 function bvUploadFile(file, cb){
   if(!BV_CLOUD_URL){ alert('Для загрузки файлов нужна общая база (Google Диск).'); cb(null); return; }
   if(!file){ cb(null); return; }
-  if(file.size>7*1024*1024){ alert('Файл больше 7 МБ — загрузи файл поменьше.'); cb(null); return; }
+  /* Диск у нас большой, но файл едет через Apps Script в base64 — он раздувается
+     на треть, и у Google есть свой потолок на размер запроса. Пропускаем сколько
+     реально доезжает, а не 7 МБ. */
+  var MB=file.size/1024/1024;
+  if(MB>45){ alert('Файл '+MB.toFixed(0)+' МБ — столько не доедет.\n\nПотолок не в Диске, а в передаче через Apps Script: файл кодируется и раздувается на треть. Больше ~45 МБ Google не принимает.\n\nЗалей такой файл на Диск руками и вставь сюда ссылку.'); cb(null); return; }
+  if(MB>10 && !confirm('Файл '+MB.toFixed(1)+' МБ. Загрузка займёт время — не закрывай вкладку.\n\nПродолжить?')){ cb(null); return; }
   var reader=new FileReader();
   reader.onload=function(ev){
     var b64=String(ev.target.result).split(',')[1];
@@ -6962,7 +6967,26 @@ function remUnitName(u){ var x=REM_UNITS.filter(function(y){return y[0]===u;})[0
 /* Правка полей НЕ перерисовывает список: иначе на каждом символе
    ломается фокус и схлопывается карточка. Перерисовка — только по blur. */
 function remField(i,key,val){ if(REMINDERS[i])REMINDERS[i][key]=val; }
-function remCommit(i){ if(typeof bvSave==='function')bvSave(); renderReminders(); }
+function remCommit(i){
+  if(typeof bvSave==='function')bvSave();
+  remSavedFlash(i);
+  renderReminders();
+  remSavedFlash(i);
+}
+/* показать «✓ сохранено» и погасить */
+function remSavedFlash(i){
+  var el=document.getElementById('rem-saved-'+i); if(!el)return;
+  el.style.opacity='1';
+  if(el._t)clearTimeout(el._t);
+  el._t=setTimeout(function(){ var e2=document.getElementById('rem-saved-'+i); if(e2)e2.style.opacity='0'; },2200);
+}
+function remSave(i){
+  if(!isChef()){ alert('Менять работы может шеф или менеджер.'); return; }
+  if(!REMINDERS[i])return;
+  if(typeof bvSaveNow==='function')bvSaveNow(); else if(typeof bvSave==='function')bvSave();
+  renderReminders();
+  remSavedFlash(i);
+}
 function remRefresh(){ renderReminders(); bvSaveNow(); }
 function remAdd(){
   if(!isChef()){ alert('Добавлять работы может шеф или менеджер.'); return; }
@@ -7004,12 +7028,15 @@ function renderReminders(){
       '<div class="field" style="margin:10px 0 0"><label>Адрес / где</label><input type="text" value="'+ev(r.addr)+'" oninput="remField('+i+',\'addr\',this.value)" placeholder="Адрес сервиса или объекта"></div>'+
       '<div class="field" style="margin:10px 0 0"><label>Описание — что / зачем / почему</label><textarea rows="3" oninput="remField('+i+',\'desc\',this.value)" placeholder="Что именно делаем, зачем и почему это важно">'+ev(r.desc)+'</textarea></div>'+
       '<div class="field" style="margin:10px 0 0"><label>Комментарии</label><textarea rows="2" oninput="remField('+i+',\'comments\',this.value)" placeholder="Заметки, история, нюансы">'+ev(r.comments)+'</textarea></div>'+
-      '<div class="btn-row chef-only" style="margin-top:12px"><button class="btn" style="color:#C0392B" onclick="remDel('+i+')">🗑 Удалить работу</button></div>'+
+      '<div class="btn-row chef-only" style="margin-top:12px;justify-content:space-between;align-items:center"><span style="display:flex;gap:8px;align-items:center">'+
+      '<button class="btn primary" onclick="remSave('+i+')">💾 Сохранить</button>'+
+      '<span id="rem-saved-'+i+'" style="font-size:12px;color:#7EA66A;font-weight:600;opacity:0;transition:opacity .2s">✓ сохранено</span></span>'+
+      '<button class="btn" style="color:#C0392B" onclick="remDel('+i+')">🗑 Удалить работу</button></div>'+
       '</div>';
     return {html:'<div class="card" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">'+
-      '<div style="min-width:200px;cursor:pointer" onclick="remToggle('+i+')"><b style="font-size:15px">'+tkEsc(r.name)+' <span class="chev" id="rem-chev-'+i+'" style="font-size:12px">'+(_remOpen[i]?'▴':'▾')+'</span></b> <span style="font-size:11px;color:var(--accent)">'+(_remOpen[i]?'нажми, чтобы свернуть':'нажми, чтобы открыть детали')+'</span><br><span style="color:var(--muted);font-size:12.5px">каждые '+unitName(r.n,r.u)+(r.note?' · '+r.note:'')+' · последний раз '+fmtD(new Date(r.last))+'</span></div>'+
-      '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="font-size:14px"><b>'+fmtD(next)+'</b></span>'+remTag(days)+
-      '<button class="btn" onclick="remPlan('+i+')">📅 В график</button><button class="btn" onclick="remDone('+i+')">Сделано сегодня</button></div></div>'+det+'</div>',days:days};
+      '<div style="flex:1 1 240px;min-width:0;cursor:pointer" onclick="remToggle('+i+')"><b style="font-size:15px">'+tkEsc(r.name)+' <span class="chev" id="rem-chev-'+i+'" style="font-size:12px">'+(_remOpen[i]?'▴':'▾')+'</span></b> <span style="font-size:11px;color:var(--accent)">'+(_remOpen[i]?'нажми, чтобы свернуть':'нажми, чтобы открыть детали')+'</span><br><span style="color:var(--muted);font-size:12.5px;overflow-wrap:anywhere">каждые '+unitName(r.n,r.u)+(r.note?' · '+r.note:'')+' · последний раз '+fmtD(new Date(r.last))+'</span></div>'+
+      '<div style="display:flex;gap:10px;align-items:center;flex:0 0 auto;white-space:nowrap"><span style="font-size:14px"><b>'+fmtD(next)+'</b></span>'+remTag(days)+
+      '<button class="btn" onclick="event.stopPropagation();remPlan('+i+')">📅 В график</button><button class="btn" onclick="event.stopPropagation();remDone('+i+')">Сделано сегодня</button></div></div>'+det+'</div>',days:days};
   });
   rows.sort(function(a,b){return a.days-b.days;});
   document.getElementById('rem-list').innerHTML=rows.map(function(r){return r.html;}).join('');
