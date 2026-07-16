@@ -118,6 +118,22 @@
   .eq-fig{margin:0;width:31%}
   .eq-fig img{width:100%;height:52pt;object-fit:cover;border-radius:4pt;border:.8pt solid #1D1D1B;display:block}
   .eq-fig figcaption{font-size:7pt;color:#6b6b66;margin-top:2pt;line-height:1.3}
+  .tk-tbl{width:100%;border-collapse:collapse}
+  .tk-tbl th{font-size:8pt;text-transform:uppercase;letter-spacing:.04em;color:#6b6b66;text-align:left;padding:0 4pt 4pt;border-bottom:1.2pt solid #1D1D1B}
+  .tk-tbl td{font-size:9.5pt;padding:4pt;border-bottom:.7pt dashed rgba(29,29,27,.28);vertical-align:top}
+  .tk-tbl .n{text-align:right;white-space:nowrap}
+  .tk-tbl tfoot td{border-top:1.2pt solid #1D1D1B;border-bottom:none;font-size:10pt;padding-top:5pt}
+  .tk-tbl tr{break-inside:avoid;page-break-inside:avoid}
+  .tk-sub{font-size:7.5pt;color:#6b6b66;margin-top:1pt}
+  .tk-note{font-size:8pt;color:#6b6b66;margin-top:5pt;line-height:1.4}
+  .tk-ol{margin:4pt 0 0;padding-left:14pt}
+  .tk-ol li{font-size:9.5pt;line-height:1.45;margin-bottom:3pt;break-inside:avoid;page-break-inside:avoid}
+  .rg-step{display:flex;gap:7pt;align-items:flex-start;padding:4pt 0;border-bottom:.7pt dashed rgba(29,29,27,.28);break-inside:avoid;page-break-inside:avoid}
+  .rg-step:last-child{border-bottom:none}
+  .rg-n{flex:0 0 auto;width:14pt;height:14pt;border-radius:50%;background:#FFE98D;border:1pt solid #1D1D1B;font-size:8pt;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-top:1pt}
+  .rg-t{font-size:9.5pt;line-height:1.45}
+  .rg-sign{margin-top:12pt;padding:8pt 10pt;border:1pt dashed #1D1D1B;border-radius:7pt;font-size:9pt;break-inside:avoid;page-break-inside:avoid}
+  .rg-sd{font-size:7.5pt;color:#6b6b66;margin-top:3pt}
   /* ===== БЕЙДЖИ ===== */
   .bdgs{display:flex;flex-wrap:wrap;gap:12px 10px;margin-top:4px}
   .bdg{position:relative;display:inline-flex;flex-direction:column;align-items:center;width:78px;text-align:center}
@@ -349,6 +365,10 @@
   #print-area .sp-doc{font-family:'Wix Madefor Text',system-ui,sans-serif;color:#1D1D1B}
   #print-area .sp-card{break-inside:avoid;page-break-inside:avoid;border:1.2pt solid #1D1D1B;border-radius:9pt;padding:8pt 10pt 9pt;margin:0 0 7pt;background:#FFFDF6!important}
   #print-area .sp-top{break-after:avoid;page-break-after:avoid}
+  #print-area .tk-tbl tr{break-inside:avoid;page-break-inside:avoid}
+  #print-area .tk-tbl thead{display:table-header-group}
+  #print-area .sp-card{break-inside:auto}
+  #print-area .sp-card:has(.tk-tbl){break-inside:auto}
   #print-area .hint{display:none!important}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 }
@@ -610,14 +630,17 @@
   <div class="card" id="regl-detail" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
       <h2 style="font-size:24px" id="rgd-title">—</h2>
-      <span class="tag" id="rgd-cat">—</span>
+      <span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="tag" id="rgd-cat">—</span>
+      <button class="btn chef-only" style="padding:4px 12px;font-size:12px" onclick="reglEditor()">✎ Редактировать</button>
+      <button class="btn" style="padding:4px 12px;font-size:12px" onclick="reglPdf()">🖨 Скачать PDF</button></span>
     </div>
     <p style="color:var(--muted);font-size:13px;margin:2px 0 12px" id="rgd-sub"></p>
     <div id="rgd-body"></div>
     <div style="margin-top:16px">
       <b style="font-size:14px">📎 Прикреплённые файлы</b>
       <div id="rgd-files" style="margin-top:8px"></div>
-      <div class="btn-row"><button class="btn" onclick="reglAttach()">+ Прикрепить файл (шеф)</button></div>
+      <div class="btn-row chef-only"><button class="btn" onclick="reglAttach()">+ Прикрепить файл</button></div>
+      <p class="hint" style="margin:6px 0 0">Файлы кладутся на Google Диск и доступны команде с любого устройства. Сам текст регламента печатается кнопкой «🖨 Скачать PDF».</p>
     </div>
   </div>
 
@@ -4938,16 +4961,51 @@ function tkExportCSV(){
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=r.name.replace(/\s+/g,'_')+'.csv';a.click();
 }
 function tkExportPDF(){
-  var r=currentRecipe,n=parseFloat(document.getElementById('tk-qty').value)||1;
+  var r=currentRecipe; if(!r){ alert('Сначала открой рецептуру.'); return; }
+  var pa=document.getElementById('print-area'); if(!pa){ alert('Печать недоступна.'); return; }
+  var n=parseFloat(document.getElementById('tk-qty').value)||1;
   var ing=tkActiveIng(),scale=tkScale();
-  var w=window.open('','_blank');
-  w.document.write('<html><head><title>'+r.name+'</title><style>body{font-family:Georgia,serif;padding:30px;max-width:640px}h1{font-style:italic}table{width:100%;border-collapse:collapse;margin:16px 0}td,th{border-bottom:1px solid #999;padding:7px 4px;text-align:left}td:last-child,th:last-child,td:nth-child(2),th:nth-child(2){text-align:right}ol li{margin-bottom:6px}.m{color:#777;font-size:13px}</style></head><body>');
-  w.document.write('<h1>'+r.name+'</h1><p class="m">BreadVenture · '+(r.sub||'')+' · на '+n+' '+r.unit+'</p>');
-  w.document.write('<table><tr><th>Ингредиент</th><th>На 1, г</th><th>На '+n+', г</th></tr>'+ing.map(function(i){return '<tr><td>'+i[0]+'</td><td>'+Math.round(i[1]*scale*10)/10+'</td><td><b>'+Math.round(i[1]*scale*n*10)/10+'</b></td></tr>';}).join('')+'</table>');
-  if(r.steps)w.document.write('<h3>Шаги</h3><ol>'+r.steps.map(function(st){return '<li>'+st+'</li>';}).join('')+'</ol>');
-  if(r.desc)w.document.write('<p><b>Комментарий шефа:</b> '+r.desc+'</p>');
-  w.document.write('</body></html>');w.document.close();
-  setTimeout(function(){w.print();},300);
+  var safEl=document.getElementById('tk-safety');
+  var safety=safEl?(parseFloat(safEl.value)||0):0;
+  /* страховка на замес: та же формула, что и в таблице на экране */
+  var total1=0; ing.forEach(function(i){ total1+=i[1]*scale; });
+  var totalN0=total1*n;
+  var buf=(totalN0>0&&safety>0)?(totalN0+safety)/totalN0:1;
+  var nb=n*buf;
+  var flour=(typeof tkFlourTotal==='function')?tkFlourTotal(ing,scale):0;
+  var co=(typeof COMPANY!=='undefined'&&COMPANY&&COMPANY.vals)?COMPANY.vals:{};
+  var name=co.short||co.name||'BreadVenture';
+  var dt=new Date();
+  var rows=ing.map(function(i){
+    var per1=Math.round(i[1]*scale*10)/10;
+    var perN=Math.round(i[1]*scale*nb*10)/10;
+    var pct=flour>0?(Math.round(i[1]*scale/flour*1000)/10)+'%':'—';
+    var h=(typeof starterHydr==='function')?starterHydr(i[0]):null;
+    var sub='';
+    if(h!==null){
+      var sf=Math.round(perN/(1+h)*10)/10, sw=Math.round((perN-perN/(1+h))*10)/10;
+      sub='<div class="tk-sub">→ мука '+fmt1(sf)+' г + вода '+fmt1(sw)+' г (гидратация '+Math.round(h*100)+'%)</div>';
+    }
+    return '<tr><td>'+tkEsc(i[0])+sub+'</td><td class="n">'+pct+'</td><td class="n">'+fmt1(per1)+'</td><td class="n"><b>'+fmt1(perN)+'</b></td></tr>';
+  }).join('');
+  var sumN=Math.round(total1*nb*10)/10;
+  pa.innerHTML='<div class="sp-doc">'+
+    '<div class="sp-top"><div><div class="sp-title">'+tkEsc(r.name)+'</div>'+
+    '<div class="sp-sub">'+tkEsc(name)+(r.sub?(' · '+tkEsc(r.sub)):'')+' · на '+fmt1(n)+' '+tkEsc(r.unit||'шт')+'</div></div>'+
+    '<div class="sp-date">'+dt.toLocaleDateString('ru-RU')+'</div></div>'+
+    (safety>0
+      ? '<div class="sp-note"><b>🛟 Страховка на замес: +'+fmt1(safety)+' г.</b> Колонка «к замесу» — с запасом; колонка «на 1» — чистая раскладка.</div>'
+      : '<div class="sp-note">Колонка «на 1» — чистая раскладка на одно изделие.</div>')+
+    '<div class="sp-card"><table class="tk-tbl"><thead><tr><th>Ингредиент</th><th class="n">%</th><th class="n">На 1, г</th><th class="n">На '+fmt1(n)+(safety>0?' (к замесу)':'')+', г</th></tr></thead>'+
+    '<tbody>'+rows+'</tbody>'+
+    '<tfoot><tr><td><b>Итого</b></td><td class="n">'+(flour>0?'':'—')+'</td><td class="n"><b>'+fmt1(Math.round(total1*10)/10)+'</b></td><td class="n"><b>'+fmt1(sumN)+'</b></td></tr></tfoot></table>'+
+    (flour>0?'<div class="tk-note">Общая мука = '+fmt1(Math.round(flour*10)/10)+' г = 100% (включая муку из опары и закваски). Проценты — от неё.</div>':'')+
+    '</div>'+
+    ((r.steps&&r.steps.length)?'<div class="sp-card"><div class="sp-head"><span class="sp-sit">Шаги</span></div><ol class="tk-ol">'+r.steps.map(function(st){return '<li>'+tkEsc(st)+'</li>';}).join('')+'</ol></div>':'')+
+    (r.desc?'<div class="sp-card"><div class="sp-head"><span class="sp-sit">Комментарий шефа</span></div><div class="sp-line">'+tkEsc(r.desc)+'</div></div>':'')+
+    '<div class="sp-foot">'+tkEsc(name)+' · Контроль сегодня. Качество завтра.</div></div>';
+  pa.style.display='block';
+  setTimeout(function(){ window.print(); setTimeout(function(){ pa.innerHTML=''; pa.style.display='none'; },400); },60);
 }
 
 
@@ -5011,43 +5069,177 @@ function renderKbCustom(sec){
 }
 function renderKbAll(){renderKbCustom('regl');renderKbCustom('san');renderKbCustom('oborud');}
 function renderReglGrid(){
-  document.getElementById('regl-grid').innerHTML=Object.keys(REGL).map(function(k){
+  reglNorm();
+  var _g=document.getElementById('regl-grid'); if(!_g)return;
+  _g.innerHTML=(isChef()?'<div class="card click chef-only" onclick="reglNew()" style="display:flex;align-items:center;justify-content:center;min-height:120px"><b style="font-size:15px">+ Новый регламент</b></div>':'')+Object.keys(REGL).map(function(k){
     var r=REGL[k];
-    return '<div class="card click bg-blue" onclick="reglOpen(\''+k+'\')"><div class="photo">фото</div><h3 class="card-t" style="font-size:17px">'+r.t+'</h3><p>'+r.body[0]+'…</p><div class="meta"><span class="tag">'+r.cat+'</span><b>›</b></div></div>';
+    return '<div class="card click bg-blue" onclick="reglOpen(\''+k+'\')"><div class="photo">фото</div><h3 class="card-t" style="font-size:17px">'+tkEsc(r.t)+'</h3><p>'+tkEsc(r.body[0]||'—')+'…</p><div class="meta"><span class="tag">'+tkEsc(r.cat)+'</span><b>›</b></div></div>';
   }).join('');
 }
 var _reglKey=null;
 function reglOpen(k){
+  reglNorm();
+  if(!REGL[k])return;
   _reglKey=k;var r=REGL[k];
   var d=document.getElementById('regl-detail');d.style.display='';
   document.getElementById('rgd-title').textContent=r.t;
   document.getElementById('rgd-cat').textContent=r.cat;
   document.getElementById('rgd-sub').textContent=r.sub;
   document.getElementById('rgd-body').innerHTML=r.body.map(function(x,i){
-    return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1.5px dashed var(--hair);align-items:flex-start"><span class="step-n">'+(i+1)+'</span><span style="font-size:14px;padding-top:3px">'+x+'</span></div>';
-  }).join('');
+    return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1.5px dashed var(--hair);align-items:flex-start"><span class="step-n">'+(i+1)+'</span><span style="font-size:14px;padding-top:3px">'+tkEsc(x)+'</span></div>';
+  }).join('')||'<p class="hint">Шаги пока не заполнены.</p>';
   reglFiles();
   d.scrollIntoView({behavior:'smooth',block:'start'});
 }
+/* Файлы регламентов: раньше это были фиктивные пары [имя, размер] —
+   кнопка «Скачать» отдавала .txt-заглушку. Теперь настоящие файлы на Диске. */
+function reglNorm(){
+  if(!REGL||typeof REGL!=='object')REGL={};
+  Object.keys(REGL).forEach(function(k){
+    var r=REGL[k];
+    if(!r||typeof r!=='object'){ delete REGL[k]; return; }
+    if(!r.t)r.t=k; if(!r.cat)r.cat='Прочее'; if(!r.sub)r.sub='';
+    if(!Array.isArray(r.body))r.body=[];
+    if(!Array.isArray(r.files))r.files=[];
+    r.files=r.files.map(function(f){
+      if(Array.isArray(f)) return {name:f[0],size:f[1]||'',url:'',demo:true};   /* старые фиктивные */
+      if(!f||typeof f!=='object')return null;
+      if(!f.name)f.name='файл';
+      return f;
+    }).filter(Boolean);
+  });
+  return REGL;
+}
+var REGL_UP=false;
 function reglFiles(){
-  var r=REGL[_reglKey];
-  document.getElementById('rgd-files').innerHTML=r.files.map(function(f,i){
-    return '<div class="pair"><span>📄 '+f[0]+' <span style="color:var(--muted);font-size:12px">'+f[1]+'</span></span><button class="btn" style="padding:4px 12px" onclick="reglDownload('+i+')">Скачать</button></div>';
-  }).join('')||'<p class="hint">Файлов пока нет.</p>';
+  reglNorm();
+  var r=REGL[_reglKey]; if(!r)return;
+  var box=document.getElementById('rgd-files'); if(!box)return;
+  var chef=isChef();
+  box.innerHTML=(r.files.length?r.files.map(function(f,i){
+    return '<div class="pair"><span>📄 '+tkEsc(f.name)+
+      (f.demo?' <span class="tag crit" style="font-size:10px">файла нет — демо</span>':(f.date?' <span style="color:var(--muted);font-size:12px">'+tkEsc(f.date)+'</span>':''))+
+      '</span><span style="display:flex;gap:5px">'+
+      (f.url?'<a class="btn" style="padding:4px 12px;text-decoration:none" href="'+driveView(f.url)+'" target="_blank">Открыть</a>':'')+
+      (chef?'<button class="btn" style="padding:4px 10px;color:#C0392B" onclick="reglFileDel('+i+')">✕</button>':'')+
+      '</span></div>';
+  }).join(''):'<p class="hint">Файлов пока нет.</p>')+(REGL_UP?'<p class="hint">Загрузка…</p>':'');
+  var demo=r.files.filter(function(f){return f.demo;}).length;
+  if(demo&&chef) box.innerHTML+='<div class="note" style="margin-top:8px">⚠️ '+demo+' файл(ов) из прототипа — настоящих файлов за ними нет. Загрузи их заново кнопкой «+ Прикрепить файл» и убери старые.</div>';
 }
-function reglDownload(i){
-  var r=REGL[_reglKey],f=r.files[i];
-  var content='BreadVenture · '+r.t+'\n'+r.sub+'\n\n'+r.body.map(function(x,n){return (n+1)+'. '+x;}).join('\n')+'\n\n(демо-файл вместо «'+f[0]+'» — реальные файлы будут храниться на Google Drive, этап 2)';
-  var blob=new Blob(['\uFEFF'+content],{type:'text/plain;charset=utf-8'});
-  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=f[0].replace(/\.(pdf|jpg|xlsx)$/i,'.txt');a.click();
+function reglFileDel(i){
+  if(!isChef())return;
+  reglNorm(); var r=REGL[_reglKey]; if(!r||!r.files[i])return;
+  if(!confirm('Убрать «'+r.files[i].name+'» из списка?'+(r.files[i].url?'\n\nСам файл останется на Google Диске.':'')))return;
+  r.files.splice(i,1); reglFiles(); bvSaveNow();
 }
+/* ---------- PDF регламента ---------- */
+function reglPdf(){
+  reglNorm();
+  var r=REGL[_reglKey]; if(!r){ alert('Сначала открой регламент.'); return; }
+  var pa=document.getElementById('print-area'); if(!pa){ alert('Печать недоступна.'); return; }
+  var co=(typeof COMPANY!=='undefined'&&COMPANY&&COMPANY.vals)?COMPANY.vals:{};
+  var name=co.short||co.name||'BreadVenture';
+  var dt=new Date();
+  var steps=r.body.map(function(x,i){
+    return '<div class="rg-step"><span class="rg-n">'+(i+1)+'</span><span class="rg-t">'+tkEsc(x)+'</span></div>';
+  }).join('');
+  var files=r.files.filter(function(f){return f.url;});
+  pa.innerHTML='<div class="sp-doc">'+
+    '<div class="sp-top"><div><div class="sp-title">'+tkEsc(r.t)+'</div>'+
+    '<div class="sp-sub">'+tkEsc(r.cat)+' · '+tkEsc(name)+(r.sub?(' · '+tkEsc(r.sub)):'')+'</div></div>'+
+    '<div class="sp-date">'+dt.toLocaleDateString('ru-RU')+'</div></div>'+
+    '<div class="sp-card">'+(steps||'<p>Регламент пока не заполнен.</p>')+'</div>'+
+    (files.length?'<div class="sp-card"><div class="sp-head"><span class="sp-sit">📎 Приложения</span></div>'+
+      files.map(function(f){ return '<div class="sp-line">'+tkEsc(f.name)+'</div>'; }).join('')+'</div>':'')+
+    '<div class="rg-sign"><div>Ознакомлен: ______________________ / ______________</div><div class="rg-sd">подпись · дата</div></div>'+
+    '<div class="sp-foot">'+tkEsc(name)+' · Контроль сегодня. Качество завтра.</div></div>';
+  pa.style.display='block';
+  setTimeout(function(){ window.print(); setTimeout(function(){ pa.innerHTML=''; pa.style.display='none'; },400); },60);
+}
+/* ---------- редактор регламента ---------- */
+function reglER(){ reglOpen(_reglKey); renderReglGrid(); bvSaveNow(); }
+function reglEditor(){
+  if(!isChef()){ alert('Менять регламенты может шеф или менеджер.'); return; }
+  reglNorm();
+  var r=REGL[_reglKey]; if(!r)return;
+  var ov=document.getElementById('rge-modal');
+  if(!ov){ ov=document.createElement('div'); ov.id='rge-modal'; ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px'; document.body.appendChild(ov); }
+  var steps=r.body.map(function(x,i){
+    return '<div class="pair" style="padding:4px 0"><span style="font-size:12.5px"><b>'+(i+1)+'.</b> '+tkEsc(x)+'</span>'+
+      '<span style="display:flex;gap:4px"><button class="btn" style="padding:1px 7px;font-size:10.5px" onclick="reglStepMove('+i+',-1)">↑</button>'+
+      '<button class="btn" style="padding:1px 7px;font-size:10.5px" onclick="reglStepMove('+i+',1)">↓</button>'+
+      '<button class="btn" style="padding:1px 7px;font-size:10.5px" onclick="reglStepEdit('+i+')">✎</button>'+
+      '<button class="btn" style="padding:1px 7px;font-size:10.5px;color:#C0392B" onclick="reglStepDel('+i+')">✕</button></span></div>';
+  }).join('') || '<p class="hint" style="margin:5px 0">Шагов пока нет.</p>';
+  ov.innerHTML='<div style="background:var(--bg);border:1.5px solid var(--ink);border-radius:16px;max-width:600px;width:100%;padding:20px;box-shadow:4px 4px 0 var(--ink)">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">✎ '+tkEsc(r.t)+'</b><button onclick="document.getElementById(\'rge-modal\').remove()" style="border:none;background:none;font-size:20px;cursor:pointer">✕</button></div>'+
+    '<div class="grid g2" style="gap:10px;margin-top:10px">'+
+    '<div class="field" style="margin:0"><label>Название</label><input type="text" value="'+tkEsc(r.t)+'" oninput="reglSet(\'t\',this.value)" onchange="renderReglGrid();bvSave()"></div>'+
+    '<div class="field" style="margin:0"><label>Категория</label><input type="text" value="'+tkEsc(r.cat)+'" oninput="reglSet(\'cat\',this.value)" onchange="renderReglGrid();bvSave()" placeholder="Подготовка / Чистка / Завершение"></div>'+
+    '</div>'+
+    '<div class="field" style="margin:10px 0 0"><label>Подзаголовок</label><input type="text" value="'+tkEsc(r.sub)+'" oninput="reglSet(\'sub\',this.value)" onchange="bvSave()" placeholder="Обновлён 08.05.2026 · ответственный: пекарь открытия"></div>'+
+    '<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:13px">Шаги</b><button class="btn" style="padding:2px 9px;font-size:11px" onclick="reglStepAdd()">+ шаг</button></div>'+steps+'</div>'+
+    '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn" onclick="reglNew()">+ Новый регламент</button>'+
+    '<button class="btn" style="color:#C0392B" onclick="reglDel()">🗑 Удалить регламент</button>'+
+    '<button class="btn primary" onclick="document.getElementById(\'rge-modal\').remove();reglER()">Готово</button></div></div>';
+}
+function reglSet(k,v){ if(REGL[_reglKey])REGL[_reglKey][k]=v; }
+function reglRE(){ reglEditor(); reglER(); }
+function reglStepAdd(){
+  if(!isChef())return; var r=REGL[_reglKey]; if(!r)return;
+  var v=prompt('Что нужно сделать:',''); if(v===null)return; v=String(v).trim();
+  if(!v){ alert('Шаг не может быть пустым.'); return; }
+  r.body.push(v); reglRE();
+}
+function reglStepEdit(i){
+  if(!isChef())return; var r=REGL[_reglKey]; if(!r||!r.body[i])return;
+  var v=prompt('Текст шага:',r.body[i]); if(v===null)return; v=String(v).trim(); if(!v)return;
+  r.body[i]=v; reglRE();
+}
+function reglStepDel(i){
+  if(!isChef())return; var r=REGL[_reglKey]; if(!r||!r.body[i])return;
+  if(!confirm('Удалить шаг?\n\n'+r.body[i]))return;
+  r.body.splice(i,1); reglRE();
+}
+function reglStepMove(i,d){
+  if(!isChef())return; var r=REGL[_reglKey]; if(!r)return;
+  var j=i+d; if(j<0||j>=r.body.length)return;
+  var t=r.body[i]; r.body[i]=r.body[j]; r.body[j]=t; reglRE();
+}
+function reglNew(){
+  if(!isChef())return;
+  var t=prompt('Название регламента:',''); t=(t||'').trim(); if(!t)return;
+  var k='rg_'+Date.now();
+  REGL[k]={t:t,cat:'Прочее',sub:'Обновлён '+new Date().toLocaleDateString('ru-RU'),body:[],files:[]};
+  _reglKey=k; reglNorm();
+  var m=document.getElementById('rge-modal'); if(m)m.remove();
+  renderReglGrid(); reglOpen(k); bvSaveNow(); reglEditor();
+}
+function reglDel(){
+  if(!isChef())return; var r=REGL[_reglKey]; if(!r)return;
+  if(Object.keys(REGL).length<2){ alert('Это единственный регламент — удалить нельзя.'); return; }
+  if(!confirm('Удалить регламент «'+r.t+'» со всеми шагами?'))return;
+  delete REGL[_reglKey];
+  var m=document.getElementById('rge-modal'); if(m)m.remove();
+  _reglKey=Object.keys(REGL)[0];
+  renderReglGrid(); reglOpen(_reglKey); bvSaveNow();
+}
+
 function reglAttach(){
+  if(!isChef()){ alert('Прикреплять файлы может шеф или менеджер.'); return; }
+  reglNorm();
   var inp=document.createElement('input');inp.type='file';
   inp.onchange=function(){
     if(!inp.files.length)return;
     var f=inp.files[0];
-    REGL[_reglKey].files.push([f.name,Math.round(f.size/1024)+' КБ']);
-    reglFiles();
+    var nm=(prompt('Название файла:', f.name)||f.name);
+    REGL_UP=true; reglFiles();
+    bvUploadFile(f, function(url){
+      REGL_UP=false;
+      if(url){ REGL[_reglKey].files.push({name:nm,url:url,date:new Date().toLocaleDateString('ru-RU')}); bvSaveNow(); }
+      reglFiles();
+    });
   };
   inp.click();
 }
@@ -9481,7 +9673,7 @@ function sendChk(){
 }
 /* ===================== СОХРАНЕНИЕ В БРАУЗЕРЕ (localStorage) ===================== */
 var BV_KEY='bv_pekar_store_v1';
-var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','REMINDERS','SCRIPTS','EQ','SAN','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','ACH_MIG','SKILL_GROUPS','TRACK_SKILLS','BADGE_CUSTOM','BADGE_EDITS','BADGE_HIDDEN','ATTEST','OB_TRACKS','OB_VERSIONS','FAQ','FAQ_ASK'];
+var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','REMINDERS','SCRIPTS','EQ','SAN','REGL','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','ACH_MIG','SKILL_GROUPS','TRACK_SKILLS','BADGE_CUSTOM','BADGE_EDITS','BADGE_HIDDEN','ATTEST','OB_TRACKS','OB_VERSIONS','FAQ','FAQ_ASK'];
 function bvSnapshot(){ var o={}; for(var i=0;i<BV_PERSIST.length;i++){ var k=BV_PERSIST[i]; try{ if(typeof window[k]!=='undefined') o[k]=window[k]; }catch(e){} } return o; }
 function bvSave(){ try{ localStorage.setItem(BV_KEY, JSON.stringify(bvSnapshot())); }catch(e){} }
 function bvLoad(){ try{ var raw=localStorage.getItem(BV_KEY); if(!raw)return false; var o=JSON.parse(raw); var n=0; for(var k in o){ if(o.hasOwnProperty(k) && BV_PERSIST.indexOf(k)>=0){ try{ window[k]=o[k]; n++; }catch(e){} } } return n>0; }catch(e){ return false; } }
@@ -9532,6 +9724,7 @@ function bvFixups(){
   try{ if(typeof faqNorm==='function')faqNorm(); }catch(e){}
   try{ if(typeof eqNorm==='function')eqNorm(); }catch(e){}
   try{ if(typeof sanNorm==='function')sanNorm(); }catch(e){}
+  try{ if(typeof reglNorm==='function')reglNorm(); }catch(e){}
 }
 function bvRerender(){
   ['renderTeam','renderHR','renderAch','renderBadgeBook','renderRolesMatrix','renderCompany','renderReminders','renderAttest','renderOnboard','renderLevelLegend','renderNotifs'].forEach(function(fn){
