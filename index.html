@@ -95,6 +95,25 @@
   .bv-today .d1{font-family:'Instrument Serif',Georgia,serif;font-style:italic;font-size:26px;line-height:1;letter-spacing:.01em}
   .bv-today .d2{font-size:11.5px;color:var(--muted);margin-top:4px;text-transform:lowercase;letter-spacing:.03em}
   .bv-today .d3{font-size:11px;color:var(--accent);font-weight:700;margin-top:2px}
+  /* ===== PDF СКРИПТОВ ===== */
+  .sp-doc{padding:0}
+  .sp-top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;border-bottom:2pt solid #1D1D1B;padding-bottom:7pt;margin-bottom:8pt}
+  .sp-title{font-family:'Instrument Serif',Georgia,serif;font-style:italic;font-size:26pt;line-height:1}
+  .sp-sub{font-size:9pt;color:#6b6b66;margin-top:3pt}
+  .sp-date{font-size:9pt;color:#6b6b66;white-space:nowrap}
+  .sp-note{font-size:8.5pt;color:#6b6b66;margin-bottom:9pt}
+  .sp-card{border:1.2pt solid #1D1D1B;border-radius:9pt;padding:8pt 10pt 9pt;margin:0 0 7pt;background:#FFFDF6}
+  .sp-head{display:flex;gap:7pt;align-items:baseline;margin-bottom:4pt}
+  .sp-num{flex:0 0 auto;width:15pt;height:15pt;border-radius:50%;background:#FFE98D;border:1pt solid #1D1D1B;font-size:8.5pt;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+  .sp-sit{font-size:11.5pt;font-weight:700;line-height:1.25}
+  .sp-sit2{font-weight:400;color:#6b6b66;font-size:10pt}
+  .sp-line{font-size:9pt;line-height:1.4;margin-top:2pt}
+  .sp-lab{font-weight:700;margin-right:3pt}
+  .sp-sr{color:#3f3f3c}
+  .sp-say{background:rgba(71,162,218,.10);border-left:2.5pt solid #47A2DA;border-radius:5pt;padding:5pt 7pt;margin:5pt 0}
+  .sp-saytext{font-size:10pt;line-height:1.45}
+  .sp-saytext+.sp-saytext{margin-top:3pt;padding-top:3pt;border-top:.7pt dashed rgba(29,29,27,.25)}
+  .sp-foot{margin-top:9pt;padding-top:6pt;border-top:1pt solid #1D1D1B;font-size:8pt;color:#6b6b66;text-align:center}
   /* ===== БЕЙДЖИ ===== */
   .bdgs{display:flex;flex-wrap:wrap;gap:12px 10px;margin-top:4px}
   .bdg{position:relative;display:inline-flex;flex-direction:column;align-items:center;width:78px;text-align:center}
@@ -321,6 +340,11 @@
   #print-area table{break-inside:auto}
   #print-area tr{break-inside:avoid;page-break-inside:avoid}
   #print-area button{display:none!important}
+  /* ===== ПЕЧАТЬ СКРИПТОВ ===== */
+  @page{ margin:14mm 12mm; }
+  #print-area .sp-doc{font-family:'Wix Madefor Text',system-ui,sans-serif;color:#1D1D1B}
+  #print-area .sp-card{break-inside:avoid;page-break-inside:avoid;border:1.2pt solid #1D1D1B;border-radius:9pt;padding:8pt 10pt 9pt;margin:0 0 7pt;background:#FFFDF6!important}
+  #print-area .sp-top{break-after:avoid;page-break-after:avoid}
   #print-area .hint{display:none!important}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 }
@@ -1399,11 +1423,25 @@
     <button class="btn" onclick="scriptFormToggle()">+ Добавить скрипт</button>
     <div id="scr-form" style="display:none;margin-top:12px;border:1.5px solid var(--ink);border-radius:12px;padding:14px;background:var(--card)">
       <input type="hidden" id="scr-idx" value="-1">
-      <div class="field" style="margin:0 0 8px"><label>Ситуация</label><input type="text" id="scr-sit" placeholder="Например: Клиент торопится"></div>
-      <div class="field" style="margin:0 0 8px"><label>Цель</label><input type="text" id="scr-goal" placeholder="Что хотим достичь"></div>
-      <div class="field" style="margin:0 0 8px"><label>Что сказать</label><textarea id="scr-say" rows="2" placeholder="Готовая фраза"></textarea></div>
-      <div class="field" style="margin:0 0 8px"><label>Не говорить</label><input type="text" id="scr-dont" placeholder="Чего избегать"></div>
-      <div class="field" style="margin:0"><label>Подсказка (необязательно)</label><input type="text" id="scr-extra" placeholder="Доп. совет"></div>
+      <div class="grid g2" style="gap:14px">
+        <div>
+          <b style="font-size:13px">🇷🇺 Русский</b>
+          <div class="field" style="margin:6px 0 8px"><label>Ситуация</label><input type="text" id="scr-sit" placeholder="Например: Клиент торопится"></div>
+          <div class="field" style="margin:0 0 8px"><label>Цель</label><input type="text" id="scr-goal" placeholder="Что хотим достичь"></div>
+          <div class="field" style="margin:0 0 8px"><label>Что сказать</label><textarea id="scr-say" rows="3" placeholder="Готовая фраза"></textarea></div>
+          <div class="field" style="margin:0 0 8px"><label>Не говорить</label><input type="text" id="scr-dont" placeholder="Чего избегать"></div>
+          <div class="field" style="margin:0"><label>Подсказка (необязательно)</label><input type="text" id="scr-extra" placeholder="Доп. совет"></div>
+        </div>
+        <div>
+          <b style="font-size:13px">🇷🇸 Srpski</b>
+          <div class="field" style="margin:6px 0 8px"><label>Situacija</label><input type="text" id="scr-sitSr" placeholder="Npr: Kupac žuri"></div>
+          <div class="field" style="margin:0 0 8px"><label>Cilj</label><input type="text" id="scr-goalSr" placeholder="Šta želimo da postignemo"></div>
+          <div class="field" style="margin:0 0 8px"><label>Šta reći</label><textarea id="scr-saySr" rows="3" placeholder="Gotova rečenica"></textarea></div>
+          <div class="field" style="margin:0 0 8px"><label>Ne govoriti</label><input type="text" id="scr-dontSr" placeholder="Šta izbegavati"></div>
+          <div class="field" style="margin:0"><label>Napomena (opciono)</label><input type="text" id="scr-extraSr" placeholder="Dodatni savet"></div>
+        </div>
+      </div>
+      <p class="hint" style="margin:10px 0 0">Скрипт видят и русскоязычные, и сербские сотрудники — заполняй оба столбца. Сохранишь с сербским — пометка «черновик» снимется.</p>
       <div class="btn-row"><button class="btn primary" onclick="scriptSave()">Сохранить</button><button class="btn" onclick="scriptFormToggle()">Отмена</button></div>
     </div>
   </div>
@@ -8260,30 +8298,32 @@ function renderProducts(){
 
 /* ===== СКРИПТЫ СЕРВИСА ===== */
 var SCRIPTS=[
-  {sit:'Первый визит клиента',goal:'Тепло встретить, сориентировать',say:'Здравствуйте! У нас хлеб на закваске и сдоба собственного производства. Подсказать, что сегодня особенно удачное?',dont:'Не молчать и не давить с выбором',extra:'Дайте 5–10 секунд осмотреться'},
-  {sit:'«Что посоветуете?»',goal:'Помочь выбрать под вкус',say:'Если любите классику — тартин, наш базовый на закваске. Хочется поярче — семечковый. Сладкое — бриошь с карамелью.',dont:'Не перечислять всё подряд',extra:'Сначала уточните: хлеб или сладкое'},
-  {sit:'Клиент не знает, какой хлеб выбрать',goal:'Сузить выбор',say:'Для бутербродов и тостов — тартин. К сырам и для насыщенного вкуса — семечковый или ржаной.',dont:'Не использовать сложные термины',extra:'Можно предложить попробовать'},
-  {sit:'Спрашивает про закваску',goal:'Объяснить просто',say:'Закваска — это живая культура из муки и воды вместо дрожжей. Даёт мягкую кислинку, лучше хранится и легче усваивается.',dont:'Не углубляться в химию',extra:''},
-  {sit:'Спрашивает про хранение',goal:'Дать понятный совет',say:'Хлеб на закваске — в бумаге или полотенце при комнатной температуре до 3–4 дней. В холодильник не нужно — там черствеет быстрее.',dont:'Не советовать пакет наглухо',extra:'Можно нарезать и заморозить'},
-  {sit:'Клиент недоволен',goal:'Снять напряжение, решить',say:'Спасибо, что сказали. Давайте разберёмся — заменю или верну деньги. Извините за неудобство.',dont:'Не спорить и не оправдываться',extra:'Сообщите шефу/менеджеру'},
-  {sit:'Жалуется на цену',goal:'Объяснить ценность',say:'Цена за длительную ферментацию (до суток), качественную муку и ручную работу. Это другой хлеб по вкусу и пользе.',dont:'Не обесценивать его мнение',extra:''},
-  {sit:'Хочет скидку',goal:'Вежливо обозначить рамки',say:'Постоянных скидок нет, но вечером на вчерашний хлеб бывает специальная цена. Подсказать, что сейчас доступно?',dont:'Не обещать то, чего нет',extra:'Уточните политику у менеджера'},
-  {sit:'Пришёл после 15:00',goal:'Сориентировать по остаткам',say:'К вечеру ассортимент меньше, но есть свежее: вот это и это. Завтра с утра — полный выбор.',dont:'Не говорить «всё разобрали»',extra:'Предложите вчерашний со скидкой'},
-  {sit:'Спрашивает про вчерашний хлеб',goal:'Честно и аппетитно',say:'Это хлеб вчерашней выпечки по специальной цене — отлично идёт на тосты и брускетту.',dont:'Не выдавать за свежий',extra:''},
-  {sit:'Спрашивает про аллергены',goal:'Дать точную информацию',say:'Подскажу по конкретной позиции — открою описание. Если строгая аллергия, уточню состав у пекаря.',dont:'Не угадывать состав',extra:'Смотрите блок «Что говорить клиенту» в рецептуре'}
+  {sit:'Первый визит клиента',goal:'Тепло встретить, сориентировать',say:'Здравствуйте! У нас хлеб на закваске и сдоба собственного производства. Подсказать, что сегодня особенно удачное?',dont:'Не молчать и не давить с выбором',extra:'Дайте 5–10 секунд осмотреться',sitSr:'Prvi dolazak kupca',goalSr:'Toplo dočekati i pomoći da se snađe',saySr:'Dobar dan! Kod nas je hleb od kiselog testa i peciva iz sopstvene proizvodnje. Da vam kažem šta je danas posebno dobro ispalo?',dontSr:'Ne ćutati i ne vršiti pritisak pri izboru',extraSr:'Dajte im 5–10 sekundi da se osvrnu',srDraft:true},
+  {sit:'«Что посоветуете?»',goal:'Помочь выбрать под вкус',say:'Если любите классику — тартин, наш базовый на закваске. Хочется поярче — семечковый. Сладкое — бриошь с карамелью.',dont:'Не перечислять всё подряд',extra:'Сначала уточните: хлеб или сладкое',sitSr:'„Šta preporučujete?“',goalSr:'Pomoći da izaberu po ukusu',saySr:'Ako volite klasiku — tartin, naš osnovni hleb od kiselog testa. Ako želite izraženiji ukus — hleb sa semenkama. Za slatko — brioš sa karamelom.',dontSr:'Ne nabrajati sve redom',extraSr:'Prvo pitajte: hleb ili nešto slatko',srDraft:true},
+  {sit:'Клиент не знает, какой хлеб выбрать',goal:'Сузить выбор',say:'Для бутербродов и тостов — тартин. К сырам и для насыщенного вкуса — семечковый или ржаной.',dont:'Не использовать сложные термины',extra:'Можно предложить попробовать',sitSr:'Kupac ne zna koji hleb da izabere',goalSr:'Suziti izbor',saySr:'Za sendviče i tost — tartin. Uz sireve i za punији ukus — hleb sa semenkama ili raženi.',dontSr:'Ne koristiti složene stručne izraze',extraSr:'Možete ponuditi da probaju',srDraft:true},
+  {sit:'Спрашивает про закваску',goal:'Объяснить просто',say:'Закваска — это живая культура из муки и воды вместо дрожжей. Даёт мягкую кислинку, лучше хранится и легче усваивается.',dont:'Не углубляться в химию',extra:'',sitSr:'Pita za kiselo testo',goalSr:'Objasniti jednostavno',saySr:'Kiselo testo je živa kultura od brašna i vode, umesto kvasca. Daje blagu kiselkastu notu, hleb duže traje i lakše se vari.',dontSr:'Ne ulaziti u hemiju',extraSr:'',srDraft:true},
+  {sit:'Спрашивает про хранение',goal:'Дать понятный совет',say:'Хлеб на закваске — в бумаге или полотенце при комнатной температуре до 3–4 дней. В холодильник не нужно — там черствеет быстрее.',dont:'Не советовать пакет наглухо',extra:'Можно нарезать и заморозить',sitSr:'Pita kako da čuva hleb',goalSr:'Dati jasan savet',saySr:'Hleb od kiselog testa — u papiru ili krpi, na sobnoj temperaturi, do 3–4 dana. Ne u frižider — tamo brže ustajava.',dontSr:'Ne savetovati zatvorenu najlon kesu',extraSr:'Može se iseći i zamrznuti',srDraft:true},
+  {sit:'Клиент недоволен',goal:'Снять напряжение, решить',say:'Спасибо, что сказали. Давайте разберёмся — заменю или верну деньги. Извините за неудобство.',dont:'Не спорить и не оправдываться',extra:'Сообщите шефу/менеджеру',sitSr:'Kupac je nezadovoljan',goalSr:'Smiriti situaciju i rešiti je',saySr:'Hvala što ste rekli. Da rešimo — zameniću vam ili vraćam novac. Izvinite na neprijatnosti.',dontSr:'Ne raspravljati se i ne pravdati se',extraSr:'Javite šefu ili menadžeru',srDraft:true},
+  {sit:'Жалуется на цену',goal:'Объяснить ценность',say:'Цена за длительную ферментацию (до суток), качественную муку и ручную работу. Это другой хлеб по вкусу и пользе.',dont:'Не обесценивать его мнение',extra:'',sitSr:'Žali se na cenu',goalSr:'Objasniti vrednost',saySr:'Cena je za dugu fermentaciju (do 24 sata), kvalitetno brašno i ručni rad. To je drugačiji hleb i po ukusu i po kvalitetu.',dontSr:'Ne omalovažavati njegovo mišljenje',extraSr:'',srDraft:true},
+  {sit:'Хочет скидку',goal:'Вежливо обозначить рамки',say:'Постоянных скидок нет, но вечером на вчерашний хлеб бывает специальная цена. Подсказать, что сейчас доступно?',dont:'Не обещать то, чего нет',extra:'Уточните политику у менеджера',sitSr:'Traži popust',goalSr:'Ljubazno postaviti granicu',saySr:'Nemamo stalne popuste, ali uveče jučerašnji hleb ima posebnu cenu. Da vam kažem šta je trenutno dostupno?',dontSr:'Ne obećavati ono što ne postoji',extraSr:'Proverite pravila kod menadžera',srDraft:true},
+  {sit:'Пришёл после 15:00',goal:'Сориентировать по остаткам',say:'К вечеру ассортимент меньше, но есть свежее: вот это и это. Завтра с утра — полный выбор.',dont:'Не говорить «всё разобрали»',extra:'Предложите вчерашний со скидкой',sitSr:'Došao posle 15:00',goalSr:'Snaći se u onome što je ostalo',saySr:'Uveče je izbor manji, ali imamo sveže: ovo i ovo. Sutra ujutru — pun asortiman.',dontSr:'Ne govoriti „sve je rasprodato“',extraSr:'Ponudite jučerašnji po sniženoj ceni',srDraft:true},
+  {sit:'Спрашивает про вчерашний хлеб',goal:'Честно и аппетитно',say:'Это хлеб вчерашней выпечки по специальной цене — отлично идёт на тосты и брускетту.',dont:'Не выдавать за свежий',extra:'',sitSr:'Pita za jučerašnji hleb',goalSr:'Iskreno i primamljivo',saySr:'To je hleb od jučerašnjeg pečenja, po posebnoj ceni — odličan za tost i brusketu.',dontSr:'Ne predstavljati ga kao svež',extraSr:'',srDraft:true},
+  {sit:'Спрашивает про аллергены',goal:'Дать точную информацию',say:'Подскажу по конкретной позиции — открою описание. Если строгая аллергия, уточню состав у пекаря.',dont:'Не угадывать состав',extra:'Смотрите блок «Что говорить клиенту» в рецептуре',sitSr:'Pita za alergene',goalSr:'Dati tačnu informaciju',saySr:'Reći ću vam za konkretan proizvod — otvoriću deklaraciju. Ako je alergija ozbiljna, proveriću sastav kod pekara.',dontSr:'Ne nagađati sastav',extraSr:'Pogledajte „Šta reći kupcu“ u tehnološkoj karti',srDraft:true}
 ];
 function scriptFormToggle(){
   if(!isChef()){alert('\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u0443\u0435\u0442 \u0448\u0435\u0444.');return;}
   var f=document.getElementById('scr-form');
   if(f.style.display==='none'){f.style.display='';document.getElementById('scr-sit').focus();}
   else{f.style.display='none';document.getElementById('scr-idx').value='-1';
-    ['scr-sit','scr-goal','scr-say','scr-dont','scr-extra'].forEach(function(id){document.getElementById(id).value='';});}
+    ['scr-sit','scr-goal','scr-say','scr-dont','scr-extra','scr-sitSr','scr-goalSr','scr-saySr','scr-dontSr','scr-extraSr'].forEach(function(id){var e=document.getElementById(id); if(e)e.value='';});}
 }
 function scriptSave(){
   var sit=(document.getElementById('scr-sit').value||'').trim();
   var say=(document.getElementById('scr-say').value||'').trim();
   if(!sit||!say){alert('\u0417\u0430\u043F\u043E\u043B\u043D\u0438\u0442\u0435 \u00AB\u0421\u0438\u0442\u0443\u0430\u0446\u0438\u044E\u00BB \u0438 \u00AB\u0427\u0442\u043E \u0441\u043A\u0430\u0437\u0430\u0442\u044C\u00BB.');return;}
-  var obj={sit:sit,goal:(document.getElementById('scr-goal').value||'').trim(),say:say,dont:(document.getElementById('scr-dont').value||'\u2014').trim()||'\u2014',extra:(document.getElementById('scr-extra').value||'').trim()};
+  function gv(id){ var e=document.getElementById(id); return e?(e.value||'').trim():''; }
+  var obj={sit:sit,goal:gv('scr-goal'),say:say,dont:gv('scr-dont')||'\u2014',extra:gv('scr-extra'),
+    sitSr:gv('scr-sitSr'),goalSr:gv('scr-goalSr'),saySr:gv('scr-saySr'),dontSr:gv('scr-dontSr'),extraSr:gv('scr-extraSr'),srDraft:false};
   var idx=parseInt(document.getElementById('scr-idx').value,10);
   if(idx>=0)SCRIPTS[idx]=obj; else SCRIPTS.push(obj);
   scriptFormToggle();renderScripts();
@@ -8296,21 +8336,95 @@ function scriptEdit(i){
   document.getElementById('scr-say').value=sc.say||'';
   document.getElementById('scr-dont').value=(sc.dont==='\u2014'?'':sc.dont)||'';
   document.getElementById('scr-extra').value=sc.extra||'';
+  [['scr-sitSr','sitSr'],['scr-goalSr','goalSr'],['scr-saySr','saySr'],['scr-dontSr','dontSr'],['scr-extraSr','extraSr']].forEach(function(p){
+    var e=document.getElementById(p[0]); if(e)e.value=sc[p[1]]||'';
+  });
   document.getElementById('scr-form').style.display='';
   document.getElementById('scr-sit').scrollIntoView({behavior:'smooth',block:'center'});
 }
 function scriptDel(i){
   if(!isChef())return; if(!confirm('\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0441\u043A\u0440\u0438\u043F\u0442 \u00AB'+SCRIPTS[i].sit+'\u00BB?'))return;
-  SCRIPTS.splice(i,1);renderScripts();
+  SCRIPTS.splice(i,1);renderScripts();bvSaveNow();
 }
+/* ===== PDF СКРИПТОВ ===== */
+function scriptsPdf(){
+  var pa=document.getElementById('print-area'); if(!pa){ alert('Печать недоступна.'); return; }
+  var co=(typeof COMPANY!=='undefined'&&COMPANY&&COMPANY.vals)?COMPANY.vals:{};
+  var name=co.short||co.name||'BreadVenture';
+  var d=new Date();
+  var lang=SCR_LANG;
+  var ru=(lang!=='sr'), sr=(lang!=='ru');
+  function row(label,labelSr,rv,sv){
+    var out='';
+    if(ru&&rv) out+='<div class="sp-line"><span class="sp-lab">'+tkEsc(label)+'</span>'+tkEsc(rv)+'</div>';
+    if(sr&&sv) out+='<div class="sp-line sp-sr"><span class="sp-lab">'+tkEsc(labelSr)+'</span>'+tkEsc(sv)+'</div>';
+    return out;
+  }
+  var cards=SCRIPTS.map(function(x,i){
+    var hasSr=!!String(x.saySr||'').trim();
+    return '<div class="sp-card">'+
+      '<div class="sp-head"><span class="sp-num">'+(i+1)+'</span><span class="sp-sit">'+tkEsc(ru?x.sit:(x.sitSr||x.sit))+
+        ((ru&&sr&&x.sitSr)?'<span class="sp-sit2"> · '+tkEsc(x.sitSr)+'</span>':'')+'</span></div>'+
+      row('Цель:','Cilj:',x.goal,hasSr?x.goalSr:'')+
+      '<div class="sp-say">'+
+        (ru&&x.say?'<div class="sp-saytext">«'+tkEsc(x.say)+'»</div>':'')+
+        (sr&&hasSr&&x.saySr?'<div class="sp-saytext sp-sr">„'+tkEsc(x.saySr)+'“</div>':'')+
+        ((sr&&!hasSr&&!ru)?'<div class="sp-saytext">—</div>':'')+
+      '</div>'+
+      row('Не говорить:','Ne govoriti:',x.dont,hasSr?x.dontSr:'')+
+      row('Подсказка:','Napomena:',x.extra,hasSr?x.extraSr:'')+
+      '</div>';
+  }).join('');
+  pa.innerHTML='<div class="sp-doc">'+
+    '<div class="sp-top"><div><div class="sp-title">Скрипты сервиса</div>'+
+    '<div class="sp-sub">Skripte za rad sa kupcima · '+tkEsc(name)+'</div></div>'+
+    '<div class="sp-date">'+d.toLocaleDateString('ru-RU')+'</div></div>'+
+    '<div class="sp-note">Готовые фразы для типовых ситуаций у стойки. · Gotove rečenice za tipične situacije za pultom.</div>'+
+    cards+
+    '<div class="sp-foot">'+tkEsc(name)+' · Контроль сегодня. Качество завтра.</div>'+
+    '</div>';
+  pa.style.display='block';
+  setTimeout(function(){ window.print(); setTimeout(function(){ pa.innerHTML=''; pa.style.display='none'; },400); },60);
+}
+var SCR_LANG='both';   /* ru | sr | both */
+function scrLang(v){ SCR_LANG=v; renderScripts(); }
+function scrHasSr(s){ return !!(String(s.saySr||'').trim()); }
 function renderScripts(){
   var box=document.getElementById('scripts-list'); if(!box)return;
-  box.innerHTML=SCRIPTS.map(function(s,i){
-    return '<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><b style="font-size:15px">'+s.sit+'</b><span class="chef-only" style="white-space:nowrap"><button class="btn" style="padding:1px 9px;font-size:12px" onclick="scriptEdit('+i+')">✎</button> <button class="btn" style="padding:1px 9px;font-size:12px" onclick="scriptDel('+i+')">✕</button></span></div>'+
-      '<p style="font-size:12.5px;color:var(--muted);margin-top:2px">Цель: '+s.goal+'</p>'+
-      '<div style="margin-top:8px;padding:10px;background:rgba(71,162,218,.08);border-radius:10px;font-size:14px">💬 '+s.say+'</div>'+
-      '<div style="font-size:13px;margin-top:6px"><b>Не говорить:</b> '+s.dont+'</div>'+
-      (s.extra?'<div style="font-size:13px;margin-top:4px;color:var(--muted)">'+s.extra+'</div>':'')+'</div>';
+  var noSr=SCRIPTS.filter(function(x){return !scrHasSr(x);}).length;
+  var draft=SCRIPTS.filter(function(x){return x.srDraft&&scrHasSr(x);}).length;
+  var pick='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">'+
+    [['ru','Русский'],['sr','Srpski'],['both','Оба языка']].map(function(l){
+      return '<button class="btn'+(SCR_LANG===l[0]?' primary':'')+'" style="padding:4px 13px;font-size:12.5px" onclick="scrLang(\''+l[0]+'\')">'+l[1]+'</button>';
+    }).join('')+
+    '<button class="btn" style="padding:4px 13px;font-size:12.5px;margin-left:auto" onclick="scriptsPdf()">🖨 Скачать PDF</button></div>'+
+    (draft?'<div class="note" style="margin-bottom:12px">🇷🇸 Сербский перевод у '+draft+' скрипт(ов) — <b>черновик, я его не проверял</b>. Открой ✎ и подтверди или поправь: пометка «черновик» снимется сама.</div>':'')+
+    (noSr?'<div class="note" style="margin-bottom:12px">⚠️ Без сербского перевода: '+noSr+' скрипт(ов).</div>':'');
+  var ru=(SCR_LANG!=='sr'), sr=(SCR_LANG!=='ru');
+  box.innerHTML=pick+SCRIPTS.map(function(s,i){
+    var hasSr=scrHasSr(s);
+    function pair(label,rv,sv,style,icon){
+      var out='';
+      if(ru&&rv) out+='<div style="'+style+'">'+(icon||'')+(label?'<b>'+label+':</b> ':'')+tkEsc(rv)+'</div>';
+      if(sr){
+        if(hasSr&&sv) out+='<div style="'+style+(ru?'margin-top:4px;':'')+'opacity:.92" lang="sr">'+(icon||'')+(label?'<b>'+label+':</b> ':'')+tkEsc(sv)+'</div>';
+        else if(!ru) out+='<div style="'+style+'color:#C0392B">перевод не заполнен</div>';
+      }
+      return out;
+    }
+    return '<div class="card scr-card" style="margin-bottom:12px">'+
+      '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">'+
+      '<span><b style="font-size:15px">'+tkEsc(ru?s.sit:(s.sitSr||s.sit))+'</b>'+
+      (ru&&sr&&hasSr&&s.sitSr?'<span style="font-size:13px;color:var(--muted)"> · '+tkEsc(s.sitSr)+'</span>':'')+
+      (s.srDraft&&hasSr?' <span class="tag warn" style="font-size:10px">перевод — черновик</span>':'')+
+      (!hasSr?' <span class="tag crit" style="font-size:10px">нет перевода</span>':'')+'</span>'+
+      '<span class="chef-only" style="white-space:nowrap"><button class="btn" style="padding:1px 9px;font-size:12px" onclick="scriptEdit('+i+')">✎</button> <button class="btn" style="padding:1px 9px;font-size:12px" onclick="scriptDel('+i+')">✕</button></span></div>'+
+      pair('Цель',s.goal,s.goalSr,'font-size:12.5px;color:var(--muted);margin-top:2px;')+
+      '<div style="margin-top:8px;padding:10px;background:rgba(71,162,218,.08);border-radius:10px">'+
+        pair('',s.say,s.saySr,'font-size:14px;line-height:1.5;','💬 ')+'</div>'+
+      pair('Не говорить',s.dont,s.dontSr,'font-size:13px;margin-top:6px;')+
+      ((s.extra||s.extraSr)?pair('',s.extra,s.extraSr,'font-size:13px;margin-top:4px;color:var(--muted);'):'')+
+      '</div>';
   }).join('');
 }
 
@@ -9026,7 +9140,7 @@ function sendChk(){
 }
 /* ===================== СОХРАНЕНИЕ В БРАУЗЕРЕ (localStorage) ===================== */
 var BV_KEY='bv_pekar_store_v1';
-var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','REMINDERS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','ACH_MIG','SKILL_GROUPS','TRACK_SKILLS','BADGE_CUSTOM','BADGE_EDITS','BADGE_HIDDEN','ATTEST','OB_TRACKS','OB_VERSIONS','FAQ','FAQ_ASK'];
+var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','REMINDERS','SCRIPTS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','ACH_MIG','SKILL_GROUPS','TRACK_SKILLS','BADGE_CUSTOM','BADGE_EDITS','BADGE_HIDDEN','ATTEST','OB_TRACKS','OB_VERSIONS','FAQ','FAQ_ASK'];
 function bvSnapshot(){ var o={}; for(var i=0;i<BV_PERSIST.length;i++){ var k=BV_PERSIST[i]; try{ if(typeof window[k]!=='undefined') o[k]=window[k]; }catch(e){} } return o; }
 function bvSave(){ try{ localStorage.setItem(BV_KEY, JSON.stringify(bvSnapshot())); }catch(e){} }
 function bvLoad(){ try{ var raw=localStorage.getItem(BV_KEY); if(!raw)return false; var o=JSON.parse(raw); var n=0; for(var k in o){ if(o.hasOwnProperty(k) && BV_PERSIST.indexOf(k)>=0){ try{ window[k]=o[k]; n++; }catch(e){} } } return n>0; }catch(e){ return false; } }
