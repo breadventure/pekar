@@ -468,7 +468,7 @@
 <!-- ===== ОБЗОР ===== -->
 <section class="view active" id="v-dash">
   <div id="about-box" style="margin-bottom:18px"></div>
-  <div class="note" style="margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span>🎂 <b>Сегодня день рождения у Нико!</b> Не забудьте поздравить. А у Ани через 3 дня — год работы в BreadVenture 🎉</span><span class="tag">из «Личных данных»</span></div>
+  <div id="dash-bday" style="margin-bottom:18px"></div>
 
   <div class="grid g2" style="margin-bottom:8px">
     <div class="card click bg-yellow" onclick="goGroup('prod')"><div class="ico">🏭</div><h3 class="card-t" id="dash-card-prod">Производство</h3><p>План замеса, чек-листы, передача смены и график.</p><div class="meta"><span>планирование · смены · график</span><b>›</b></div></div>
@@ -633,7 +633,14 @@
         <div class="pair"><span>Маржа</span><span id="tk-margin">—</span></div>
         <p class="hint">В боевой версии поля доступны только роли «менеджер/шеф» и сохраняются в таблицу.</p>
       </div>
-      <div class="card" style="margin-top:14px" id="tk-steps-card">
+      <div class="card" style="margin-top:14px" id="tk-how-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <b style="font-size:15px">👩‍🍳 Как готовим</b>
+        <button class="btn chef-only" style="padding:2px 10px;font-size:11px" onclick="tkHowEdit()">✎ Править</button>
+      </div>
+      <div id="tk-how" style="margin-top:8px"></div>
+    </div>
+    <div class="card" style="margin-top:14px" id="tk-steps-card">
         <b style="font-size:15px">Шаги</b>
         <div id="tk-steps" style="margin-top:8px"></div>
       </div>
@@ -1046,6 +1053,7 @@
 <!-- ===== ПЛАНИРОВАНИЕ ===== -->
 <section class="view" id="v-plan">
   <div class="crumbs"><a onclick="go('dash')">Главная</a> / Планирование</div>
+  <div id="hol-box-plan" style="margin-bottom:16px"></div>
   <div class="tabs" style="margin-top:0">
     <button class="on" onclick="tab(this,'pl-day')">План замеса на день</button>
     <button onclick="tab(this,'pl-week')">Отпёки на неделю</button>
@@ -1630,6 +1638,7 @@
 <!-- ===== ГРАФИК ===== -->
 <section class="view" id="v-sched">
   <div class="crumbs"><a onclick="go('dash')">Главная</a> / График смен</div>
+  <div id="hol-box" style="margin-bottom:16px"></div>
   <div class="card" style="margin-bottom:16px">
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
       <div class="field" style="margin:0;order:9"><label>&nbsp;</label><div style="display:flex;gap:6px"><button class="btn" onclick="schedPdf()">🖨 PDF</button><button class="btn" onclick="schedCsv()">📊 Excel (CSV)</button></div></div>
@@ -2259,6 +2268,38 @@ function matCatDel(c){
 /* ===== ДАТА И ДЕНЬ НЕДЕЛИ ===== */
 var BV_DOW=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
 var BV_MON=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+/* Раньше на главной висел вшитый в HTML текст «Сегодня день рождения у Нико!
+   А у Ани через 3 дня — год работы» — просто буквы, ни от чего не зависели.
+   Теперь считается из «Личных данных». */
+function renderDashBday(){
+  var box=document.getElementById('dash-bday'); if(!box)return;
+  if(typeof TEAM==='undefined'||!TEAM.filter){ box.innerHTML=''; return; }
+  var act=TEAM.filter(function(p){return p.status!=='Архивный';});
+  var bd=[], an=[];
+  act.forEach(function(p){
+    var iso=(typeof bdayISO==='function')?bdayISO(p.bday):'';
+    var d=iso?daysToAnniv(iso):null;
+    if(d!==null&&d<=BDAY_AHEAD) bd.push({p:p,d:d});
+    var st=String(p.started||'').slice(0,10), ds=daysToAnniv(st), ys=annivYears(st);
+    if(ds!==null&&ds<=ANNIV_AHEAD&&ys>=1) an.push({p:p,d:ds,y:ys});
+  });
+  if(!bd.length&&!an.length){ box.innerHTML=''; return; }
+  bd.sort(function(a,b){return a.d-b.d;}); an.sort(function(a,b){return a.d-b.d;});
+  function when(d){ return d===0?'сегодня':(d===1?'завтра':'через '+d+' '+plu(d,'день','дня','дней')); }
+  var parts=[];
+  bd.forEach(function(x){
+    parts.push(x.d===0
+      ? '🎂 <b>Сегодня день рождения у '+tkEsc(empName(x.p))+'!</b> Не забудьте поздравить.'
+      : '🎂 У '+tkEsc(empName(x.p))+' день рождения '+when(x.d)+'.');
+  });
+  an.forEach(function(x){
+    parts.push(x.d===0
+      ? '🎉 <b>Сегодня '+x.y+' '+plu(x.y,'год','года','лет')+' работы у '+tkEsc(empName(x.p))+'!</b>'
+      : '🎉 У '+tkEsc(empName(x.p))+' '+when(x.d)+' — '+x.y+' '+plu(x.y,'год','года','лет')+' работы в BreadVenture.');
+  });
+  box.innerHTML='<div class="note" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">'+
+    '<span>'+parts.join(' ')+'</span><span class="tag">из «Личных данных»</span></div>';
+}
 function renderToday(){
   var el=document.getElementById('bv-today'); if(!el)return;
   var d=new Date();
@@ -2313,7 +2354,7 @@ function setRole(r){
   if(typeof renderMyShifts==='function')renderMyShifts();
   /* разделы, где кнопки правки зависят от роли: без этого у новой роли
      остаются кнопки предыдущей */
-  ['renderFaq','renderScripts','renderReminders','renderAch','renderBadgeBook','renderRolesMatrix','renderCompany','renderAttest','renderOnboard','renderHR','renderLevelLegend','renderToday','renderDrinks','renderProducts','renderEqGrid','renderSanGrid','renderMat','renderAbout','renderReglGrid'].forEach(function(fn){
+  ['renderFaq','renderScripts','renderReminders','renderAch','renderBadgeBook','renderRolesMatrix','renderCompany','renderAttest','renderOnboard','renderHR','renderLevelLegend','renderToday','renderDashBday','renderDrinks','renderProducts','renderEqGrid','renderSanGrid','renderMat','renderAbout','renderReglGrid','renderHolBox'].forEach(function(fn){
     try{ if(typeof window[fn]==='function')window[fn](); }catch(e){}
   });
   if(typeof CURRENT_VIEW!=='undefined'&&!viewAllowed(CURRENT_VIEW))go('dash');
@@ -2446,7 +2487,20 @@ var NOTIFS=[
 /* Раньше видимость решалась двумя ролями: «шеф» и «все остальные».
    Теперь — по правам: у роли есть право на раздел → напоминание видно. */
 function notifRole(){return isChef()?'chef':'baker';}
+/* кто я сейчас — карточка сотрудника, под которой вошли */
+function meEmp(){
+  try{
+    if(typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.empId) return empById(CURRENT_USER.empId);
+    var pin=Object.keys(PIN_MAP).filter(function(x){return PIN_MAP[x].roleKey===CUR_ROLE;})[0];
+    return pin?pinEmp(pin):null;
+  }catch(e){ return null; }
+}
 function notifVisible(n){
+  /* адресное напоминание: видит тот, кого оно касается — даже без права на раздел */
+  if(n.emp){
+    var me=meEmp();
+    if(me&&me.id===n.emp)return true;
+  }
   if(n.perm) return can(n.perm);
   var r=n.role||'all';
   if(r==='all')return true;
@@ -2455,7 +2509,7 @@ function notifVisible(n){
   if(r==='bar')return can('bar')||can('baronly');
   return r===notifRole();
 }
-/* --- автонапоминания: дни рождения и годовщины работы --- */
+/* --- автонапоминания: зарплата, дни рождения, годовщины --- */
 var NOTIF_SEEN={};
 var BDAY_AHEAD=14, ANNIV_AHEAD=7;
 function plu(n,a1,a2,a5){ n=Math.abs(n)%100; var n1=n%10; if(n>10&&n<20)return a5; if(n1>1&&n1<5)return a2; if(n1===1)return a1; return a5; }
@@ -2486,6 +2540,16 @@ function autoNotifs(){
       out.push({icon:'🎂',key:k,unread:!NOTIF_SEEN[k],role:'all',go:'team',
         t:(db===0?'Сегодня день рождения: '+empName(p):'Скоро день рождения: '+empName(p)),
         d:(db===0?'поздравляем! 🎉':'через '+db+' '+plu(db,'день','дня','дней')+' · '+tmDate(bi).slice(0,5))});
+    }
+    /* Зарплата: сумма — чувствительная. Видит тот, у кого право «Себестоимость ·
+       зарплаты», и сам сотрудник про свою. Без права и не про себя — не видит. */
+    if(typeof salMonth==='function'){
+      var sm=salMonth(p);
+      if(sm>0 && p.salNote){
+        var k3='sal:'+p.id+':'+String(p.salNote).slice(0,24);
+        out.push({icon:'💰',key:k3,unread:!NOTIF_SEEN[k3],perm:'cost',emp:p.id,go:'hr',
+          t:'Зарплата: '+empName(p), d:tkEsc(p.salNote)});
+      }
     }
     var st=String(p.started||'').slice(0,10), ds=daysToAnniv(st), ys=annivYears(st);
     if(ds!==null && ds<=ANNIV_AHEAD && ys>=1){
@@ -2835,6 +2899,7 @@ function renderTK(){
   renderTKClient();
   renderTKPhotos();
   renderTKTable();
+  if(typeof tkHowRender==='function')tkHowRender();
 }
 function tkActiveIng(){
   var r=currentRecipe;
@@ -3726,8 +3791,7 @@ function sanPdf(){
     blk('✓ Как правильно',d.how,'ok')+
     blk('✕ Как неправильно',d.bad,'bad')+
     '<div class="sp-foot">'+tkEsc(name)+' · Контроль сегодня. Качество завтра.</div></div>';
-  pa.style.display='block';
-  setTimeout(function(){ window.print(); setTimeout(function(){ pa.innerHTML=''; pa.style.display='none'; },400); },60);
+  bvPrint();
 }
 function renderSanGrid(){
   sanNorm();
@@ -4066,8 +4130,7 @@ function eqPdf(){
     (body||'<p>Регламент пока не заполнен.</p>')+
     (common?'<div class="sp-card"><div class="sp-head"><span class="sp-sit">📷 Общие фото</span></div><div class="eq-figs">'+common+'</div></div>':'')+
     '<div class="sp-foot">'+tkEsc(name)+' · Контроль сегодня. Качество завтра.</div></div>';
-  pa.style.display='block';
-  setTimeout(function(){ window.print(); setTimeout(function(){ pa.innerHTML=''; pa.style.display='none'; },400); },60);
+  bvPrint();
 }
 eqNorm();renderEqGrid();eqOpen('pech');sanOpen('ruki');renderSanGrid();
 
@@ -4903,13 +4966,216 @@ function addNews(){
 
 
 /* ===== ГРАФИК: любой месяц/год, правки шефа, заметки ===== */
-var STAFF=[
- {n:'Светлана',cls:'s',shifts:{5:'05–14'}},
- {n:'Аня',cls:'a',shifts:{1:'05–14',2:'05–14',4:'05–14',5:'05–14',6:'06–14'}},
- {n:'Нико',cls:'n',shifts:{1:'07–15',2:'07–15',3:'07–15',5:'07–15',0:'07–15'}},
- {n:'Андрей',cls:'m',shifts:{2:'09–17',3:'09–17',4:'09–17',6:'09–17',0:'09–17'}}
-]; /* shifts по дням недели: 1=пн … 6=сб, 0=вс */
-var HOLIDAYS={'2026-06-28':'🎉 Видовдан','2026-06-15':'⚠ Праздничный день','2026-12-19':'🎉 Свети Никола'};
+/* График строился по своему списку людей — отдельному от карточек сотрудников.
+   Отсюда «просто имена». Теперь STAFF собирается из TEAM: уволил, переименовал,
+   завёл нового — график знает. Здесь остаются только сами смены. */
+var STAFF=[];
+var STAFF_SHIFTS={
+ 'Светлана':{5:'05–14'},
+ 'Аня':{1:'05–14',2:'05–14',4:'05–14',5:'05–14',6:'06–14'},
+ 'Нико':{1:'07–15',2:'07–15',3:'07–15',5:'07–15',0:'07–15'},
+ 'Андрей':{2:'09–17',3:'09–17',4:'09–17',6:'09–17',0:'09–17'}
+};
+var STAFF_CLS=['a','n','m','s','v'];
+function staffSync(){
+  if(typeof TEAM==='undefined'||!TEAM.filter)return STAFF;
+  var old={}; STAFF.forEach(function(p){ old[p.id||p.n]=p; });
+  STAFF=TEAM.filter(function(p){ return p.status!=='Архивный'; }).map(function(p,i){
+    var prev=old[p.id]||old[p.n]||{};
+    var sh=prev.shifts || STAFF_SHIFTS[p.n] || STAFF_SHIFTS[empName(p)] || {};
+    return { id:p.id, n:empName(p), pos:p.pos||'', cls:prev.cls||STAFF_CLS[i%STAFF_CLS.length], shifts:sh };
+  });
+  return STAFF;
+}
+function staffBy(name){ return STAFF.filter(function(x){return x.n===name;})[0]; } /* shifts по дням недели: 1=пн … 6=сб, 0=вс */
+/* ===== ПРАЗДНИКИ =====
+   Даты — официальный календарь Сербии (Закон о државним и другим празницима).
+   Пасха плавающая — считается формулой, а не вбита на один год.
+   Влияние на спрос и напоминания заполняет шеф: цифры знает только пекарня. */
+var HOLIDAYS={};
+function orthEaster(y){
+  /* православная Пасха: юлианский расчёт + 13 дней (действует 1900–2099) */
+  var a=y%4,b=y%7,c=y%19;
+  var d=(19*c+15)%30, e=(2*a+4*b-d+34)%7;
+  var m=Math.floor((d+e+114)/31), day=((d+e+114)%31)+1;
+  var jd=new Date(Date.UTC(y,m-1,day));
+  jd.setUTCDate(jd.getUTCDate()+13);
+  return jd;
+}
+function isoUTC(d){ return d.toISOString().slice(0,10); }
+function shiftDays(d,n){ var x=new Date(d.getTime()); x.setUTCDate(x.getUTCDate()+n); return x; }
+/* официальные нерабочие дни Сербии на любой год */
+function holOfficial(y){
+  var e=orthEaster(y);
+  return [
+    {d:y+'-01-01', t:'Нова година',            off:true},
+    {d:y+'-01-02', t:'Нова година (2-й день)', off:true},
+    {d:y+'-01-07', t:'Божић · Рождество',      off:true},
+    {d:y+'-02-15', t:'Дан државности · Сретење',off:true},
+    {d:y+'-02-16', t:'Дан државности (2-й день)',off:true},
+    {d:isoUTC(shiftDays(e,-2)), t:'Велики петак · Страстная пятница', off:true},
+    {d:isoUTC(shiftDays(e,-1)), t:'Велика субота',                    off:true},
+    {d:isoUTC(e),               t:'Васкрс · Пасха',                   off:true},
+    {d:isoUTC(shiftDays(e,1)),  t:'Васкршњи понедељак',               off:true},
+    {d:y+'-05-01', t:'Празник рада',           off:true},
+    {d:y+'-05-02', t:'Празник рада (2-й день)',off:true},
+    {d:y+'-11-11', t:'Дан примирја',           off:true}
+  ];
+}
+var HOL_INFO={};   /* дата -> {impact, note, remind, days} — заполняет шеф */
+var HOL_CUSTOM=[]; /* свои даты: Видовдан, слава, локальные */
+function holBoot(){
+  if(!HOL_INFO||typeof HOL_INFO!=='object')HOL_INFO={};
+  if(!Array.isArray(HOL_CUSTOM))HOL_CUSTOM=[];
+  HOLIDAYS={};
+  var years={};
+  var now=new Date().getFullYear();
+  years[now]=1; years[now+1]=1;
+  try{
+    var y2=parseInt((document.getElementById('sc-year')||{}).value);
+    if(y2)years[y2]=1;
+  }catch(e){}
+  Object.keys(years).forEach(function(y){
+    holOfficial(parseInt(y)).forEach(function(h){ HOLIDAYS[h.d]='🎉 '+h.t; });
+  });
+  HOL_CUSTOM.forEach(function(h){ if(h&&h.d)HOLIDAYS[h.d]='🎉 '+h.t; });
+  return HOLIDAYS;
+}
+function holAll(y){
+  holBoot();
+  var out=holOfficial(y).map(function(h){ return {d:h.d,t:h.t,off:true,own:false}; });
+  HOL_CUSTOM.forEach(function(h){ if(h&&h.d&&h.d.slice(0,4)===String(y)) out.push({d:h.d,t:h.t,off:!!h.off,own:true}); });
+  return out.sort(function(a,b){ return a.d<b.d?-1:1; });
+}
+function holInfo(d){ if(!HOL_INFO[d])HOL_INFO[d]={impact:'',note:'',days:3}; return HOL_INFO[d]; }
+function holDaysLeft(d){
+  var x=new Date(d+'T00:00:00'); if(isNaN(x.getTime()))return null;
+  var now=new Date(); now.setHours(0,0,0,0);
+  return Math.round((x-now)/86400000);
+}
+/* напоминания перед праздником — в графике и в планировании */
+function holSoon(){
+  holBoot();
+  var y=new Date().getFullYear();
+  var out=[];
+  holAll(y).concat(holAll(y+1)).forEach(function(h){
+    var dl=holDaysLeft(h.d);
+    if(dl===null||dl<0)return;
+    var inf=HOL_INFO[h.d];
+    var win=(inf&&inf.days)?inf.days:3;
+    if(dl<=win) out.push({h:h,days:dl,info:inf||{}});
+  });
+  return out.sort(function(a,b){ return a.days-b.days; });
+}
+function holBanner(where){
+  var list=holSoon(); if(!list.length)return '';
+  return list.map(function(x){
+    var msg=(where==='plan')?(x.info.notePlan||''):(x.info.noteSched||'');
+    var when=x.days===0?'сегодня':(x.days===1?'завтра':('через '+x.days+' '+plu(x.days,'день','дня','дней')));
+    return '<div class="note" style="margin-bottom:10px">🎉 <b>'+tkEsc(x.h.t)+'</b> — '+when+' ('+fmtD(new Date(x.h.d+'T00:00:00'))+')'+
+      (x.info.impact?'<br><b>Спрос:</b> '+tkEsc(x.info.impact):'')+
+      (msg?'<br>👉 '+tkEsc(msg):'')+
+      ((!x.info.impact&&!msg&&isChef())?'<br><span style="font-size:12px">Не заполнено, как это влияет на пекарню — <a onclick="go(\'sched\');holEditor()" style="color:var(--accent);cursor:pointer;text-decoration:underline">заполнить</a>.</span>':'')+
+      '</div>';
+  }).join('');
+}
+/* ---------- редактор праздников ---------- */
+function holRefresh(){
+  holBoot();
+  try{ renderSched(); }catch(e){}
+  try{ renderHolBox(); }catch(e){}
+  try{ if(typeof renderPlanHol==='function')renderPlanHol(); }catch(e){}
+  bvSaveNow();
+}
+function renderHolBox(){
+  holBoot();
+  ['hol-box','hol-box-plan'].forEach(function(id){
+    var box=document.getElementById(id); if(!box)return;
+    var where=(id==='hol-box-plan')?'plan':'sched';
+    var y=new Date().getFullYear();
+    try{ var yy=parseInt((document.getElementById('sc-year')||{}).value); if(yy&&where==='sched')y=yy; }catch(e){}
+    var list=holAll(y);
+    var soon=holBanner(where);
+    box.innerHTML=soon+
+      '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'+
+      '<b style="font-size:15px">🎉 Праздники '+y+'</b>'+
+      (isChef()?'<span style="display:flex;gap:5px"><button class="btn chef-only" style="padding:2px 10px;font-size:11px" onclick="holEditor()">✎ Настроить</button></span>':'')+'</div>'+
+      '<p class="hint" style="margin:4px 0 6px">Официальный календарь Сербии. Пасха считается на каждый год сама.</p>'+
+      list.map(function(h){
+        var inf=HOL_INFO[h.d]||{}, dl=holDaysLeft(h.d);
+        var soonTag=(dl!==null&&dl>=0&&dl<=((inf.days)||3))?' <span class="tag warn" style="font-size:10px">скоро</span>':'';
+        return '<div class="pair"><span>'+fmtD(new Date(h.d+'T00:00:00'))+' · <b>'+tkEsc(h.t)+'</b>'+(h.own?' <span class="tag" style="font-size:10px">своё</span>':'')+soonTag+
+          (inf.impact?'<br><span style="color:var(--muted);font-size:11.5px">'+tkEsc(inf.impact)+'</span>':'')+'</span>'+
+          (isChef()?'<span><button class="btn chef-only" style="padding:1px 8px;font-size:10.5px" onclick="holEdit(\''+h.d+'\')">✎</button></span>':'')+
+          '</div>';
+      }).join('')+'</div>';
+  });
+}
+function holEditor(){
+  if(!isChef()){ alert('Настраивать праздники может шеф или менеджер.'); return; }
+  holBoot();
+  var y=new Date().getFullYear();
+  try{ var yy=parseInt((document.getElementById('sc-year')||{}).value); if(yy)y=yy; }catch(e){}
+  var ov=document.getElementById('hol-modal');
+  if(!ov){ ov=document.createElement('div'); ov.id='hol-modal'; ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px'; document.body.appendChild(ov); }
+  var rows=holAll(y).map(function(h){
+    var inf=HOL_INFO[h.d]||{};
+    var ok=inf.impact||inf.noteSched||inf.notePlan;
+    return '<div class="pair"><span>'+fmtD(new Date(h.d+'T00:00:00'))+' · <b>'+tkEsc(h.t)+'</b>'+
+      (ok?'':' <span class="tag crit" style="font-size:10px">не заполнено</span>')+'</span>'+
+      '<span style="display:flex;gap:4px"><button class="btn" style="padding:1px 8px;font-size:10.5px" onclick="holEdit(\''+h.d+'\')">✎</button>'+
+      (h.own?'<button class="btn" style="padding:1px 8px;font-size:10.5px;color:#C0392B" onclick="holDel(\''+h.d+'\')">✕</button>':'')+'</span></div>';
+  }).join('');
+  ov.innerHTML='<div style="background:var(--bg);border:1.5px solid var(--ink);border-radius:16px;max-width:600px;width:100%;padding:20px;box-shadow:4px 4px 0 var(--ink)">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">🎉 Праздники '+y+'</b><button onclick="document.getElementById(\'hol-modal\').remove()" style="border:none;background:none;font-size:20px;cursor:pointer">✕</button></div>'+
+    '<p class="hint" style="margin:4px 0 8px">Даты — официальные, менять не нужно. Заполни, <b>как праздник влияет на пекарню</b> и что напомнить в графике и планировании.</p>'+
+    rows+
+    '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn" onclick="holAdd()">+ Свой праздник</button>'+
+    '<button class="btn primary" onclick="document.getElementById(\'hol-modal\').remove();holRefresh()">Готово</button></div></div>';
+}
+function holEdit(d){
+  if(!isChef())return;
+  holBoot();
+  var all=holAll(parseInt(d.slice(0,4)));
+  var h=all.filter(function(x){return x.d===d;})[0]||{t:d};
+  var inf=holInfo(d);
+  var im=prompt('Как «'+h.t+'» влияет на спрос и работу пекарни:\n\nНапример: «спрос ×2, много заказов на кулич и колач; заранее закупить муку».', inf.impact||'');
+  if(im===null)return;
+  var ns=prompt('Что напомнить в ГРАФИКЕ СМЕН перед праздником:\n\nНапример: «Пасхальная неделя — загрузка максимальная, ставь всех пекарей».', inf.noteSched||'');
+  if(ns===null)return;
+  var np=prompt('Что напомнить в ПЛАНИРОВАНИИ перед праздником:\n\nНапример: «Запланируй замес на 40% больше обычного».', inf.notePlan||'');
+  if(np===null)return;
+  var dw=prompt('За сколько дней начинать напоминать:', String(inf.days||3));
+  if(dw===null)return;
+  var n=parseInt(dw);
+  inf.impact=String(im).trim(); inf.noteSched=String(ns).trim(); inf.notePlan=String(np).trim();
+  inf.days=(isNaN(n)||n<0)?3:n;
+  HOL_INFO[d]=inf;
+  if(document.getElementById('hol-modal'))holEditor();
+  holRefresh();
+}
+function holAdd(){
+  if(!isChef())return;
+  var d=prompt('Дата праздника (ГГГГ-ММ-ДД):',''); if(d===null)return;
+  d=String(d).trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d)){ alert('Нужна дата в виде 2026-06-28.'); return; }
+  var t=prompt('Название:',''); if(t===null)return; t=String(t).trim();
+  if(!t){ alert('Название не может быть пустым.'); return; }
+  if(HOL_CUSTOM.some(function(x){return x.d===d;})){ alert('На эту дату уже есть свой праздник.'); return; }
+  HOL_CUSTOM.push({d:d,t:t,off:false});
+  if(document.getElementById('hol-modal'))holEditor();
+  holRefresh();
+}
+function holDel(d){
+  if(!isChef())return;
+  var h=HOL_CUSTOM.filter(function(x){return x.d===d;})[0];
+  if(!h){ alert('Официальные праздники удалять нельзя — они из закона.'); return; }
+  if(!confirm('Удалить «'+h.t+'»?'))return;
+  HOL_CUSTOM=HOL_CUSTOM.filter(function(x){return x.d!==d;});
+  delete HOL_INFO[d];
+  if(document.getElementById('hol-modal'))holEditor();
+  holRefresh();
+}
 var ABSENCE_INFO={
   '2026-06-15|Светлана':{type:'Отпуск',range:'15–19 июня',appr:'согласован 20 мая'},
   '2026-06-12|Нико':{type:'Отпуск',range:'12 и 14 июня',appr:'согласован 1 июня'},
@@ -4967,6 +5233,7 @@ function schedNoteEdit(key){
   renderSched();
 }
 function schedDayCard(dateISO,name){
+  staffSync();
   var p=STAFF.find(function(x){return x.n===name;});
   var wd=new Date(dateISO).getDay();
   var ovr=SCHED_OVR[dateISO+'|'+name];
@@ -5116,6 +5383,7 @@ function tplApply(id){
 }
 /* ===== ВЫГРУЗКА ГРАФИКА СМЕН ===== */
 function schedGrid(){
+  staffSync();
   var y=parseInt(document.getElementById('sc-year').value)||new Date().getFullYear();
   var m=parseInt(document.getElementById('sc-month').value);
   var days=new Date(y,m+1,0).getDate();
@@ -5180,8 +5448,7 @@ function schedPdf(){
     '<span class="sc-c sc-vac">отпуск</span> · <span class="sc-c sc-gen">ген</span> ген.уборка · <span class="sc-c sc-bol">бол</span> больничный · '+
     '<b>См</b> — смен за месяц, <b>Ч</b> — часов</div>'+
     '<div class="sp-foot">'+tkEsc(name)+' · Контроль сегодня. Качество завтра.</div></div>';
-  pa.style.display='block';
-  setTimeout(function(){ window.print(); setTimeout(function(){ pa.innerHTML=''; pa.style.display='none'; },400); },60);
+  bvPrint();
 }
 function renderSched(){
   var y=parseInt(document.getElementById('sc-year').value)||2026;
@@ -5250,6 +5517,7 @@ function renderSched(){
     }
   }
   document.getElementById('sched-month').innerHTML=html;
+  try{ if(typeof renderHolBox==='function')renderHolBox(); }catch(e){}
 }
 function shiftHours(v){
   var m=(''+v).match(/(\d+)\D+(\d+)/); if(!m)return 0;
@@ -5389,6 +5657,42 @@ function tkExportCSV(){
   var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=r.name.replace(/\s+/g,'_')+'.csv';a.click();
 }
+/* Safari не блокирует window.print() — диалог ещё открыт, а код уже
+   стирал содержимое по таймеру. Отсюда белый лист. Чистим по afterprint. */
+function bvPrint(){
+  var pa=document.getElementById('print-area'); if(!pa)return;
+  pa.style.display='block';
+  var done=function(){
+    try{ window.removeEventListener('afterprint',done); }catch(e){}
+    if(_bvPrintT){ clearTimeout(_bvPrintT); _bvPrintT=null; }
+    pa.innerHTML=''; pa.style.display='none';
+  };
+  try{ window.addEventListener('afterprint',done); }catch(e){}
+  if(_bvPrintT)clearTimeout(_bvPrintT);
+  _bvPrintT=setTimeout(done,120000);            /* если afterprint не пришёл */
+  setTimeout(function(){ try{ window.print(); }catch(e){} },60);
+}
+var _bvPrintT=null;
+/* «Как готовим» — развёрнутое описание процесса своими словами.
+   Отличается от «Шагов»: шаги — что делать по порядку, здесь — как и почему. */
+function tkHowRender(){
+  var box=document.getElementById('tk-how'); if(!box)return;
+  var r=currentRecipe; if(!r){ box.innerHTML=''; return; }
+  var v=String(r.how||'').trim();
+  box.innerHTML = v
+    ? '<div style="font-size:14px;line-height:1.65;white-space:pre-wrap">'+tkEsc(v)+'</div>'
+    : '<p class="hint">Пока не заполнено.'+(isChef()?' Нажми «✎ Править» и опиши процесс своими словами: на что смотреть, как понять что готово, где обычно ошибаются.':'')+'</p>';
+  var c=document.getElementById('tk-how-card');
+  if(c)c.style.display=(v||isChef())?'':'none';
+}
+function tkHowEdit(){
+  if(!isChef()){ alert('Править описание может шеф или менеджер.'); return; }
+  var r=currentRecipe; if(!r)return;
+  var v=prompt('Как готовим — своими словами.\n\nНа что смотреть, как понять что готово, где обычно ошибаются. Переносы строк сохраняются.', r.how||'');
+  if(v===null)return;
+  r.how=String(v).trim();
+  tkHowRender(); bvSaveNow();
+}
 function tkExportPDF(){
   var r=currentRecipe; if(!r){ alert('Сначала открой рецептуру.'); return; }
   var pa=document.getElementById('print-area'); if(!pa){ alert('Печать недоступна.'); return; }
@@ -5430,11 +5734,11 @@ function tkExportPDF(){
     '<tfoot><tr><td><b>Итого</b></td><td class="n">'+(flour>0?'':'—')+'</td><td class="n"><b>'+fmt1(Math.round(total1*10)/10)+'</b></td><td class="n"><b>'+fmt1(sumN)+'</b></td></tr></tfoot></table>'+
     (flour>0?'<div class="tk-note">Общая мука = '+fmt1(Math.round(flour*10)/10)+' г = 100% (включая муку из опары и закваски). Проценты — от неё.</div>':'')+
     '</div>'+
+    (r.how?'<div class="sp-card"><div class="sp-head"><span class="sp-sit">👩‍🍳 Как готовим</span></div><div class="sp-line" style="white-space:pre-wrap">'+tkEsc(r.how)+'</div></div>':'')+
     ((r.steps&&r.steps.length)?'<div class="sp-card"><div class="sp-head"><span class="sp-sit">Шаги</span></div><ol class="tk-ol">'+r.steps.map(function(st){return '<li>'+tkEsc(st)+'</li>';}).join('')+'</ol></div>':'')+
     (r.desc?'<div class="sp-card"><div class="sp-head"><span class="sp-sit">Комментарий шефа</span></div><div class="sp-line">'+tkEsc(r.desc)+'</div></div>':'')+
     '<div class="sp-foot">'+tkEsc(name)+' · Контроль сегодня. Качество завтра.</div></div>';
-  pa.style.display='block';
-  setTimeout(function(){ window.print(); setTimeout(function(){ pa.innerHTML=''; pa.style.display='none'; },400); },60);
+  bvPrint();
 }
 
 
@@ -5632,8 +5936,7 @@ function reglPdf(){
       files.map(function(f){ return '<div class="sp-line">'+tkEsc(f.name)+'</div>'; }).join('')+'</div>':'')+
     '<div class="rg-sign"><div>Ознакомлен: ______________________ / ______________</div><div class="rg-sd">подпись · дата</div></div>'+
     '<div class="sp-foot">'+tkEsc(name)+' · Контроль сегодня. Качество завтра.</div></div>';
-  pa.style.display='block';
-  setTimeout(function(){ window.print(); setTimeout(function(){ pa.innerHTML=''; pa.style.display='none'; },400); },60);
+  bvPrint();
 }
 /* ---------- редактор регламента ---------- */
 function reglER(){ reglOpen(_reglKey); renderReglGrid(); bvSaveNow(); }
@@ -5833,6 +6136,7 @@ function teamChanged(){
   try{ renderTeam(); }catch(e){}
   try{ renderHR(); }catch(e){}
   try{ if(typeof obFillPeople==='function')obFillPeople(); if(typeof renderOnboard==='function')renderOnboard(); }catch(e){}
+  try{ if(typeof renderDashBday==='function')renderDashBday(); if(typeof renderToday==='function')renderToday(); }catch(e){}
   try{ renderAch(); renderBadgeBook(); }catch(e){}
   try{ renderRolesMatrix(); }catch(e){}
   try{ renderReminders(); }catch(e){}
@@ -6667,9 +6971,10 @@ function remNotifs(){
     var stage=remStage(days,remTotal(r));
     if(stage)NOTIFS.unshift({_rem:true,perm:'remind',icon:'⏰',t:r.name+' — '+stage,d:'срок '+fmtD(next)+(days>=0?' (через '+days+' дн)':' — просрочено'),go:'remind',unread:true});
   });
-  /* санкнижки — из «Личных данных» каждого сотрудника, а не из отдельного списка */
+  /* Санкнижки: видят шеф/владелец/менеджер (право «remind») И сам сотрудник,
+     которого это касается — ему же идти её продлевать. */
   (typeof sanBooks==='function'?sanBooks():[]).forEach(function(p){
-    if(p.days<=30) NOTIFS.unshift({_rem:true,perm:'remind',icon:'🩺',
+    if(p.days<=30) NOTIFS.unshift({_rem:true,perm:'remind',emp:p.id,icon:'🩺',
       t:'Сан.книжка: '+p.name,
       d:(p.days<0?('просрочена '+(-p.days)+' дн — вход в цех закрыт'):('истекает через '+p.days+' дн · до '+fmtD(p.until))),
       go:'remind',unread:true});
@@ -9481,8 +9786,7 @@ function scriptsPdf(){
     cards+
     '<div class="sp-foot">'+tkEsc(name)+' · Контроль сегодня. Качество завтра.</div>'+
     '</div>';
-  pa.style.display='block';
-  setTimeout(function(){ window.print(); setTimeout(function(){ pa.innerHTML=''; pa.style.display='none'; },400); },60);
+  bvPrint();
 }
 var SCR_LANG='both';   /* ru | sr | both */
 function scrLang(v){ SCR_LANG=v; renderScripts(); }
@@ -10238,7 +10542,7 @@ function sendChk(){
 }
 /* ===================== СОХРАНЕНИЕ В БРАУЗЕРЕ (localStorage) ===================== */
 var BV_KEY='bv_pekar_store_v1';
-var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','REMINDERS','SCRIPTS','EQ','SAN','REGL','ERRS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','ACH_MIG','SKILL_GROUPS','TRACK_SKILLS','BADGE_CUSTOM','BADGE_EDITS','BADGE_HIDDEN','ATTEST','OB_TRACKS','OB_VERSIONS','FAQ','FAQ_ASK','MAT','MAT_CATS','ABOUT'];
+var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF_SHIFTS','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','REMINDERS','HOL_INFO','HOL_CUSTOM','SCRIPTS','EQ','SAN','REGL','ERRS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','ACH_MIG','SKILL_GROUPS','TRACK_SKILLS','BADGE_CUSTOM','BADGE_EDITS','BADGE_HIDDEN','ATTEST','OB_TRACKS','OB_VERSIONS','FAQ','FAQ_ASK','MAT','MAT_CATS','ABOUT'];
 function bvSnapshot(){ var o={}; for(var i=0;i<BV_PERSIST.length;i++){ var k=BV_PERSIST[i]; try{ if(typeof window[k]!=='undefined') o[k]=window[k]; }catch(e){} } return o; }
 function bvSave(){ try{ localStorage.setItem(BV_KEY, JSON.stringify(bvSnapshot())); }catch(e){} }
 function bvLoad(){ try{ var raw=localStorage.getItem(BV_KEY); if(!raw)return false; var o=JSON.parse(raw); var n=0; for(var k in o){ if(o.hasOwnProperty(k) && BV_PERSIST.indexOf(k)>=0){ try{ window[k]=o[k]; n++; }catch(e){} } } return n>0; }catch(e){ return false; } }
@@ -10292,6 +10596,8 @@ function bvFixups(){
   try{ if(typeof reglNorm==='function')reglNorm(); }catch(e){}
   try{ if(typeof matNorm==='function')matNorm(); }catch(e){}
   try{ if(typeof aboutNorm==='function')aboutNorm(); }catch(e){}
+  try{ if(typeof staffSync==='function')staffSync(); }catch(e){}
+  try{ if(typeof holBoot==='function')holBoot(); }catch(e){}
 }
 function bvRerender(){
   ['renderTeam','renderHR','renderAch','renderBadgeBook','renderRolesMatrix','renderCompany','renderReminders','renderAttest','renderOnboard','renderLevelLegend','renderNotifs'].forEach(function(fn){
@@ -10299,6 +10605,7 @@ function bvRerender(){
   });
   try{ if(typeof renderFaq==='function')renderFaq(); }catch(e){}
   try{ if(typeof renderToday==='function')renderToday(); }catch(e){}
+  try{ if(typeof renderDashBday==='function')renderDashBday(); }catch(e){}
   try{ if(typeof renderMat==='function')renderMat(); }catch(e){}
   try{ if(typeof renderAbout==='function')renderAbout(); }catch(e){}
   try{ if(typeof CUR_ROLE!=='undefined'&&typeof setRole==='function')setRole(CUR_ROLE); }catch(e){}
@@ -10322,7 +10629,7 @@ function bvBootCloud(){
   }).catch(function(e){});
 }
 bvBootCloud();bvLoad();bvFixups();try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} var _sn=document.getElementById('bv-store-note'); var _rl=document.getElementById('bv-reset-link'); if(BV_CLOUD_URL){ if(_sn)_sn.innerHTML='☁️ Данные в общей базе<br><span style="opacity:.8">общие для команды</span><br><a onclick="bvPing()" style="cursor:pointer;text-decoration:underline">Проверить базу</a>'; if(_rl)_rl.style.display='none'; } bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
-renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAttest();renderFaq();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderBadgeBook();renderAttest();renderToday();renderFaq();renderMat();renderAbout();rolesBoot();teamBoot();coMigrate();achMigrate();badgeMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
+renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAttest();renderFaq();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderBadgeBook();renderAttest();renderToday();renderDashBday();renderFaq();renderMat();renderAbout();holBoot();renderHolBox();rolesBoot();teamBoot();coMigrate();achMigrate();badgeMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
 
 calcKalk();calcAkt();calcHidr();calcBP();
 
