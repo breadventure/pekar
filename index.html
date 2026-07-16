@@ -90,6 +90,11 @@
   .tag.crit{background:rgba(217,92,92,.18)}
   .tag.ok{background:rgba(126,166,106,.22)}
   .tag.warn{background:var(--yellow)}
+  /* ===== ДАТА В ШАПКЕ ===== */
+  .bv-today{margin:10px 0 2px;padding:9px 12px;border:1.5px solid var(--ink);border-radius:12px;background:var(--card);box-shadow:2px 2px 0 var(--ink)}
+  .bv-today .d1{font-family:'Instrument Serif',Georgia,serif;font-style:italic;font-size:26px;line-height:1;letter-spacing:.01em}
+  .bv-today .d2{font-size:11.5px;color:var(--muted);margin-top:4px;text-transform:lowercase;letter-spacing:.03em}
+  .bv-today .d3{font-size:11px;color:var(--accent);font-weight:700;margin-top:2px}
   /* ===== БЕЙДЖИ ===== */
   .bdgs{display:flex;flex-wrap:wrap;gap:12px 10px;margin-top:4px}
   .bdg{position:relative;display:inline-flex;flex-direction:column;align-items:center;width:78px;text-align:center}
@@ -358,6 +363,7 @@
 
 <aside>
   <div class="logo"><b>BreadVenture Standards</b><span>внутренняя система</span></div>
+  <div id="bv-today" class="bv-today"></div>
   <div class="role"><div class="ava" id="cur-ava">А</div><div><b id="cur-name">Аня</b><span id="cur-role">Пекарь · смена 05:00–14:00</span></div></div>
   
   <nav id="nav">
@@ -1640,46 +1646,13 @@
 <!-- ===== FAQ ===== -->
 <section class="view" id="v-faq">
   <div class="crumbs"><a onclick="go('dash')">Главная</a> / FAQ</div>
-  <div class="btn-row" style="margin-bottom:16px"><span class="chef-only"><button class="btn primary" onclick="var f=document.getElementById('faq-form');f.style.display=(f.style.display==='none')?'':'none'">+ Добавить вопрос</button></span></div>
-  <div class="card" id="faq-form" style="display:none;margin-bottom:16px">
-    <div class="grid g2" style="gap:12px">
-      <div class="field"><label>Категория</label><select id="qf-cat"><option value="0">🥖 Закваски</option><option value="1">🌡 Ферментация</option><option value="2">🔥 Выпечка</option><option value="3">🧪 Проблемы с тестом</option><option value="4">☕ Сервис и бар</option><option value="5">📋 Внутренние регламенты</option><option value="6">👥 Команда и смены</option><option value="7">💰 Деньги и касса</option></select></div>
-      <div class="field"><label>Вопрос</label><input type="text" id="qf-q" placeholder="Например: Какая внутренняя температура готового хлеба?"></div>
-    </div>
-    <div class="field"><label>Ответ</label><textarea id="qf-a" rows="2"></textarea></div>
-    <div class="btn-row"><button class="btn primary" onclick="addFaq()">Сохранить</button></div>
+  <div class="btn-row" style="margin-bottom:14px">
+    <span class="chef-only"><button class="btn primary" onclick="faqQAdd()">+ Добавить вопрос</button>
+    <button class="btn" onclick="faqCatAdd()">+ Категория</button></span>
+    <button class="btn" onclick="faqAskOpen()">🙋 Задать вопрос шефу</button>
   </div>
-  <div class="faq-grid">
-    <div class="faq-cat"><h3>🥖 Закваски</h3><ul>
-      <li><button class="faq-q" onclick="fq(this)">Как часто кормить закваску? <span class="chev">›</span></button><div class="faq-a">При 24–26 °C — каждые 12 ч. В холодильнике — раз в 5–7 дней. Перед производством 1–2 кормления в тепле.</div></li>
-      <li><button class="faq-q" onclick="fq(this)">Как понять, что закваска зрелая? <span class="chev">›</span></button><div class="faq-a">Удвоилась, купол начинает слегка опадать, запах приятно кислый. Тест: ложка закваски плавает в воде.</div></li>
-    </ul></div>
-    <div class="faq-cat"><h3>🌡 Ферментация</h3><ul>
-      <li><button class="faq-q" onclick="fq(this)">Что влияет на скорость ферментации? <span class="chev">›</span></button><div class="faq-a">Температура (+2 °C ≈ +20% скорости), процент закваски (летом 5%), гидратация, тип муки.</div></li>
-      <li><button class="faq-q" onclick="fq(this)">Как замедлить тесто на ночь? <span class="chev">›</span></button><div class="faq-a">Снизить закваску до 5–8%, сформовать и в холодильник на 4 °C. Ретардация 10–14 ч даёт более глубокий вкус.</div></li>
-    </ul></div>
-    <div class="faq-cat"><h3>🔥 Выпечка</h3><ul>
-      <li><button class="faq-q" onclick="fq(this)">Температура и пар — стандарт? <span class="chev">›</span></button><div class="faq-a">Старт 250 °C с паром 15 мин, затем 220 °C без пара. Внутренняя температура готового хлеба: 96–98 °C.</div></li>
-    </ul></div>
-    <div class="faq-cat"><h3>🧪 Проблемы с тестом</h3><ul>
-      <li><button class="faq-q" onclick="fq(this)">Тесто липнет и расплывается? <span class="chev">›</span></button><div class="faq-a">Перебродило или слишком высокая гидратация. Сократить bulk на 30–60 мин или уменьшить воду на 3–5%.</div></li>
-    </ul></div>
-    <div class="faq-cat"><h3>☕ Сервис и бар</h3><ul>
-      <li><button class="faq-q" onclick="fq(this)">Что делать, если гость недоволен? <span class="chev">›</span></button><div class="faq-a">Выслушать, извиниться, предложить замену или возврат. Серьёзные случаи — записать в «Поделиться с командой» и сообщить менеджеру.</div></li>
-      <li><button class="faq-q" onclick="fq(this)">Как принять оплату без чека? <span class="chev">›</span></button><div class="faq-a">Не принимаем без чека. Если касса не пробивает — звонок менеджеру, продажа приостанавливается.</div></li>
-    </ul></div>
-    <div class="faq-cat"><h3>📋 Внутренние регламенты</h3><ul>
-      <li><button class="faq-q" onclick="fq(this)">Во сколько открытие и закрытие? <span class="chev">›</span></button><div class="faq-a">См. раздел «Регламенты» → «Открытие/Закрытие производства». Чек-лист смены подскажет по шагам.</div></li>
-      <li><button class="faq-q" onclick="fq(this)">Куда сообщать о поломке? <span class="chev">›</span></button><div class="faq-a">В «Передаче смены» → «Изменить статус оборудования». Срочное — отдельной кнопкой «Срочная проблема для шефа».</div></li>
-    </ul></div>
-    <div class="faq-cat"><h3>👥 Команда и смены</h3><ul>
-      <li><button class="faq-q" onclick="fq(this)">Как поменяться сменой? <span class="chev">›</span></button><div class="faq-a">Согласовать с тем, кто подменит, и с менеджером. Изменение внесёт шеф/менеджер в «Графике смен».</div></li>
-      <li><button class="faq-q" onclick="fq(this)">Где взять сан.книжку? <span class="chev">›</span></button><div class="faq-a">Сроки и записи — у менеджера в «Личных данных». Напоминания о продлении приходят заранее.</div></li>
-    </ul></div>
-    <div class="faq-cat"><h3>💰 Деньги и касса</h3><ul>
-      <li><button class="faq-q" onclick="fq(this)">Что делать с разменными деньгами? <span class="chev">›</span></button><div class="faq-a">Пересчитать на открытии и закрытии, зафиксировать в чек-листе. Расхождения — сразу менеджеру.</div></li>
-    </ul></div>
-  </div>
+  <div id="faq-ask"></div>
+  <div id="faq-grid"></div>
 </section>
 
 </main>
@@ -1751,6 +1724,188 @@ var CURRENT_USER=null;
 function loginAs(pin){var u=PIN_MAP[pin];if(!u)return false;CURRENT_USER=u;if(typeof pinSync==='function')pinSync();setRole(u.roleKey);var w=document.getElementById('who-mini');if(w)w.textContent='\uD83D\uDC64 '+u.name;return true;}
 function pinSubmit(){var inp=document.getElementById('pin-input');var v=(inp.value||'').trim();var err=document.getElementById('pin-err');if(loginAs(v)){var g=document.getElementById('pin-gate');if(g)g.style.display='none';inp.value='';if(err)err.textContent='';window.scrollTo(0,0);}else{if(err)err.textContent='\u041D\u0435\u0432\u0435\u0440\u043D\u044B\u0439 PIN';inp.value='';inp.focus();}}
 function logout(){CURRENT_USER=null;var g=document.getElementById('pin-gate');if(g)g.style.display='flex';var i=document.getElementById('pin-input');if(i){i.value='';setTimeout(function(){i.focus();},50);}}
+var FAQ=[
+  {id:'c0',t:"🥖 Закваски",qs:[{id:'q0_0',q:"Как часто кормить закваску?",a:"При 24–26 °C — каждые 12 ч. В холодильнике — раз в 5–7 дней. Перед производством 1–2 кормления в тепле."},{id:'q0_1',q:"Как понять, что закваска зрелая?",a:"Удвоилась, купол начинает слегка опадать, запах приятно кислый. Тест: ложка закваски плавает в воде."}]},
+  {id:'c1',t:"🌡 Ферментация",qs:[{id:'q1_0',q:"Что влияет на скорость ферментации?",a:"Температура (+2 °C ≈ +20% скорости), процент закваски (летом 5%), гидратация, тип муки."},{id:'q1_1',q:"Как замедлить тесто на ночь?",a:"Снизить закваску до 5–8%, сформовать и в холодильник на 4 °C. Ретардация 10–14 ч даёт более глубокий вкус."}]},
+  {id:'c2',t:"🔥 Выпечка",qs:[{id:'q2_0',q:"Температура и пар — стандарт?",a:"Старт 250 °C с паром 15 мин, затем 220 °C без пара. Внутренняя температура готового хлеба: 96–98 °C."}]},
+  {id:'c3',t:"🧪 Проблемы с тестом",qs:[{id:'q3_0',q:"Тесто липнет и расплывается?",a:"Перебродило или слишком высокая гидратация. Сократить bulk на 30–60 мин или уменьшить воду на 3–5%."}]},
+  {id:'c4',t:"☕ Сервис и бар",qs:[{id:'q4_0',q:"Что делать, если гость недоволен?",a:"Выслушать, извиниться, предложить замену или возврат. Серьёзные случаи — записать в «Поделиться с командой» и сообщить менеджеру."},{id:'q4_1',q:"Как принять оплату без чека?",a:"Не принимаем без чека. Если касса не пробивает — звонок менеджеру, продажа приостанавливается."}]},
+  {id:'c5',t:"📋 Внутренние регламенты",qs:[{id:'q5_0',q:"Во сколько открытие и закрытие?",a:"См. раздел «Регламенты» → «Открытие/Закрытие производства». Чек-лист смены подскажет по шагам."},{id:'q5_1',q:"Куда сообщать о поломке?",a:"В «Передаче смены» → «Изменить статус оборудования». Срочное — отдельной кнопкой «Срочная проблема для шефа»."}]},
+  {id:'c6',t:"👥 Команда и смены",qs:[{id:'q6_0',q:"Как поменяться сменой?",a:"Согласовать с тем, кто подменит, и с менеджером. Изменение внесёт шеф/менеджер в «Графике смен»."},{id:'q6_1',q:"Где взять сан.книжку?",a:"Сроки и записи — у менеджера в «Личных данных». Напоминания о продлении приходят заранее."}]},
+  {id:'c7',t:"💰 Деньги и касса",qs:[{id:'q7_0',q:"Что делать с разменными деньгами?",a:"Пересчитать на открытии и закрытии, зафиксировать в чек-листе. Расхождения — сразу менеджеру."}]}
+];
+var FAQ_ASK=[];
+function faqNorm(){
+  if(!Array.isArray(FAQ))FAQ=[];
+  FAQ.forEach(function(c){ if(!c.id)c.id='c'+Math.random().toString(36).slice(2,7); if(!Array.isArray(c.qs))c.qs=[]; c.qs.forEach(function(q){ if(!q.id)q.id='q'+Math.random().toString(36).slice(2,7); }); });
+  if(!Array.isArray(FAQ_ASK))FAQ_ASK=[];
+  return FAQ;
+}
+function faqCat(id){ return faqNorm().filter(function(c){return c.id===id;})[0]; }
+function faqRefresh(){ renderFaq(); bvSaveNow(); }
+function renderFaq(){
+  var box=document.getElementById('faq-grid'); if(!box)return;
+  faqNorm();
+  var chef=isChef();
+  box.innerHTML='<div class="faq-grid">'+(FAQ.length?FAQ.map(function(c){
+    return '<div class="faq-cat"><h3 style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span>'+tkEsc(c.t)+'</span>'+
+      (chef?'<span style="display:flex;gap:4px"><button class="btn chef-only" style="padding:1px 7px;font-size:10.5px" onclick="faqCatRename(\''+c.id+'\')">✎</button>'+
+      '<button class="btn chef-only" style="padding:1px 7px;font-size:10.5px;color:#C0392B" onclick="faqCatDel(\''+c.id+'\')">🗑</button></span>':'')+'</h3><ul>'+
+      (c.qs.length?c.qs.map(function(q,i){
+        return '<li><button class="faq-q" onclick="fq(this)">'+tkEsc(q.q)+' <span class="chev">›</span></button>'+
+          '<div class="faq-a">'+tkEsc(q.a).replace(/\n/g,'<br>')+
+          (chef?'<div class="btn-row chef-only" style="margin-top:7px"><button class="btn" style="padding:2px 9px;font-size:11px" onclick="event.stopPropagation();faqQEdit(\''+c.id+'\',\''+q.id+'\')">✎ Править</button>'+
+          '<button class="btn" style="padding:2px 9px;font-size:11px" onclick="event.stopPropagation();faqQMove(\''+c.id+'\',\''+q.id+'\',-1)">↑</button>'+
+          '<button class="btn" style="padding:2px 9px;font-size:11px" onclick="event.stopPropagation();faqQMove(\''+c.id+'\',\''+q.id+'\',1)">↓</button>'+
+          '<button class="btn" style="padding:2px 9px;font-size:11px;color:#C0392B" onclick="event.stopPropagation();faqQDel(\''+c.id+'\',\''+q.id+'\')">🗑</button></div>':'')+
+          '</div></li>';
+      }).join(''):'<li><p class="hint" style="margin:4px 0">Вопросов пока нет.</p></li>')+
+      '</ul></div>';
+  }).join(''):'<p class="hint">Категорий пока нет.'+(chef?' Нажми «+ Категория».':'')+'</p>')+'</div>';
+  renderFaqAsk();
+}
+/* --- вопрос шефу --- */
+function faqAskOpen(){
+  faqNorm();
+  var q=prompt('Твой вопрос шефу:\n\nОтвет попадёт в базу знаний — им смогут пользоваться все.',''); q=(q||'').trim(); if(!q)return;
+  FAQ_ASK.unshift({id:'a'+Date.now(),q:q,by:(typeof whoAmI==='function'?whoAmI():'—'),date:new Date().toISOString().slice(0,10)});
+  faqRefresh();
+  alert('Вопрос отправлен шефу.\n\nКак ответит — вопрос появится в базе знаний.');
+}
+function renderFaqAsk(){
+  var box=document.getElementById('faq-ask'); if(!box)return;
+  faqNorm();
+  if(!FAQ_ASK.length){ box.innerHTML=''; return; }
+  var chef=isChef();
+  if(!chef){
+    box.innerHTML='<div class="note" style="margin-bottom:14px">🙋 Вопросов ждут ответа: <b>'+FAQ_ASK.length+'</b>. Как шеф ответит — они появятся в базе.</div>';
+    return;
+  }
+  box.innerHTML='<div class="card bg-pink" style="margin-bottom:14px"><b style="font-size:15px">🙋 Вопросы от команды ('+FAQ_ASK.length+')</b>'+
+    FAQ_ASK.map(function(x){
+      return '<div class="pair"><span><b style="font-size:13.5px">'+tkEsc(x.q)+'</b><br><span style="color:var(--muted);font-size:11.5px">'+tkEsc(x.by)+' · '+tkEsc(x.date)+'</span></span>'+
+        '<span style="display:flex;gap:5px"><button class="btn" style="padding:2px 10px;font-size:11px" onclick="faqAskAnswer(\''+x.id+'\')">Ответить</button>'+
+        '<button class="btn" style="padding:2px 8px;font-size:11px;color:#C0392B" onclick="faqAskDel(\''+x.id+'\')">🗑</button></span></div>';
+    }).join('')+'</div>';
+}
+function faqAskAnswer(id){
+  if(!isChef())return; faqNorm();
+  var x=FAQ_ASK.filter(function(y){return y.id===id;})[0]; if(!x)return;
+  if(!FAQ.length){ alert('Сначала заведи хотя бы одну категорию.'); return; }
+  var c=faqPickCat(); if(!c)return;
+  var q=prompt('Вопрос (можно поправить формулировку):',x.q); if(q===null)return;
+  q=String(q).trim(); if(!q)return;
+  var a=prompt('Ответ:',''); if(a===null)return;
+  a=String(a).trim(); if(!a){ alert('Ответ не может быть пустым.'); return; }
+  c.qs.push({id:'q'+Date.now(),q:q,a:a});
+  FAQ_ASK=FAQ_ASK.filter(function(y){return y.id!==id;});
+  faqRefresh();
+  alert('Готово. Вопрос теперь в базе знаний.');
+}
+function faqAskDel(id){
+  if(!isChef())return; faqNorm();
+  var x=FAQ_ASK.filter(function(y){return y.id===id;})[0]; if(!x)return;
+  if(!confirm('Убрать вопрос «'+x.q+'» без ответа?'))return;
+  FAQ_ASK=FAQ_ASK.filter(function(y){return y.id!==id;});
+  faqRefresh();
+}
+/* --- категории --- */
+function faqPickCat(cur){
+  faqNorm();
+  var v=prompt('В какую категорию:\n\n'+FAQ.map(function(c,i){return (i+1)+'. '+c.t;}).join('\n')+'\n\nНомер:', cur?String(FAQ.map(function(c){return c.id;}).indexOf(cur)+1):'1');
+  if(v===null)return null;
+  var i=parseInt(v)-1;
+  if(isNaN(i)||!FAQ[i]){ alert('Нет такой категории.'); return null; }
+  return FAQ[i];
+}
+function faqCatAdd(){
+  if(!isChef()){ alert('Заводить категории может шеф или менеджер.'); return; }
+  faqNorm();
+  var t=prompt('Название категории (можно с эмодзи):\n\nНапример: 🥐 Слоёное тесто',''); t=(t||'').trim(); if(!t)return;
+  if(FAQ.some(function(c){return c.t.toLowerCase()===t.toLowerCase();})){ alert('Такая категория уже есть.'); return; }
+  FAQ.push({id:'c'+Date.now(),t:t,qs:[]});
+  faqRefresh();
+}
+function faqCatRename(id){
+  if(!isChef())return;
+  var c=faqCat(id); if(!c)return;
+  var t=prompt('Название категории:',c.t); t=(t||'').trim(); if(!t)return;
+  c.t=t; faqRefresh();
+}
+function faqCatDel(id){
+  if(!isChef())return;
+  var c=faqCat(id); if(!c)return;
+  if(!confirm('Удалить категорию «'+c.t+'»'+(c.qs.length?(' и все '+c.qs.length+' вопрос(ов) внутри'):'')+'?'))return;
+  FAQ=FAQ.filter(function(x){return x.id!==id;});
+  faqRefresh();
+}
+/* --- вопросы --- */
+function faqQAdd(){
+  if(!isChef()){ alert('Добавлять вопросы может шеф или менеджер. Свой вопрос можно задать кнопкой «Задать вопрос шефу».'); return; }
+  faqNorm();
+  if(!FAQ.length){ alert('Сначала заведи категорию.'); return; }
+  var c=faqPickCat(); if(!c)return;
+  var q=prompt('Вопрос:',''); if(q===null)return; q=String(q).trim();
+  if(!q){ alert('Вопрос не может быть пустым.'); return; }
+  var a=prompt('Ответ:',''); if(a===null)return; a=String(a).trim();
+  if(!a){ alert('Ответ не может быть пустым.'); return; }
+  c.qs.push({id:'q'+Date.now(),q:q,a:a});
+  faqRefresh();
+}
+function faqQEdit(cid,qid){
+  if(!isChef())return;
+  var c=faqCat(cid); if(!c)return;
+  var x=c.qs.filter(function(y){return y.id===qid;})[0]; if(!x)return;
+  var q=prompt('Вопрос:',x.q); if(q===null)return; q=String(q).trim();
+  if(!q){ alert('Вопрос не может быть пустым.'); return; }
+  var a=prompt('Ответ:',x.a); if(a===null)return; a=String(a).trim();
+  if(!a){ alert('Ответ не может быть пустым.'); return; }
+  x.q=q; x.a=a;
+  var mv=confirm('Перенести вопрос в другую категорию?\n\nОК — да, Отмена — оставить здесь.');
+  if(mv){
+    var nc=faqPickCat(cid);
+    if(nc&&nc.id!==cid){ c.qs=c.qs.filter(function(y){return y.id!==qid;}); nc.qs.push(x); }
+  }
+  faqRefresh();
+}
+function faqQDel(cid,qid){
+  if(!isChef())return;
+  var c=faqCat(cid); if(!c)return;
+  var x=c.qs.filter(function(y){return y.id===qid;})[0]; if(!x)return;
+  if(!confirm('Удалить вопрос?\n\n'+x.q))return;
+  c.qs=c.qs.filter(function(y){return y.id!==qid;});
+  faqRefresh();
+}
+function faqQMove(cid,qid,d){
+  if(!isChef())return;
+  var c=faqCat(cid); if(!c)return;
+  var i=c.qs.map(function(y){return y.id;}).indexOf(qid), j=i+d;
+  if(i<0||j<0||j>=c.qs.length)return;
+  var t=c.qs[i]; c.qs[i]=c.qs[j]; c.qs[j]=t;
+  faqRefresh();
+}
+
+/* ===== ДАТА И ДЕНЬ НЕДЕЛИ ===== */
+var BV_DOW=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+var BV_MON=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+function renderToday(){
+  var el=document.getElementById('bv-today'); if(!el)return;
+  var d=new Date();
+  var bd=[];
+  try{
+    if(typeof TEAM!=='undefined'&&TEAM.filter){
+      TEAM.filter(function(p){return p.status!=='Архивный';}).forEach(function(p){
+        var iso=(typeof bdayISO==='function')?bdayISO(p.bday):'';
+        if(!iso)return;
+        var x=new Date(iso+'T00:00:00');
+        if(x.getDate()===d.getDate()&&x.getMonth()===d.getMonth()) bd.push(empName(p));
+      });
+    }
+  }catch(e){}
+  el.innerHTML='<div class="d1">'+d.getDate()+' '+BV_MON[d.getMonth()]+'</div>'+
+    '<div class="d2">'+BV_DOW[d.getDay()]+' · '+d.getFullYear()+'</div>'+
+    (bd.length?'<div class="d3">🎂 сегодня день рождения: '+tkEsc(bd.join(', '))+'</div>':'');
+}
 function attAuto(){
   try{
     var pin=Object.keys(PIN_MAP).filter(function(x){return PIN_MAP[x].roleKey===CUR_ROLE;})[0];
@@ -5308,13 +5463,45 @@ function remToggle(i){
   d.style.display=open?'':'none';
   var ch=document.getElementById('rem-chev-'+i); if(ch)ch.textContent=open?'▴':'▾';
 }
+var REM_KINDS=['Уборка','Сервис оборудования','Санитария','Проверка','Документы','Закупка','Другое'];
+var REM_UNITS=[['d','дней'],['w','недель'],['m','месяцев'],['y','лет']];
+function remUnitName(u){ var x=REM_UNITS.filter(function(y){return y[0]===u;})[0]; return x?x[1]:u; }
 function remField(i,key,val){ if(REMINDERS[i])REMINDERS[i][key]=val; }
+var _remOpen={};
+function remRefresh(){ renderReminders(); bvSaveNow(); }
+function remAdd(){
+  if(!isChef()){ alert('Добавлять работы может шеф или менеджер.'); return; }
+  var n=prompt('Название работы:',''); n=(n||'').trim(); if(!n)return;
+  REMINDERS.push({name:n,kind:REM_KINDS[0],n:1,u:'m',last:new Date().toISOString().slice(0,10),note:'',who:'',phone:'',addr:'',desc:'',comments:''});
+  _remOpen[REMINDERS.length-1]=true;
+  remRefresh();
+}
+function remDel(i){
+  if(!isChef()){ alert('Удалять работы может шеф или менеджер.'); return; }
+  var r=REMINDERS[i]; if(!r)return;
+  if(!confirm('Удалить работу «'+r.name+'» насовсем?\n\nНапоминания по ней перестанут приходить.'))return;
+  REMINDERS.splice(i,1); _remOpen={};
+  remRefresh();
+}
 function renderReminders(){
   var rows=REMINDERS.map(function(r,i){
     var next=addInterval(r.last,r.n,r.u),days=daysLeft(next);
     var ev=function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');};
     var det='<div id="rem-det-'+i+'" style="display:none;margin-top:12px;border-top:1.5px dashed var(--hair);padding-top:12px">'+
       '<div class="grid g2" style="gap:10px">'+
+      '<div class="field" style="margin:0"><label>Название работы</label><input type="text" value="'+ev(r.name)+'" oninput="remField('+i+',\'name\',this.value);remRefresh()"></div>'+
+      '<div class="field" style="margin:0"><label>Тип работы</label><select onchange="remField('+i+',\'kind\',this.value);remRefresh()">'+
+        REM_KINDS.map(function(k){ return '<option'+((r.kind||REM_KINDS[0])===k?' selected':'')+'>'+tkEsc(k)+'</option>'; }).join('')+'</select></div>'+
+      '</div>'+
+      '<div class="grid g2" style="gap:10px;margin-top:10px">'+
+      '<div class="field" style="margin:0"><label>Как часто</label><div style="display:flex;gap:6px">'+
+        '<input type="number" min="1" step="1" value="'+ev(r.n)+'" onchange="remField('+i+',\'n\',Math.max(1,parseInt(this.value)||1));remRefresh()" style="width:70px">'+
+        '<select onchange="remField('+i+',\'u\',this.value);remRefresh()" style="flex:1">'+
+        REM_UNITS.map(function(u){ return '<option value="'+u[0]+'"'+(r.u===u[0]?' selected':'')+'>'+u[1]+'</option>'; }).join('')+'</select></div>'+
+        '<p class="hint" style="margin:3px 0 0">Сейчас: каждые '+ev(r.n)+' '+remUnitName(r.u)+' → следующий раз '+fmtD(next)+'</p></div>'+
+      '<div class="field" style="margin:0"><label>Уточнение к периодичности</label><input type="text" value="'+ev(r.note)+'" oninput="remField('+i+',\'note\',this.value);remRefresh()" placeholder="воскресенье, после смены"></div>'+
+      '</div>'+
+      '<div class="grid g2" style="gap:10px;margin-top:10px">'+
       '<div class="field" style="margin:0"><label>Исполнитель</label><input type="text" value="'+ev(r.who)+'" oninput="remField('+i+',\'who\',this.value)" placeholder="Кто выполняет"></div>'+
       '<div class="field" style="margin:0"><label>Телефон</label><input type="text" value="'+ev(r.phone)+'" oninput="remField('+i+',\'phone\',this.value)" placeholder="+381…"></div>'+
       '</div>'+
@@ -5322,6 +5509,7 @@ function renderReminders(){
       '<div class="field" style="margin:10px 0 0"><label>Адрес / где</label><input type="text" value="'+ev(r.addr)+'" oninput="remField('+i+',\'addr\',this.value)" placeholder="Адрес сервиса или объекта"></div>'+
       '<div class="field" style="margin:10px 0 0"><label>Описание — что / зачем / почему</label><textarea rows="3" oninput="remField('+i+',\'desc\',this.value)" placeholder="Что именно делаем, зачем и почему это важно">'+ev(r.desc)+'</textarea></div>'+
       '<div class="field" style="margin:10px 0 0"><label>Комментарии</label><textarea rows="2" oninput="remField('+i+',\'comments\',this.value)" placeholder="Заметки, история, нюансы">'+ev(r.comments)+'</textarea></div>'+
+      '<div class="btn-row chef-only" style="margin-top:12px"><button class="btn" style="color:#C0392B" onclick="remDel('+i+')">🗑 Удалить работу</button></div>'+
       '</div>';
     return {html:'<div class="card" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">'+
       '<div style="min-width:200px;cursor:pointer" onclick="remToggle('+i+')"><b style="font-size:15px">'+r.name+' <span class="chev" id="rem-chev-'+i+'" style="font-size:12px">▾</span></b> <span style="font-size:11px;color:var(--accent)">нажми, чтобы открыть детали</span><br><span style="color:var(--muted);font-size:12.5px">каждые '+unitName(r.n,r.u)+(r.note?' · '+r.note:'')+' · последний раз '+fmtD(new Date(r.last))+'</span></div>'+
@@ -8838,7 +9026,7 @@ function sendChk(){
 }
 /* ===================== СОХРАНЕНИЕ В БРАУЗЕРЕ (localStorage) ===================== */
 var BV_KEY='bv_pekar_store_v1';
-var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','ACH_MIG','SKILL_GROUPS','TRACK_SKILLS','BADGE_CUSTOM','BADGE_EDITS','BADGE_HIDDEN','ATTEST','OB_TRACKS','OB_VERSIONS'];
+var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','REMINDERS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','ACH_MIG','SKILL_GROUPS','TRACK_SKILLS','BADGE_CUSTOM','BADGE_EDITS','BADGE_HIDDEN','ATTEST','OB_TRACKS','OB_VERSIONS','FAQ','FAQ_ASK'];
 function bvSnapshot(){ var o={}; for(var i=0;i<BV_PERSIST.length;i++){ var k=BV_PERSIST[i]; try{ if(typeof window[k]!=='undefined') o[k]=window[k]; }catch(e){} } return o; }
 function bvSave(){ try{ localStorage.setItem(BV_KEY, JSON.stringify(bvSnapshot())); }catch(e){} }
 function bvLoad(){ try{ var raw=localStorage.getItem(BV_KEY); if(!raw)return false; var o=JSON.parse(raw); var n=0; for(var k in o){ if(o.hasOwnProperty(k) && BV_PERSIST.indexOf(k)>=0){ try{ window[k]=o[k]; n++; }catch(e){} } } return n>0; }catch(e){ return false; } }
@@ -8856,6 +9044,9 @@ function bvCloudPull(manual){
   fetch(BV_CLOUD_URL,{method:'GET'}).then(function(r){return r.json();}).then(function(res){
     if(res&&res.ok&&res.data){
       for(var k in res.data){ if(BV_PERSIST.indexOf(k)>=0){ try{ window[k]=res.data[k]; }catch(e){} } }
+      /* данные из облака пришли ПОСЛЕ старта и затёрли то, что уже починили —
+         прогоняем починку заново, иначе правки не применяются к облачным данным */
+      bvFixups();
       bvSave();
       try{ sessionStorage.setItem('bv_pulled','1'); }catch(e){}
       bvCloudStatus('Синхронизировано '+bvNow(), true);
@@ -8873,6 +9064,26 @@ function bvCloudSave(manual){
     bvCloudStatus((res&&res.ok)?('Синхронизировано '+bvNow()):'Ошибка сохранения в базе', !!(res&&res.ok));
   }).catch(function(e){ bvCloudStatus('Нет связи — сохранено локально.', false); });
 }
+/* всё, что чинит и достраивает данные при старте — в одном месте.
+   Вызывается и на старте, и после прихода данных из облака. */
+function bvFixups(){
+  try{ if(typeof teamBoot==='function')teamBoot(); }catch(e){}
+  try{ if(typeof rolesBoot==='function')rolesBoot(); }catch(e){}
+  try{ if(typeof coMigrate==='function')coMigrate(); }catch(e){}
+  try{ if(typeof achMigrate==='function')achMigrate(); }catch(e){}
+  try{ if(typeof badgeMigrate==='function')badgeMigrate(); }catch(e){}
+  try{ if(typeof attBoot==='function')attBoot(); }catch(e){}
+  try{ if(typeof obTracksClean==='function')obTracksClean(); }catch(e){}
+  try{ if(typeof faqNorm==='function')faqNorm(); }catch(e){}
+}
+function bvRerender(){
+  ['renderTeam','renderHR','renderAch','renderBadgeBook','renderRolesMatrix','renderCompany','renderReminders','renderAttest','renderOnboard','renderLevelLegend','renderNotifs'].forEach(function(fn){
+    try{ if(typeof window[fn]==='function')window[fn](); }catch(e){}
+  });
+  try{ if(typeof renderFaq==='function')renderFaq(); }catch(e){}
+  try{ if(typeof renderToday==='function')renderToday(); }catch(e){}
+  try{ if(typeof CUR_ROLE!=='undefined'&&typeof setRole==='function')setRole(CUR_ROLE); }catch(e){}
+}
 function bvBootCloud(){
   if(!BV_CLOUD_URL) return;
   try{ if(sessionStorage.getItem('bv_pulled')) return; }catch(e){}
@@ -8880,15 +9091,19 @@ function bvBootCloud(){
     if(res&&res.ok&&res.data){
       var cur=''; try{ cur=localStorage.getItem(BV_KEY)||''; }catch(e){}
       for(var k in res.data){ if(BV_PERSIST.indexOf(k)>=0){ try{ window[k]=res.data[k]; }catch(e){} } }
+      /* данные из облака пришли ПОСЛЕ старта и затёрли то, что уже починили —
+         прогоняем починку заново, иначе правки не применяются к облачным данным */
+      bvFixups();
       bvSave();
       try{ sessionStorage.setItem('bv_pulled','1'); }catch(e){}
       var neu=''; try{ neu=localStorage.getItem(BV_KEY)||''; }catch(e){}
-      if(neu && neu!==cur){ location.reload(); }
+      if(neu && neu!==cur){ location.reload(); return; }
+      bvRerender();
     }
   }).catch(function(e){});
 }
-bvBootCloud();bvLoad();try{if(typeof rolesBoot==='function')rolesBoot();}catch(e){}try{if(typeof teamBoot==='function')teamBoot();}catch(e){}try{if(typeof coMigrate==='function')coMigrate();}catch(e){}try{if(typeof achMigrate==='function'){achMigrate();badgeMigrate();}}catch(e){}try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} var _sn=document.getElementById('bv-store-note'); var _rl=document.getElementById('bv-reset-link'); if(BV_CLOUD_URL){ if(_sn)_sn.innerHTML='☁️ Данные в общей базе<br><span style="opacity:.8">общие для команды</span><br><a onclick="bvPing()" style="cursor:pointer;text-decoration:underline">Проверить базу</a>'; if(_rl)_rl.style.display='none'; } bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
-renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAttest();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderBadgeBook();renderAttest();rolesBoot();teamBoot();coMigrate();achMigrate();badgeMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
+bvBootCloud();bvLoad();bvFixups();try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} var _sn=document.getElementById('bv-store-note'); var _rl=document.getElementById('bv-reset-link'); if(BV_CLOUD_URL){ if(_sn)_sn.innerHTML='☁️ Данные в общей базе<br><span style="opacity:.8">общие для команды</span><br><a onclick="bvPing()" style="cursor:pointer;text-decoration:underline">Проверить базу</a>'; if(_rl)_rl.style.display='none'; } bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
+renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAttest();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderBadgeBook();renderAttest();renderToday();renderFaq();rolesBoot();teamBoot();coMigrate();achMigrate();badgeMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
 
 calcKalk();calcAkt();calcHidr();calcBP();
 
