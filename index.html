@@ -467,6 +467,7 @@
 
 <!-- ===== ОБЗОР ===== -->
 <section class="view active" id="v-dash">
+  <div id="about-box" style="margin-bottom:18px"></div>
   <div class="note" style="margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span>🎂 <b>Сегодня день рождения у Нико!</b> Не забудьте поздравить. А у Ани через 3 дня — год работы в BreadVenture 🎉</span><span class="tag">из «Личных данных»</span></div>
 
   <div class="grid g2" style="margin-bottom:8px">
@@ -1318,6 +1319,18 @@
   </div>
 </section>
 
+<!-- ===== ПОЛЕЗНЫЕ МАТЕРИАЛЫ ===== -->
+<section class="view" id="v-mat">
+  <div class="crumbs"><a onclick="go('dash')">Главная</a> / База знаний / Полезные материалы</div>
+  <div class="note" style="margin-bottom:14px">📚 Каналы, блоги, книги, статьи, видео, файлы и заметки. Кладите сюда всё, что помогает в работе — доступно всей команде.</div>
+  <div class="btn-row chef-only" style="margin-bottom:12px">
+    <button class="btn primary" onclick="matAdd()">+ Добавить материал</button>
+    <button class="btn" onclick="matCatAdd()">+ Тема</button>
+  </div>
+  <div id="mat-filter" style="margin-bottom:12px"></div>
+  <div id="mat-list"></div>
+</section>
+
 <!-- ===== СПРАВОЧНИК БЕЙДЖЕЙ ===== -->
 <section class="view" id="v-badges">
   <div class="crumbs"><a onclick="go('dash')">Главная</a> / Команда / Бейджи</div>
@@ -1734,13 +1747,13 @@
 
 /* ===== РЕЖИМ ШЕФА ===== */
 
-var TITLES={dash:['Пекарь','Все стандарты и знания в одном месте.'],recipes:['Рецептуры','Все рецепты и формулы наших продуктов.'],tk:['Рецептура','Раскладка, шаги, версии и экономика продукта.'],regl:['Регламенты работы','Правила и процедуры ежедневной работы.'],err:['Критические ошибки','Частые ошибки производства и как их избежать.'],san:['Санитарные правила','Гигиена, защита и поддержание чистоты.'],oborud:['Оборудование','Настройка, обслуживание и правила безопасности.'],check:['Чек-листы смен','Открытие и закрытие смены с отчётом в чат.'],plan:['Планирование','План замеса на день и отпёки на неделю.'],hr:['Личные данные','Документы, сан.книжки и условия работы.'],updates:['Обновления','Что изменилось в базе знаний.'],fails:['Жёсткие факапы','Истории провалов, решения и выводы.'],team:['Наша команда','Кто за что отвечает и в чём хорош.'],rarch:['Архив рецептур','Снятые с производства рецепты.'],scripts:['Скрипты сервиса','Что говорить клиентам в разных ситуациях.'],drinks:['Напитки','Карта бара: состав, технология, подача.'],handoff:['Передача смены','Что предыдущая смена оставила следующей.'],breport:['Отчёт дня','Закрытие дня бариста: продажи, остатки, Njuppa.'],roles:['Права доступа','Кто что видит и редактирует. Настраивает шеф.'],company:['Данные компании','Реквизиты и документы BreadVenture.'],badges:['Бейджи','Что можно заработать и за что.'],products:['Карточки продукта','Что говорить клиенту о каждом изделии.'],vitrina:['Витрина дня','Что на продажу, что в ресторан и когда.'],vitcon:['Конструктор витрины','Состав витрины по формуле, вкусы без повторов.'],bakeplan:['Планировщик печи','Загрузка печи, последовательность отпёков и тайминг.'],mixplan:['Планировщик замесов','Распределение замесов по тестомесу и планетарке.'],partners:['Партнёры','Профиль заведений, история отгрузок и статистика.'],remind:['Регулярные работы','Сервисы, сан.книжки и сроки обслуживания. Доступно только шефу.'],rtest:['Тесты рецептур','Разработка: итерации, оценки, перевод в производство.'],onboard:['Онбординг','Путь нового пекаря от первого дня до самостоятельной смены.'],news:['Новости пекарни','Кто чем отличился и что мы внедрили.'],calc:['Калькуляторы','Расчёты заквасок и рецептур.'],sched:['График смен','Смены команды на текущую неделю.'],train:['Обучение и тесты','Проверь знания и прокачай навыки.'],faq:['FAQ','Знания пекарни — кратко и ясно.']};
+var TITLES={dash:['Пекарь','Все стандарты и знания в одном месте.'],recipes:['Рецептуры','Все рецепты и формулы наших продуктов.'],tk:['Рецептура','Раскладка, шаги, версии и экономика продукта.'],regl:['Регламенты работы','Правила и процедуры ежедневной работы.'],err:['Критические ошибки','Частые ошибки производства и как их избежать.'],san:['Санитарные правила','Гигиена, защита и поддержание чистоты.'],oborud:['Оборудование','Настройка, обслуживание и правила безопасности.'],check:['Чек-листы смен','Открытие и закрытие смены с отчётом в чат.'],plan:['Планирование','План замеса на день и отпёки на неделю.'],hr:['Личные данные','Документы, сан.книжки и условия работы.'],updates:['Обновления','Что изменилось в базе знаний.'],fails:['Жёсткие факапы','Истории провалов, решения и выводы.'],team:['Наша команда','Кто за что отвечает и в чём хорош.'],rarch:['Архив рецептур','Снятые с производства рецепты.'],scripts:['Скрипты сервиса','Что говорить клиентам в разных ситуациях.'],drinks:['Напитки','Карта бара: состав, технология, подача.'],handoff:['Передача смены','Что предыдущая смена оставила следующей.'],breport:['Отчёт дня','Закрытие дня бариста: продажи, остатки, Njuppa.'],roles:['Права доступа','Кто что видит и редактирует. Настраивает шеф.'],mat:['Полезные материалы','Каналы, книги, статьи, файлы и заметки — всё, что помогает расти.'],company:['Данные компании','Реквизиты и документы BreadVenture.'],badges:['Бейджи','Что можно заработать и за что.'],products:['Карточки продукта','Что говорить клиенту о каждом изделии.'],vitrina:['Витрина дня','Что на продажу, что в ресторан и когда.'],vitcon:['Конструктор витрины','Состав витрины по формуле, вкусы без повторов.'],bakeplan:['Планировщик печи','Загрузка печи, последовательность отпёков и тайминг.'],mixplan:['Планировщик замесов','Распределение замесов по тестомесу и планетарке.'],partners:['Партнёры','Профиль заведений, история отгрузок и статистика.'],remind:['Регулярные работы','Сервисы, сан.книжки и сроки обслуживания. Доступно только шефу.'],rtest:['Тесты рецептур','Разработка: итерации, оценки, перевод в производство.'],onboard:['Онбординг','Путь нового пекаря от первого дня до самостоятельной смены.'],news:['Новости пекарни','Кто чем отличился и что мы внедрили.'],calc:['Калькуляторы','Расчёты заквасок и рецептур.'],sched:['График смен','Смены команды на текущую неделю.'],train:['Обучение и тесты','Проверь знания и прокачай навыки.'],faq:['FAQ','Знания пекарни — кратко и ясно.']};
 var NAV_STACK=[];var CURRENT_VIEW='dash';
 
 var GROUPS={
   prod:{label:'Производство',views:[['Планирование','plan'],['Чек-листы смен','check'],['Передача смены','handoff'],['Отчёт дня (бар)','breport'],['График смен','sched']]},
   recipes:{label:'Рецептуры',views:[['Рабочие рецептуры','recipes'],['Тесты рецептур','rtest'],['Архив','rarch'],['Калькуляторы','calc']]},
-  kb:{label:'База знаний',views:[['Регламенты','regl'],['Санитария','san'],['Оборудование','oborud'],['Критические ошибки','err'],['Скрипты сервиса','scripts'],['FAQ','faq']]},
+  kb:{label:'База знаний',views:[['Регламенты','regl'],['Санитария','san'],['Оборудование','oborud'],['Критические ошибки','err'],['Скрипты сервиса','scripts'],['FAQ','faq'],['Полезные материалы','mat']]},
   team:{label:'Команда',views:[['Сотрудники','team'],['Обучение','train'],['Онбординг','onboard'],['Личные данные','hr'],['Права доступа','roles']]}
 };
 function viewGroup(name){
@@ -1957,6 +1970,292 @@ function faqQMove(cid,qid,d){
   faqRefresh();
 }
 
+/* ===== О ПРОЕКТЕ ===== */
+var ABOUT={
+  title:'О проекте',
+  intro:'',
+  blocks:[
+    {id:'b1',t:'💡 Идея',v:''},
+    {id:'b2',t:'🎯 Ценности',v:''},
+    {id:'b3',t:'🥖 Концепция',v:''},
+    {id:'b4',t:'📈 Наш опыт',v:''}
+  ],
+  news:[],
+  open:false
+};
+function aboutNorm(){
+  if(!ABOUT||typeof ABOUT!=='object')ABOUT={};
+  if(!ABOUT.title)ABOUT.title='О проекте';
+  if(typeof ABOUT.intro!=='string')ABOUT.intro='';
+  if(!Array.isArray(ABOUT.blocks))ABOUT.blocks=[];
+  if(!Array.isArray(ABOUT.news))ABOUT.news=[];
+  ABOUT.blocks.forEach(function(b){ if(!b.id)b.id='b'+Math.random().toString(36).slice(2,7); if(!b.t)b.t='Блок'; if(typeof b.v!=='string')b.v=''; });
+  ABOUT.news.forEach(function(n){ if(!n.id)n.id='n'+Math.random().toString(36).slice(2,7); if(!n.t)n.t=''; if(typeof n.v!=='string')n.v=''; if(!n.date)n.date=''; });
+  return ABOUT;
+}
+function aboutRefresh(){ renderAbout(); bvSaveNow(); }
+function aboutToggle(){ aboutNorm(); ABOUT.open=!ABOUT.open; renderAbout(); }
+function renderAbout(){
+  var box=document.getElementById('about-box'); if(!box)return;
+  aboutNorm();
+  var chef=isChef();
+  var filled=ABOUT.blocks.filter(function(b){return b.v;});
+  var hasAny=ABOUT.intro||filled.length||ABOUT.news.length;
+  if(!hasAny&&!chef){ box.innerHTML=''; return; }
+  var news=ABOUT.news.slice(0,ABOUT.open?99:2);
+  box.innerHTML='<div class="card bg-green" style="padding:14px 16px">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer" onclick="aboutToggle()">'+
+    '<b style="font-size:16px">🥖 '+tkEsc(ABOUT.title)+' <span style="font-size:12px;color:var(--accent)">'+(ABOUT.open?'свернуть ▴':'развернуть ▾')+'</span></b>'+
+    (chef?'<span style="display:flex;gap:5px" onclick="event.stopPropagation()"><button class="btn chef-only" style="padding:2px 10px;font-size:11px" onclick="aboutEditor()">✎ Редактировать</button></span>':'')+
+    '</div>'+
+    (ABOUT.intro?'<p style="font-size:13.5px;line-height:1.6;margin:8px 0 0;white-space:pre-wrap">'+tkEsc(ABOUT.intro)+'</p>':(chef&&!hasAny?'<p class="hint" style="margin:8px 0 0">Пока пусто — расскажи команде о проекте: идея, ценности, концепция, опыт. Нажми «✎ Редактировать».</p>':''))+
+    (ABOUT.open?
+      ('<div class="grid g2" style="gap:10px;margin-top:12px">'+filled.map(function(b){
+        return '<div style="border:1.5px solid var(--hair);border-radius:11px;padding:10px;background:var(--card)">'+
+          '<b style="font-size:13px">'+tkEsc(b.t)+'</b>'+
+          '<div style="font-size:12.5px;line-height:1.55;margin-top:4px;white-space:pre-wrap">'+tkEsc(b.v)+'</div></div>';
+      }).join('')+'</div>')
+      :'')+
+    (news.length?('<div style="margin-top:12px;border-top:1.5px dashed var(--hair);padding-top:9px">'+
+      '<b style="font-size:13px">📣 Новости проекта</b>'+
+      news.map(function(n){
+        return '<div style="padding:6px 0;border-bottom:1.5px dashed var(--hair)"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="font-size:13px">'+tkEsc(n.t)+'</b><span style="font-size:11.5px;color:var(--muted)">'+tkEsc(n.date)+'</span></div>'+
+          (n.v?'<div style="font-size:12.5px;line-height:1.5;margin-top:2px;white-space:pre-wrap">'+tkEsc(n.v)+'</div>':'')+'</div>';
+      }).join('')+
+      ((!ABOUT.open&&ABOUT.news.length>2)?'<p class="hint" style="margin:6px 0 0">Ещё '+(ABOUT.news.length-2)+' — разверни блок.</p>':'')+
+      '</div>'):'')+
+    '</div>';
+}
+function aboutEditor(){
+  if(!isChef()){ alert('Менять «О проекте» может шеф или менеджер.'); return; }
+  aboutNorm();
+  var ov=document.getElementById('ab-modal');
+  if(!ov){ ov=document.createElement('div'); ov.id='ab-modal'; ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px'; document.body.appendChild(ov); }
+  var blocks=ABOUT.blocks.map(function(b,i){
+    return '<div style="border:1.5px solid var(--hair);border-radius:11px;padding:9px;margin-top:7px;background:var(--card)">'+
+      '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center">'+
+      '<input type="text" value="'+tkEsc(b.t)+'" oninput="aboutSetB('+i+',\'t\',this.value)" onchange="aboutRefreshSoft()" style="flex:1;font-weight:700;font-size:13px;border:1.5px solid var(--hair);border-radius:8px;padding:4px 7px">'+
+      '<span style="display:flex;gap:4px"><button class="btn" style="padding:1px 7px;font-size:10.5px" onclick="aboutBMove('+i+',-1)">↑</button>'+
+      '<button class="btn" style="padding:1px 7px;font-size:10.5px" onclick="aboutBMove('+i+',1)">↓</button>'+
+      '<button class="btn" style="padding:1px 7px;font-size:10.5px;color:#C0392B" onclick="aboutBDel('+i+')">✕</button></span></div>'+
+      '<textarea rows="3" oninput="aboutSetB('+i+',\'v\',this.value)" onchange="aboutRefreshSoft()" placeholder="Текст блока" style="width:100%;margin-top:6px;border:1.5px solid var(--hair);border-radius:8px;padding:7px;font-size:12.5px;box-sizing:border-box">'+tkEsc(b.v)+'</textarea></div>';
+  }).join('');
+  var news=ABOUT.news.map(function(n,i){
+    return '<div class="pair" style="padding:5px 0"><span style="font-size:12.5px"><b>'+tkEsc(n.t)+'</b> <span style="color:var(--muted)">'+tkEsc(n.date)+'</span>'+(n.v?'<br><span style="color:var(--muted);font-size:11.5px">'+tkEsc(n.v)+'</span>':'')+'</span>'+
+      '<span style="display:flex;gap:4px"><button class="btn" style="padding:1px 7px;font-size:10.5px" onclick="aboutNewsEdit('+i+')">✎</button>'+
+      '<button class="btn" style="padding:1px 7px;font-size:10.5px;color:#C0392B" onclick="aboutNewsDel('+i+')">✕</button></span></div>';
+  }).join('') || '<p class="hint" style="margin:5px 0">Новостей пока нет.</p>';
+  ov.innerHTML='<div style="background:var(--bg);border:1.5px solid var(--ink);border-radius:16px;max-width:620px;width:100%;padding:20px;box-shadow:4px 4px 0 var(--ink)">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">✎ О проекте</b><button onclick="document.getElementById(\'ab-modal\').remove()" style="border:none;background:none;font-size:20px;cursor:pointer">✕</button></div>'+
+    '<p class="hint" style="margin:4px 0 0">Этот блок видит вся команда на главной. Пустые блоки не показываются.</p>'+
+    '<div class="field" style="margin:10px 0 0"><label>Заголовок</label><input type="text" value="'+tkEsc(ABOUT.title)+'" oninput="aboutSet(\'title\',this.value)" onchange="aboutRefreshSoft()"></div>'+
+    '<div class="field" style="margin:10px 0 0"><label>Вступление — одним абзацем</label><textarea rows="3" oninput="aboutSet(\'intro\',this.value)" onchange="aboutRefreshSoft()" placeholder="Кто мы и зачем">'+tkEsc(ABOUT.intro)+'</textarea></div>'+
+    '<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:13px">Блоки</b><button class="btn" style="padding:2px 9px;font-size:11px" onclick="aboutBAdd()">+ блок</button></div>'+blocks+'</div>'+
+    '<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:13px">📣 Новости проекта</b><button class="btn" style="padding:2px 9px;font-size:11px" onclick="aboutNewsAdd()">+ новость</button></div>'+news+'</div>'+
+    '<div style="display:flex;gap:8px;margin-top:14px"><button class="btn primary" onclick="document.getElementById(\'ab-modal\').remove();aboutRefresh()">Готово</button></div></div>';
+}
+function aboutSet(k,v){ aboutNorm(); ABOUT[k]=v; }
+function aboutSetB(i,k,v){ aboutNorm(); if(ABOUT.blocks[i])ABOUT.blocks[i][k]=v; }
+function aboutRefreshSoft(){ renderAbout(); if(typeof bvSave==='function')bvSave(); }
+function aboutER(){ aboutEditor(); renderAbout(); bvSaveNow(); }
+function aboutBAdd(){
+  if(!isChef())return; aboutNorm();
+  var t=prompt('Название блока (можно с эмодзи):','') ; t=(t||'').trim(); if(!t)return;
+  ABOUT.blocks.push({id:'b'+Date.now(),t:t,v:''}); aboutER();
+}
+function aboutBDel(i){
+  if(!isChef())return; aboutNorm();
+  var b=ABOUT.blocks[i]; if(!b)return;
+  if(!confirm('Удалить блок «'+b.t+'»?'))return;
+  ABOUT.blocks.splice(i,1); aboutER();
+}
+function aboutBMove(i,d){
+  if(!isChef())return; aboutNorm();
+  var j=i+d; if(j<0||j>=ABOUT.blocks.length)return;
+  var t=ABOUT.blocks[i]; ABOUT.blocks[i]=ABOUT.blocks[j]; ABOUT.blocks[j]=t; aboutER();
+}
+function aboutNewsAdd(){
+  if(!isChef())return; aboutNorm();
+  var t=prompt('Новость — коротко:',''); if(t===null)return; t=String(t).trim();
+  if(!t){ alert('Заголовок не может быть пустым.'); return; }
+  var v=prompt('Подробнее (необязательно):',''); if(v===null)return;
+  var d=prompt('Дата:',new Date().toLocaleDateString('ru-RU')); if(d===null)return;
+  ABOUT.news.unshift({id:'n'+Date.now(),t:t,v:String(v).trim(),date:String(d).trim()});
+  aboutER();
+}
+function aboutNewsEdit(i){
+  if(!isChef())return; aboutNorm();
+  var n=ABOUT.news[i]; if(!n)return;
+  var t=prompt('Новость:',n.t); if(t===null)return; t=String(t).trim(); if(!t)return;
+  var v=prompt('Подробнее:',n.v); if(v===null)return;
+  var d=prompt('Дата:',n.date); if(d===null)return;
+  n.t=t; n.v=String(v).trim(); n.date=String(d).trim(); aboutER();
+}
+function aboutNewsDel(i){
+  if(!isChef())return; aboutNorm();
+  var n=ABOUT.news[i]; if(!n)return;
+  if(!confirm('Удалить новость «'+n.t+'»?'))return;
+  ABOUT.news.splice(i,1); aboutER();
+}
+
+/* ===== ПОЛЕЗНЫЕ МАТЕРИАЛЫ ===== */
+var MAT_TYPES=[['link','🔗','Ссылка'],['tg','✈️','Telegram-канал'],['ig','📸','Instagram'],['yt','🎬','Видео'],['book','📚','Книга'],['art','📰','Статья'],['file','📄','Файл'],['note','📝','Заметка']];
+var MAT=[];
+var MAT_CATS=['Хлеб и закваска','Сдоба и кондитерка','Бар и кофе','Бизнес и управление','Оформление и маркетинг','Разное'];
+var MAT_F='';   /* фильтр по теме */
+var MAT_UP=false;
+function matNorm(){
+  if(!Array.isArray(MAT))MAT=[];
+  if(!Array.isArray(MAT_CATS)||!MAT_CATS.length)MAT_CATS=['Разное'];
+  MAT=MAT.filter(function(m){ return m&&typeof m==='object'; });
+  MAT.forEach(function(m){
+    if(!m.id)m.id='m'+Math.random().toString(36).slice(2,7);
+    if(!MAT_TYPES.some(function(t){return t[0]===m.type;}))m.type='link';
+    if(!m.t)m.t='Без названия';
+    if(!m.cat||MAT_CATS.indexOf(m.cat)<0)m.cat=MAT_CATS[MAT_CATS.length-1];
+    if(!m.note)m.note=''; if(!m.who)m.who=''; if(!m.url)m.url='';
+  });
+  return MAT;
+}
+function matType(k){ return MAT_TYPES.filter(function(t){return t[0]===k;})[0]||MAT_TYPES[0]; }
+function matRefresh(){ renderMat(); bvSaveNow(); }
+function renderMat(){
+  matNorm();
+  var f=document.getElementById('mat-filter');
+  if(f)f.innerHTML='<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'+
+    '<button class="btn'+(MAT_F===''?' primary':'')+'" style="padding:3px 12px;font-size:12px" onclick="matFilter(\'\')">Все · '+MAT.length+'</button>'+
+    MAT_CATS.map(function(c){
+      var n=MAT.filter(function(m){return m.cat===c;}).length;
+      if(!n&&!isChef())return '';
+      return '<button class="btn'+(MAT_F===c?' primary':'')+'" style="padding:3px 12px;font-size:12px" onclick="matFilter(\''+encodeURIComponent(c)+'\')">'+tkEsc(c)+' · '+n+
+        (isChef()?'<span onclick="event.stopPropagation();matCatDel(\''+encodeURIComponent(c)+'\')" title="Удалить тему" style="margin-left:5px;color:#C0392B;font-size:10px">✕</span>':'')+'</button>';
+    }).join('')+'</div>';
+  var box=document.getElementById('mat-list'); if(!box)return;
+  var list=MAT.filter(function(m){ return !MAT_F || m.cat===MAT_F; });
+  if(!list.length){ box.innerHTML='<p class="hint">'+(MAT.length?'В этой теме пока пусто.':'Материалов пока нет.'+(isChef()?' Нажми «+ Добавить материал».':''))+'</p>'+(MAT_UP?'<p class="hint">Загрузка…</p>':''); return; }
+  var cats=MAT_F?[MAT_F]:MAT_CATS.filter(function(c){ return list.some(function(m){return m.cat===c;}); });
+  box.innerHTML=(MAT_UP?'<p class="hint">Загрузка…</p>':'')+cats.map(function(c){
+    var items=list.filter(function(m){return m.cat===c;});
+    return '<div style="margin-bottom:18px"><b style="font-size:14px">'+tkEsc(c)+'</b>'+
+      '<div class="grid g2" style="gap:10px;margin-top:8px">'+items.map(function(m){
+        var ty=matType(m.type);
+        var link=m.url?('<a class="btn" style="padding:3px 11px;font-size:12px;text-decoration:none" href="'+(m.type==='file'?driveView(m.url):m.url)+'" target="_blank" rel="noopener">'+(m.type==='file'?'Открыть файл ↗':'Открыть ↗')+'</a>'):'';
+        return '<div class="card" style="padding:12px">'+
+          '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">'+
+          '<span style="flex:1;min-width:0"><span class="tag" style="font-size:10px">'+ty[1]+' '+tkEsc(ty[2])+'</span>'+
+          '<div style="font-size:14px;font-weight:700;margin-top:5px;line-height:1.3">'+tkEsc(m.t)+'</div>'+
+          (m.who?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+tkEsc(m.who)+'</div>':'')+'</span>'+
+          (isChef()?'<span style="display:flex;gap:4px;flex-shrink:0"><button class="btn chef-only" style="padding:1px 7px;font-size:10.5px" onclick="matEdit(\''+m.id+'\')">✎</button>'+
+          '<button class="btn chef-only" style="padding:1px 7px;font-size:10.5px;color:#C0392B" onclick="matDel(\''+m.id+'\')">✕</button></span>':'')+'</div>'+
+          (m.note?'<div style="font-size:12.5px;line-height:1.5;margin-top:7px;color:var(--muted);white-space:pre-wrap">'+tkEsc(m.note)+'</div>':'')+
+          (link?'<div class="btn-row" style="margin-top:9px">'+link+'</div>':'')+
+          '<div style="font-size:10.5px;color:var(--muted);margin-top:7px">'+tkEsc(m.by||'')+(m.date?' · '+tkEsc(m.date):'')+'</div>'+
+          '</div>';
+      }).join('')+'</div></div>';
+  }).join('');
+}
+function matFilter(c){ MAT_F=c?decodeURIComponent(c):''; renderMat(); }
+function matPickType(cur){
+  var v=prompt('Что добавляем:\n\n'+MAT_TYPES.map(function(t,i){return (i+1)+'. '+t[1]+' '+t[2];}).join('\n')+'\n\nНомер:', cur?String(MAT_TYPES.map(function(t){return t[0];}).indexOf(cur)+1):'1');
+  if(v===null)return null;
+  var i=parseInt(v)-1;
+  if(isNaN(i)||!MAT_TYPES[i]){ alert('Нет такого номера.'); return null; }
+  return MAT_TYPES[i][0];
+}
+function matPickCat(cur){
+  matNorm();
+  var v=prompt('Тема:\n\n'+MAT_CATS.map(function(c,i){return (i+1)+'. '+c;}).join('\n')+'\n\nНомер:', cur?String(MAT_CATS.indexOf(cur)+1):'1');
+  if(v===null)return null;
+  var i=parseInt(v)-1;
+  if(isNaN(i)||!MAT_CATS[i]){ alert('Нет такой темы.'); return null; }
+  return MAT_CATS[i];
+}
+function matAdd(){
+  if(!isChef()){ alert('Добавлять материалы может шеф или менеджер.'); return; }
+  matNorm();
+  var type=matPickType(); if(!type)return;
+  var t=prompt('Название:',''); if(t===null)return; t=String(t).trim();
+  if(!t){ alert('Название не может быть пустым.'); return; }
+  var who=prompt(type==='book'?'Автор:':(type==='note'?'От кого (необязательно):':'Автор / канал (необязательно):'),'');
+  if(who===null)return;
+  var cat=matPickCat(); if(!cat)return;
+  var note=prompt(type==='note'?'Текст заметки:':'Зачем это нам — своими словами (необязательно):','');
+  if(note===null)return;
+  if(type==='note'&&!String(note).trim()){ alert('Заметка не может быть пустой.'); return; }
+  var item={id:'m'+Date.now(),type:type,t:t,who:String(who).trim(),cat:cat,note:String(note).trim(),url:'',
+    by:(typeof whoAmI==='function'?whoAmI():''),date:new Date().toLocaleDateString('ru-RU')};
+  if(type==='file'){
+    MAT.unshift(item); matRefresh();
+    matFilePick(item.id);
+    return;
+  }
+  if(type!=='note'){
+    var u=prompt('Ссылка (https://…):',''); if(u===null)return;
+    u=String(u).trim();
+    if(u&&!/^https?:\/\//i.test(u)){ u='https://'+u; }
+    item.url=u;
+  }
+  MAT.unshift(item); matRefresh();
+}
+function matFilePick(id){
+  var m=MAT.filter(function(x){return x.id===id;})[0]; if(!m)return;
+  var inp=document.createElement('input'); inp.type='file';
+  inp.onchange=function(){
+    if(!inp.files.length)return;
+    MAT_UP=true; renderMat();
+    bvUploadFile(inp.files[0], function(url){
+      MAT_UP=false;
+      if(url){ m.url=url; bvSaveNow(); }
+      renderMat();
+    });
+  };
+  inp.click();
+}
+function matEdit(id){
+  if(!isChef())return; matNorm();
+  var m=MAT.filter(function(x){return x.id===id;})[0]; if(!m)return;
+  var type=matPickType(m.type); if(!type)return;
+  var t=prompt('Название:',m.t); if(t===null)return; t=String(t).trim();
+  if(!t){ alert('Название не может быть пустым.'); return; }
+  var who=prompt('Автор / канал:',m.who); if(who===null)return;
+  var cat=matPickCat(m.cat); if(!cat)return;
+  var note=prompt(type==='note'?'Текст заметки:':'Зачем это нам:',m.note); if(note===null)return;
+  m.type=type; m.t=t; m.who=String(who).trim(); m.cat=cat; m.note=String(note).trim();
+  if(type==='file'){
+    if(!m.url||confirm('Заменить файл?\n\nОК — выбрать новый, Отмена — оставить как есть.')){ matRefresh(); matFilePick(id); return; }
+  } else if(type!=='note'){
+    var u=prompt('Ссылка:',m.url); if(u!==null){ u=String(u).trim(); if(u&&!/^https?:\/\//i.test(u))u='https://'+u; m.url=u; }
+  } else { m.url=''; }
+  matRefresh();
+}
+function matDel(id){
+  if(!isChef())return; matNorm();
+  var m=MAT.filter(function(x){return x.id===id;})[0]; if(!m)return;
+  if(!confirm('Удалить «'+m.t+'»?'+(m.type==='file'&&m.url?'\n\nСам файл останется на Google Диске.':'')))return;
+  MAT=MAT.filter(function(x){return x.id!==id;});
+  matRefresh();
+}
+function matCatAdd(){
+  if(!isChef()){ alert('Заводить темы может шеф или менеджер.'); return; }
+  matNorm();
+  var c=prompt('Название темы:',''); c=(c||'').trim(); if(!c)return;
+  if(MAT_CATS.some(function(x){return x.toLowerCase()===c.toLowerCase();})){ alert('Такая тема уже есть.'); return; }
+  MAT_CATS.push(c); matRefresh();
+}
+function matCatDel(c){
+  if(!isChef())return; matNorm();
+  c=decodeURIComponent(c);
+  if(MAT_CATS.length<2){ alert('Это единственная тема — удалить нельзя.'); return; }
+  var used=MAT.filter(function(m){return m.cat===c;});
+  if(used.length&&!confirm('В теме «'+c+'» есть '+used.length+' материал(ов).\n\nОни переедут в «'+MAT_CATS.filter(function(x){return x!==c;})[0]+'». Продолжить?'))return;
+  if(!used.length&&!confirm('Удалить тему «'+c+'»?'))return;
+  var fallback=MAT_CATS.filter(function(x){return x!==c;})[0];
+  used.forEach(function(m){ m.cat=fallback; });
+  MAT_CATS=MAT_CATS.filter(function(x){return x!==c;});
+  if(MAT_F===c)MAT_F='';
+  matRefresh();
+}
+
 /* ===== ДАТА И ДЕНЬ НЕДЕЛИ ===== */
 var BV_DOW=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
 var BV_MON=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
@@ -2014,7 +2313,7 @@ function setRole(r){
   if(typeof renderMyShifts==='function')renderMyShifts();
   /* разделы, где кнопки правки зависят от роли: без этого у новой роли
      остаются кнопки предыдущей */
-  ['renderFaq','renderScripts','renderReminders','renderAch','renderBadgeBook','renderRolesMatrix','renderCompany','renderAttest','renderOnboard','renderHR','renderLevelLegend','renderToday','renderDrinks','renderProducts','renderEqGrid','renderSanGrid'].forEach(function(fn){
+  ['renderFaq','renderScripts','renderReminders','renderAch','renderBadgeBook','renderRolesMatrix','renderCompany','renderAttest','renderOnboard','renderHR','renderLevelLegend','renderToday','renderDrinks','renderProducts','renderEqGrid','renderSanGrid','renderMat','renderAbout','renderReglGrid'].forEach(function(fn){
     try{ if(typeof window[fn]==='function')window[fn](); }catch(e){}
   });
   if(typeof CURRENT_VIEW!=='undefined'&&!viewAllowed(CURRENT_VIEW))go('dash');
@@ -2044,7 +2343,7 @@ var VIEW_PERM={
   rtest:'tests',
   drinks:'bar', products:'bar',
   vitrina:'baronly', vitcon:'vitcon', partners:'partners',
-  regl:'kb', san:'kb', oborud:'kb', err:'kb', scripts:'kb', faq:'kb',
+  regl:'kb', san:'kb', oborud:'kb', err:'kb', scripts:'kb', faq:'kb', mat:'kb',
   remind:'remind',
   team:'team', train:'train', onboard:'onboard', hr:'hr', company:'company',
   sched:'sched'
@@ -9939,7 +10238,7 @@ function sendChk(){
 }
 /* ===================== СОХРАНЕНИЕ В БРАУЗЕРЕ (localStorage) ===================== */
 var BV_KEY='bv_pekar_store_v1';
-var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','REMINDERS','SCRIPTS','EQ','SAN','REGL','ERRS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','ACH_MIG','SKILL_GROUPS','TRACK_SKILLS','BADGE_CUSTOM','BADGE_EDITS','BADGE_HIDDEN','ATTEST','OB_TRACKS','OB_VERSIONS','FAQ','FAQ_ASK'];
+var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','REMINDERS','SCRIPTS','EQ','SAN','REGL','ERRS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','ACH_MIG','SKILL_GROUPS','TRACK_SKILLS','BADGE_CUSTOM','BADGE_EDITS','BADGE_HIDDEN','ATTEST','OB_TRACKS','OB_VERSIONS','FAQ','FAQ_ASK','MAT','MAT_CATS','ABOUT'];
 function bvSnapshot(){ var o={}; for(var i=0;i<BV_PERSIST.length;i++){ var k=BV_PERSIST[i]; try{ if(typeof window[k]!=='undefined') o[k]=window[k]; }catch(e){} } return o; }
 function bvSave(){ try{ localStorage.setItem(BV_KEY, JSON.stringify(bvSnapshot())); }catch(e){} }
 function bvLoad(){ try{ var raw=localStorage.getItem(BV_KEY); if(!raw)return false; var o=JSON.parse(raw); var n=0; for(var k in o){ if(o.hasOwnProperty(k) && BV_PERSIST.indexOf(k)>=0){ try{ window[k]=o[k]; n++; }catch(e){} } } return n>0; }catch(e){ return false; } }
@@ -9991,6 +10290,8 @@ function bvFixups(){
   try{ if(typeof eqNorm==='function')eqNorm(); }catch(e){}
   try{ if(typeof sanNorm==='function')sanNorm(); }catch(e){}
   try{ if(typeof reglNorm==='function')reglNorm(); }catch(e){}
+  try{ if(typeof matNorm==='function')matNorm(); }catch(e){}
+  try{ if(typeof aboutNorm==='function')aboutNorm(); }catch(e){}
 }
 function bvRerender(){
   ['renderTeam','renderHR','renderAch','renderBadgeBook','renderRolesMatrix','renderCompany','renderReminders','renderAttest','renderOnboard','renderLevelLegend','renderNotifs'].forEach(function(fn){
@@ -9998,6 +10299,8 @@ function bvRerender(){
   });
   try{ if(typeof renderFaq==='function')renderFaq(); }catch(e){}
   try{ if(typeof renderToday==='function')renderToday(); }catch(e){}
+  try{ if(typeof renderMat==='function')renderMat(); }catch(e){}
+  try{ if(typeof renderAbout==='function')renderAbout(); }catch(e){}
   try{ if(typeof CUR_ROLE!=='undefined'&&typeof setRole==='function')setRole(CUR_ROLE); }catch(e){}
 }
 function bvBootCloud(){
@@ -10019,7 +10322,7 @@ function bvBootCloud(){
   }).catch(function(e){});
 }
 bvBootCloud();bvLoad();bvFixups();try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} var _sn=document.getElementById('bv-store-note'); var _rl=document.getElementById('bv-reset-link'); if(BV_CLOUD_URL){ if(_sn)_sn.innerHTML='☁️ Данные в общей базе<br><span style="opacity:.8">общие для команды</span><br><a onclick="bvPing()" style="cursor:pointer;text-decoration:underline">Проверить базу</a>'; if(_rl)_rl.style.display='none'; } bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
-renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAttest();renderFaq();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderBadgeBook();renderAttest();renderToday();renderFaq();rolesBoot();teamBoot();coMigrate();achMigrate();badgeMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
+renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAttest();renderFaq();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderBadgeBook();renderAttest();renderToday();renderFaq();renderMat();renderAbout();rolesBoot();teamBoot();coMigrate();achMigrate();badgeMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
 
 calcKalk();calcAkt();calcHidr();calcBP();
 
