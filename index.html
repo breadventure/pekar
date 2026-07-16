@@ -91,10 +91,10 @@
   .tag.ok{background:rgba(126,166,106,.22)}
   .tag.warn{background:var(--yellow)}
   /* ===== ДАТА В ШАПКЕ ===== */
-  .bv-today{margin:10px 0 2px;padding:9px 12px;border:1.5px solid var(--ink);border-radius:12px;background:var(--card);box-shadow:2px 2px 0 var(--ink)}
-  .bv-today .d1{font-family:'Instrument Serif',Georgia,serif;font-style:italic;font-size:26px;line-height:1;letter-spacing:.01em}
-  .bv-today .d2{font-size:11.5px;color:var(--muted);margin-top:4px;text-transform:lowercase;letter-spacing:.03em}
-  .bv-today .d3{font-size:11px;color:var(--accent);font-weight:700;margin-top:2px}
+  .bv-today{margin:8px 0 2px;padding:5px 10px;border:1.5px solid var(--ink);border-radius:10px;background:var(--card);box-shadow:2px 2px 0 var(--ink);display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
+  .bv-today .d1{font-family:'Instrument Serif',Georgia,serif;font-style:italic;font-size:16px;line-height:1.2;letter-spacing:.01em}
+  .bv-today .d2{font-size:10.5px;color:var(--muted);letter-spacing:.02em}
+  .bv-today .d3{font-size:10px;color:var(--accent);font-weight:700;flex-basis:100%;margin-top:1px}
   /* ===== PDF СКРИПТОВ ===== */
   .sp-doc{padding:0}
   .sp-top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;border-bottom:2pt solid #1D1D1B;padding-bottom:7pt;margin-bottom:8pt}
@@ -1940,9 +1940,9 @@ function renderToday(){
       });
     }
   }catch(e){}
-  el.innerHTML='<div class="d1">'+d.getDate()+' '+BV_MON[d.getMonth()]+'</div>'+
-    '<div class="d2">'+BV_DOW[d.getDay()]+' · '+d.getFullYear()+'</div>'+
-    (bd.length?'<div class="d3">🎂 сегодня день рождения: '+tkEsc(bd.join(', '))+'</div>':'');
+  el.innerHTML='<span class="d1">'+d.getDate()+' '+BV_MON[d.getMonth()]+'</span>'+
+    '<span class="d2">'+BV_DOW[d.getDay()]+'</span>'+
+    (bd.length?'<span class="d3">🎂 '+tkEsc(bd.join(', '))+'</span>':'');
 }
 function attAuto(){
   try{
@@ -1978,6 +1978,11 @@ function setRole(r){
   if(typeof renderHandoff==='function')renderHandoff();
   if(typeof renderDashImportant==='function')renderDashImportant();
   if(typeof renderMyShifts==='function')renderMyShifts();
+  /* разделы, где кнопки правки зависят от роли: без этого у новой роли
+     остаются кнопки предыдущей */
+  ['renderFaq','renderScripts','renderReminders','renderAch','renderBadgeBook','renderRolesMatrix','renderCompany','renderAttest','renderOnboard','renderHR','renderLevelLegend','renderToday','renderDrinks','renderProducts'].forEach(function(fn){
+    try{ if(typeof window[fn]==='function')window[fn](); }catch(e){}
+  });
   if(typeof CURRENT_VIEW!=='undefined'&&!viewAllowed(CURRENT_VIEW))go('dash');
 }
 /* какие view запрещены роли */
@@ -5499,13 +5504,17 @@ function remToggle(i){
   var d=document.getElementById('rem-det-'+i); if(!d)return;
   var open=d.style.display==='none';
   d.style.display=open?'':'none';
+  _remOpen[i]=open;                        /* помним: перерисовка не должна закрывать */
   var ch=document.getElementById('rem-chev-'+i); if(ch)ch.textContent=open?'▴':'▾';
 }
+var _remOpen={};
 var REM_KINDS=['Уборка','Сервис оборудования','Санитария','Проверка','Документы','Закупка','Другое'];
 var REM_UNITS=[['d','дней'],['w','недель'],['m','месяцев'],['y','лет']];
 function remUnitName(u){ var x=REM_UNITS.filter(function(y){return y[0]===u;})[0]; return x?x[1]:u; }
+/* Правка полей НЕ перерисовывает список: иначе на каждом символе
+   ломается фокус и схлопывается карточка. Перерисовка — только по blur. */
 function remField(i,key,val){ if(REMINDERS[i])REMINDERS[i][key]=val; }
-var _remOpen={};
+function remCommit(i){ if(typeof bvSave==='function')bvSave(); renderReminders(); }
 function remRefresh(){ renderReminders(); bvSaveNow(); }
 function remAdd(){
   if(!isChef()){ alert('Добавлять работы может шеф или менеджер.'); return; }
@@ -5525,32 +5534,32 @@ function renderReminders(){
   var rows=REMINDERS.map(function(r,i){
     var next=addInterval(r.last,r.n,r.u),days=daysLeft(next);
     var ev=function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');};
-    var det='<div id="rem-det-'+i+'" style="display:none;margin-top:12px;border-top:1.5px dashed var(--hair);padding-top:12px">'+
+    var det='<div id="rem-det-'+i+'" style="display:'+(_remOpen[i]?'':'none')+';margin-top:12px;border-top:1.5px dashed var(--hair);padding-top:12px">'+
       '<div class="grid g2" style="gap:10px">'+
-      '<div class="field" style="margin:0"><label>Название работы</label><input type="text" value="'+ev(r.name)+'" oninput="remField('+i+',\'name\',this.value);remRefresh()"></div>'+
-      '<div class="field" style="margin:0"><label>Тип работы</label><select onchange="remField('+i+',\'kind\',this.value);remRefresh()">'+
+      '<div class="field" style="margin:0"><label>Название работы</label><input type="text" value="'+ev(r.name)+'" oninput="remField('+i+',\'name\',this.value)" onchange="remCommit('+i+')"></div>'+
+      '<div class="field" style="margin:0"><label>Тип работы</label><select onchange="remField('+i+',\'kind\',this.value);remCommit('+i+')">'+
         REM_KINDS.map(function(k){ return '<option'+((r.kind||REM_KINDS[0])===k?' selected':'')+'>'+tkEsc(k)+'</option>'; }).join('')+'</select></div>'+
       '</div>'+
       '<div class="grid g2" style="gap:10px;margin-top:10px">'+
       '<div class="field" style="margin:0"><label>Как часто</label><div style="display:flex;gap:6px">'+
-        '<input type="number" min="1" step="1" value="'+ev(r.n)+'" onchange="remField('+i+',\'n\',Math.max(1,parseInt(this.value)||1));remRefresh()" style="width:70px">'+
-        '<select onchange="remField('+i+',\'u\',this.value);remRefresh()" style="flex:1">'+
+        '<input type="number" min="1" step="1" value="'+ev(r.n)+'" onchange="remField('+i+',\'n\',Math.max(1,parseInt(this.value)||1));remCommit('+i+')" style="width:70px">'+
+        '<select onchange="remField('+i+',\'u\',this.value);remCommit('+i+')" style="flex:1">'+
         REM_UNITS.map(function(u){ return '<option value="'+u[0]+'"'+(r.u===u[0]?' selected':'')+'>'+u[1]+'</option>'; }).join('')+'</select></div>'+
         '<p class="hint" style="margin:3px 0 0">Сейчас: каждые '+ev(r.n)+' '+remUnitName(r.u)+' → следующий раз '+fmtD(next)+'</p></div>'+
-      '<div class="field" style="margin:0"><label>Уточнение к периодичности</label><input type="text" value="'+ev(r.note)+'" oninput="remField('+i+',\'note\',this.value);remRefresh()" placeholder="воскресенье, после смены"></div>'+
+      '<div class="field" style="margin:0"><label>Уточнение к периодичности</label><input type="text" value="'+ev(r.note)+'" oninput="remField('+i+',\'note\',this.value)" onchange="remCommit('+i+')" placeholder="воскресенье, после смены"></div>'+
       '</div>'+
       '<div class="grid g2" style="gap:10px;margin-top:10px">'+
       '<div class="field" style="margin:0"><label>Исполнитель</label><input type="text" value="'+ev(r.who)+'" oninput="remField('+i+',\'who\',this.value)" placeholder="Кто выполняет"></div>'+
       '<div class="field" style="margin:0"><label>Телефон</label><input type="text" value="'+ev(r.phone)+'" oninput="remField('+i+',\'phone\',this.value)" placeholder="+381…"></div>'+
       '</div>'+
-      '<div class="field" style="margin:10px 0 0"><label>Когда делали в последний раз</label><input type="date" value="'+ev(r.last)+'" onchange="remField('+i+',\'last\',this.value);renderReminders()"><p class="hint" style="margin:3px 0 0">От этой даты считается следующий срок.</p></div>'+
+      '<div class="field" style="margin:10px 0 0"><label>Когда делали в последний раз</label><input type="date" value="'+ev(r.last)+'" onchange="remField('+i+',\'last\',this.value);remCommit('+i+')"><p class="hint" style="margin:3px 0 0">От этой даты считается следующий срок.</p></div>'+
       '<div class="field" style="margin:10px 0 0"><label>Адрес / где</label><input type="text" value="'+ev(r.addr)+'" oninput="remField('+i+',\'addr\',this.value)" placeholder="Адрес сервиса или объекта"></div>'+
       '<div class="field" style="margin:10px 0 0"><label>Описание — что / зачем / почему</label><textarea rows="3" oninput="remField('+i+',\'desc\',this.value)" placeholder="Что именно делаем, зачем и почему это важно">'+ev(r.desc)+'</textarea></div>'+
       '<div class="field" style="margin:10px 0 0"><label>Комментарии</label><textarea rows="2" oninput="remField('+i+',\'comments\',this.value)" placeholder="Заметки, история, нюансы">'+ev(r.comments)+'</textarea></div>'+
       '<div class="btn-row chef-only" style="margin-top:12px"><button class="btn" style="color:#C0392B" onclick="remDel('+i+')">🗑 Удалить работу</button></div>'+
       '</div>';
     return {html:'<div class="card" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">'+
-      '<div style="min-width:200px;cursor:pointer" onclick="remToggle('+i+')"><b style="font-size:15px">'+r.name+' <span class="chev" id="rem-chev-'+i+'" style="font-size:12px">▾</span></b> <span style="font-size:11px;color:var(--accent)">нажми, чтобы открыть детали</span><br><span style="color:var(--muted);font-size:12.5px">каждые '+unitName(r.n,r.u)+(r.note?' · '+r.note:'')+' · последний раз '+fmtD(new Date(r.last))+'</span></div>'+
+      '<div style="min-width:200px;cursor:pointer" onclick="remToggle('+i+')"><b style="font-size:15px">'+tkEsc(r.name)+' <span class="chev" id="rem-chev-'+i+'" style="font-size:12px">'+(_remOpen[i]?'▴':'▾')+'</span></b> <span style="font-size:11px;color:var(--accent)">'+(_remOpen[i]?'нажми, чтобы свернуть':'нажми, чтобы открыть детали')+'</span><br><span style="color:var(--muted);font-size:12.5px">каждые '+unitName(r.n,r.u)+(r.note?' · '+r.note:'')+' · последний раз '+fmtD(new Date(r.last))+'</span></div>'+
       '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="font-size:14px"><b>'+fmtD(next)+'</b></span>'+remTag(days)+
       '<button class="btn" onclick="remPlan('+i+')">📅 В график</button><button class="btn" onclick="remDone('+i+')">Сделано сегодня</button></div></div>'+det+'</div>',days:days};
   });
@@ -5619,8 +5628,9 @@ function remPlan(i){
   go('sched'); if(typeof renderSched==='function')renderSched();
 }
 function remDone(i){
-  REMINDERS[i].last='2026-06-10';
-  renderReminders();remNotifs();renderRtest();renderAttest();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();applyChkDirections();renderProducts();renderVitrina();
+  if(!REMINDERS[i])return;
+  REMINDERS[i].last=new Date().toISOString().slice(0,10);
+  renderReminders();remNotifs();renderRtest();renderAttest();renderFaq();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();applyChkDirections();renderProducts();renderVitrina();
 }
 function addReminder(){
   var n=document.getElementById('rf2-name').value.trim();
@@ -5628,7 +5638,7 @@ function addReminder(){
   REMINDERS.push({name:n,n:parseInt(document.getElementById('rf2-n').value)||1,u:document.getElementById('rf2-u').value,last:document.getElementById('rf2-last').value,note:''});
   document.getElementById('rf2-name').value='';
   document.getElementById('rem-form').style.display='none';
-  renderReminders();remNotifs();renderRtest();renderAttest();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();applyChkDirections();renderProducts();renderVitrina();
+  renderReminders();remNotifs();renderRtest();renderAttest();renderFaq();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();applyChkDirections();renderProducts();renderVitrina();
 }
 function remStage(days,total){
   if(days<0)return 'просрочено на '+(-days)+' дн';
@@ -9217,7 +9227,7 @@ function bvBootCloud(){
   }).catch(function(e){});
 }
 bvBootCloud();bvLoad();bvFixups();try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} var _sn=document.getElementById('bv-store-note'); var _rl=document.getElementById('bv-reset-link'); if(BV_CLOUD_URL){ if(_sn)_sn.innerHTML='☁️ Данные в общей базе<br><span style="opacity:.8">общие для команды</span><br><a onclick="bvPing()" style="cursor:pointer;text-decoration:underline">Проверить базу</a>'; if(_rl)_rl.style.display='none'; } bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
-renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAttest();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderBadgeBook();renderAttest();renderToday();renderFaq();rolesBoot();teamBoot();coMigrate();achMigrate();badgeMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
+renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAttest();renderFaq();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderBadgeBook();renderAttest();renderToday();renderFaq();rolesBoot();teamBoot();coMigrate();achMigrate();badgeMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
 
 calcKalk();calcAkt();calcHidr();calcBP();
 
