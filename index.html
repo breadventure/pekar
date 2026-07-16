@@ -490,12 +490,7 @@
 
       <div class="card" style="margin-top:16px">
         <b style="font-size:15px">✅ Мои задачи на сегодня</b>
-        <div style="margin-top:6px">
-          <div class="task" style="cursor:default"><div class="cb"></div><div><span>Подготовка пулиша для тартина</span><small>05:30</small></div></div>
-          <div class="task" style="cursor:default"><div class="cb"></div><div><span>Проверка ферментационных боксов</span><small>06:00</small></div></div>
-          <div class="task" style="cursor:default"><div class="cb"></div><div><span>Сверить план выпечки (не закрыт)</span><small>важно</small></div></div>
-          <div class="task" style="cursor:default"><div class="cb"></div><div><span>Уборка рабочих поверхностей</span><small>10:00</small></div></div>
-        </div>
+        <div id="dash-tasks" style="margin-top:6px"></div>
         <p class="hint">Отмечаются в чек-листе смены — здесь просто напоминание.</p>
         <div class="btn-row"><button class="btn primary" onclick="go('check')">Открыть чек-лист ›</button></div>
       </div>
@@ -2370,7 +2365,7 @@ function setRole(r){
   if(typeof renderMyShifts==='function')renderMyShifts();
   /* разделы, где кнопки правки зависят от роли: без этого у новой роли
      остаются кнопки предыдущей */
-  ['renderFaq','renderScripts','renderReminders','renderAch','renderBadgeBook','renderRolesMatrix','renderCompany','renderAttest','renderOnboard','renderHR','renderLevelLegend','renderToday','renderDashBday','renderDrinks','renderProducts','renderEqGrid','renderSanGrid','renderMat','renderAbout','renderReglGrid','renderHolBox'].forEach(function(fn){
+  ['renderFaq','renderScripts','renderReminders','renderAch','renderBadgeBook','renderRolesMatrix','renderCompany','renderAttest','renderOnboard','renderHR','renderLevelLegend','renderToday','renderDashBday','renderDrinks','renderProducts','renderEqGrid','renderSanGrid','renderMat','renderAbout','renderReglGrid','renderHolBox','renderDashTasks'].forEach(function(fn){
     try{ if(typeof window[fn]==='function')window[fn](); }catch(e){}
   });
   if(typeof CURRENT_VIEW!=='undefined'&&!viewAllowed(CURRENT_VIEW))go('dash');
@@ -2920,8 +2915,8 @@ function renderTK(){
   document.getElementById('tk-sub').textContent=r.sub||'';
   document.getElementById('tk-unit').textContent=r.unit;
   document.getElementById('tk-desc').value=r.desc||'';
-  document.getElementById('tk-cost').value=r.cost||0;
-  document.getElementById('tk-price').value=r.price||0;
+  var _c=document.getElementById('tk-cost'); if(_c)_c.value=r.cost||0;
+  var _p2=document.getElementById('tk-price'); if(_p2)_p2.value=r.price||0;
   var _vv=document.getElementById('tk-vat'); if(_vv)_vv.value=(r.vat!==undefined?r.vat:10);
   tkMargin();
   // weight scaler — доступен для всех рецептур
@@ -3334,16 +3329,8 @@ function tkEditPct(idx,val){
   clearTimeout(window._tkT);window._tkT=setTimeout(renderTKTable,900);
 }
 function tkPickVersion(i){currentRecipe._v=i;renderTK();}
-function tkMargin(){
-  var c=parseFloat(document.getElementById('tk-cost').value)||0;
-  var p=parseFloat(document.getElementById('tk-price').value)||0;
-  var vatEl=document.getElementById('tk-vat'); var vat=vatEl?(parseFloat(vatEl.value)||0):0;
-  currentRecipe.cost=c;currentRecipe.price=p;currentRecipe.vat=vat;
-  var net = vat>0 ? p/(1+vat/100) : p;
-  document.getElementById('tk-margin').innerHTML = (c>0&&p>0)
-    ? '<b>'+Math.round(net-c)+' RSD ('+Math.round((net-c)/net*100)+'%)</b>'+(vat>0?('<br><span style="color:var(--muted);font-size:11.5px">цена без НДС '+Math.round(net)+' RSD · вычтен НДС '+vat+'%</span>'):'')
-    : '—';
-}
+function tkMargin(){ /* экономика убрана из рецептуры */ }
+
 function tkEditMeta(){
   var r=currentRecipe;
   var n=prompt('Название рецептуры:',r.name);if(n===null)return;
@@ -4332,8 +4319,8 @@ function renderTK(){
   document.getElementById('tk-sub').textContent=r.sub||'';
   document.getElementById('tk-unit').textContent=r.unit;
   document.getElementById('tk-desc').value=r.desc||'';
-  document.getElementById('tk-cost').value=r.cost||0;
-  document.getElementById('tk-price').value=r.price||0;
+  var _c=document.getElementById('tk-cost'); if(_c)_c.value=r.cost||0;
+  var _p2=document.getElementById('tk-price'); if(_p2)_p2.value=r.price||0;
   var _vv=document.getElementById('tk-vat'); if(_vv)_vv.value=(r.vat!==undefined?r.vat:10);
   tkMargin();
   // weight scaler — доступен для всех рецептур
@@ -4442,16 +4429,8 @@ function tkEditPct(idx,val){
   clearTimeout(window._tkT);window._tkT=setTimeout(renderTKTable,900);
 }
 function tkPickVersion(i){currentRecipe._v=i;renderTK();}
-function tkMargin(){
-  var c=parseFloat(document.getElementById('tk-cost').value)||0;
-  var p=parseFloat(document.getElementById('tk-price').value)||0;
-  var vatEl=document.getElementById('tk-vat'); var vat=vatEl?(parseFloat(vatEl.value)||0):0;
-  currentRecipe.cost=c;currentRecipe.price=p;currentRecipe.vat=vat;
-  var net = vat>0 ? p/(1+vat/100) : p;
-  document.getElementById('tk-margin').innerHTML = (c>0&&p>0)
-    ? '<b>'+Math.round(net-c)+' RSD ('+Math.round((net-c)/net*100)+'%)</b>'+(vat>0?('<br><span style="color:var(--muted);font-size:11.5px">цена без НДС '+Math.round(net)+' RSD · вычтен НДС '+vat+'%</span>'):'')
-    : '—';
-}
+function tkMargin(){ /* экономика убрана из рецептуры */ }
+
 function tkEditMeta(){
   var r=currentRecipe;
   var n=prompt('Название рецептуры:',r.name);if(n===null)return;
@@ -5215,7 +5194,8 @@ function renderHolBox(){
     var list=holAll(y);
     var soon=holBanner(where);
     var next=list.filter(function(h){ var dl=holDaysLeft(h.d); return dl!==null&&dl>=0; })[0];
-    box.innerHTML=soon+
+    var rtb=(where==='sched'&&typeof rtPlanSched==='function')?rtPlanSched():'';
+    box.innerHTML=rtb+soon+
       '<details class="card" style="padding:12px 14px"><summary style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;list-style:none">'+
       '<b style="font-size:14px">🎉 Праздники '+y+' <span style="font-weight:400;color:var(--muted);font-size:12px">'+
       (next?('· ближайший: '+tkEsc(next.t)+', '+fmtD(new Date(next.d+'T00:00:00'))):'· список')+'</span></b>'+
@@ -7165,11 +7145,138 @@ var SCORE_LABELS={taste:'Вкус',look:'Внешний вид',texture:'Тек�
 function iterAvg(it){var v=Object.keys(SCORE_LABELS).map(function(k){return it.scores[k]||0;});return v.reduce(function(a,b){return a+b;},0)/v.length;}
 function rtCard(t){
   var best=t.iters.length?Math.max.apply(null,t.iters.map(iterAvg)):0;
+  var plans=RT_PLAN.filter(function(p){return p.rt===t.id&&!p.done;});
+  var planTag=plans.length?plans.map(function(p){
+    var e=rtPlanEmp(p);
+    return '<span class="tag warn" style="font-size:10px">🧪 '+fmtD(new Date(p.date+'T00:00:00'))+(e?(' · '+tkEsc(empName(e))):'')+'</span>';
+  }).join(' '):'';
   return '<div class="card click" style="margin-bottom:12px" onclick="rtOpen(\''+t.id+'\')"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">'+
     '<div><b style="font-size:16px">'+t.name+'</b><br><span style="color:var(--muted);font-size:12.5px">'+t.cat+' · '+t.iters.length+' итераций · ответственный '+(t.resp||'—')+'</span></div>'+
-    '<div style="display:flex;gap:8px;align-items:center"><span class="tag '+RT_STATUS_CLS[t.status]+'">'+RT_STATUS[t.status]+'</span>'+(best?'<span class="tag ok">★ '+best.toFixed(1)+'</span>':'')+'<b>›</b></div></div></div>';
+    '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+planTag+'<span class="tag '+RT_STATUS_CLS[t.status]+'">'+RT_STATUS[t.status]+'</span>'+(best?'<span class="tag ok">★ '+best.toFixed(1)+'</span>':'')+
+    (isChef()?'<button class="btn chef-only" style="padding:2px 9px;font-size:11px" onclick="event.stopPropagation();rtPlanAdd(\''+t.id+'\')">📅 Запланировать</button>':'')+
+    '<b>›</b></div></div></div>';
+}
+/* ===== ПЛАНИРОВАНИЕ ТЕСТА РЕЦЕПТУРЫ =====
+   Один тест → одна запись плана. Она сама показывается в трёх местах:
+   чек-лист исполнителя, задачи дня, напоминание в графике смен. */
+var RT_PLAN=[];   /* {id, rt, name, date, empId, note, done} */
+function rtPlanNorm(){
+  if(!Array.isArray(RT_PLAN))RT_PLAN=[];
+  RT_PLAN=RT_PLAN.filter(function(p){ return p&&p.date&&p.empId; });
+  RT_PLAN.forEach(function(p){ if(!p.id)p.id='rp'+Math.random().toString(36).slice(2,7); if(!p.note)p.note=''; });
+  return RT_PLAN;
+}
+function rtPlanFor(empId,iso){
+  rtPlanNorm();
+  return RT_PLAN.filter(function(p){ return p.empId===empId && p.date===iso; });
+}
+function rtPlanEmp(p){ return empById(p.empId); }
+function rtPlanAdd(rtId){
+  if(!isChef()){ alert('Планировать тесты может шеф или менеджер.'); return; }
+  var t=RTESTS.filter(function(x){return x.id===rtId;})[0]; if(!t)return;
+  var act=TEAM.filter(function(p){return p.status!=='Архивный';});
+  if(!act.length){ alert('Сначала заведи сотрудников.'); return; }
+  var d=prompt('Дата теста (ГГГГ-ММ-ДД):', new Date().toISOString().slice(0,10));
+  if(d===null)return; d=String(d).trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d)){ alert('Нужна дата в виде 2026-07-20.'); return; }
+  var cur=act.map(function(p){return empName(p);}).indexOf(t.resp)+1;
+  var v=prompt('Кто проводит тест:\n\n'+act.map(function(p,i){return (i+1)+'. '+empName(p)+' \u00B7 '+(p.pos||'—');}).join('\n')+'\n\nНомер:', cur?String(cur):'1');
+  if(v===null)return;
+  var emp=act[parseInt(v)-1];
+  if(!emp){ alert('Нет такого номера.'); return; }
+  var note=prompt('Что именно проверить (попадёт в чек-лист и задачи дня):', t.goal||'');
+  if(note===null)return;
+  rtPlanNorm();
+  RT_PLAN.push({id:'rp'+Date.now(),rt:t.id,name:t.name,date:d,empId:emp.id,note:String(note).trim(),done:false});
+  t.resp=empName(emp);
+  rtPlanRefresh();
+  alert('Тест запланирован.\n\n'+t.name+'\n'+fmtD(new Date(d+'T00:00:00'))+' \u00B7 '+empName(emp)+
+    '\n\nПоявится у него в чек-листе смены, в задачах на день и напоминанием в графике.');
+}
+function rtPlanDel(id){
+  if(!isChef())return;
+  rtPlanNorm();
+  var p=RT_PLAN.filter(function(x){return x.id===id;})[0]; if(!p)return;
+  if(!confirm('Отменить запланированный тест «'+p.name+'» на '+fmtD(new Date(p.date+'T00:00:00'))+'?'))return;
+  RT_PLAN=RT_PLAN.filter(function(x){return x.id!==id;});
+  rtPlanRefresh();
+}
+function rtPlanToggle(id){
+  rtPlanNorm();
+  var p=RT_PLAN.filter(function(x){return x.id===id;})[0]; if(!p)return;
+  p.done=!p.done;
+  rtPlanRefresh();
+}
+function rtPlanRefresh(){
+  ['renderRtest','renderChk','renderDashTasks','renderSched','renderHolBox'].forEach(function(f){
+    try{ if(typeof window[f]==='function')window[f](); }catch(e){}
+  });
+  bvSaveNow();
+}
+/* --- 1. чек-лист исполнителя --- */
+function rtPlanChk(){
+  rtPlanNorm();
+  var iso=new Date().toISOString().slice(0,10);
+  var me=(typeof meEmp==='function')?meEmp():null;
+  var list=RT_PLAN.filter(function(p){
+    if(p.date!==iso)return false;
+    if(me)return p.empId===me.id;
+    return isChef();
+  });
+  if(!list.length)return '';
+  return list.map(function(p){
+    var e=rtPlanEmp(p);
+    return '<div class="chk-item" onclick="rtPlanToggle(\''+p.id+'\')" style="border:1.5px solid var(--accent);border-radius:10px;padding:9px;margin-bottom:8px;background:var(--accent-soft)">'+
+      '<div class="cb'+(p.done?' on':'')+'">'+(p.done?'✓':'')+'</div>'+
+      '<div><span><b>🧪 Тест рецептуры: '+tkEsc(p.name)+'</b></span>'+
+      '<small>'+(p.note?tkEsc(p.note):'провести и записать итерацию')+(e?(' · '+tkEsc(empName(e))):'')+'</small></div></div>';
+  }).join('');
+}
+/* --- 2. задачи на день --- */
+function renderDashTasks(){
+  var box=document.getElementById('dash-tasks'); if(!box)return;
+  rtPlanNorm();
+  var iso=new Date().toISOString().slice(0,10);
+  var me=(typeof meEmp==='function')?meEmp():null;
+  var mine=RT_PLAN.filter(function(p){
+    if(p.date!==iso)return false;
+    return me?(p.empId===me.id):isChef();
+  });
+  var soon=RT_PLAN.filter(function(p){
+    if(p.done||p.date<=iso)return false;
+    var dl=Math.round((new Date(p.date+'T00:00:00')-new Date(iso+'T00:00:00'))/86400000);
+    if(dl>3)return false;
+    return me?(p.empId===me.id):isChef();
+  });
+  box.innerHTML=(mine.length?mine.map(function(p){
+    return '<div class="task" onclick="rtPlanToggle(\''+p.id+'\')" style="cursor:pointer"><div class="cb'+(p.done?' on':'')+'">'+(p.done?'✓':'')+'</div>'+
+      '<div><span>🧪 Тест рецептуры: '+tkEsc(p.name)+'</span><small>'+(p.note?tkEsc(p.note):'сегодня')+'</small></div></div>';
+  }).join(''):'')+
+  (soon.length?soon.map(function(p){
+    var dl=Math.round((new Date(p.date+'T00:00:00')-new Date(iso+'T00:00:00'))/86400000);
+    return '<div class="task" style="cursor:default;opacity:.7"><div class="cb"></div>'+
+      '<div><span>🧪 Тест «'+tkEsc(p.name)+'»</span><small>через '+dl+' '+plu(dl,'день','дня','дней')+' · '+fmtD(new Date(p.date+'T00:00:00'))+'</small></div></div>';
+  }).join(''):'')+
+  ((!mine.length&&!soon.length)?'<p class="hint" style="margin:4px 0">На сегодня задач нет.</p>':'');
+}
+/* --- 3. напоминание в графике --- */
+function rtPlanSched(){
+  rtPlanNorm();
+  var iso=new Date().toISOString().slice(0,10);
+  var list=RT_PLAN.filter(function(p){ return !p.done && p.date>=iso; }).sort(function(a,b){ return a.date<b.date?-1:1; });
+  if(!list.length)return '';
+  return '<div class="note" style="margin-bottom:10px">🧪 <b>Запланированные тесты рецептур</b>'+
+    list.map(function(p){
+      var e=rtPlanEmp(p);
+      var dl=Math.round((new Date(p.date+'T00:00:00')-new Date(iso+'T00:00:00'))/86400000);
+      var when=dl===0?'сегодня':(dl===1?'завтра':('через '+dl+' '+plu(dl,'день','дня','дней')));
+      return '<div style="font-size:12.5px;margin-top:4px">'+fmtD(new Date(p.date+'T00:00:00'))+' ('+when+') · <b>'+tkEsc(p.name)+'</b> · '+
+        (e?tkEsc(empName(e)):'—')+(isChef()?(' <button class="btn chef-only" style="padding:0 7px;font-size:10.5px" onclick="rtPlanDel(\''+p.id+'\')">✕</button>'):'')+
+        '<br><span style="color:var(--muted);font-size:11.5px">Учти при постановке смен: в этот день у исполнителя есть тест.</span></div>';
+    }).join('')+'</div>';
 }
 function renderRtest(){
+  rtPlanNorm();
   var active=RTESTS.filter(function(t){return t.status!=='arch'&&t.status!=='prod';});
   var arch=RTESTS.filter(function(t){return t.status==='arch'||t.status==='prod';});
   document.getElementById('rt-list').innerHTML=active.map(rtCard).join('')||'<p class="hint">Активных тестов нет.</p>';
@@ -10508,7 +10615,8 @@ function renderChk(){
   var chatN=(st.role==='barista')?'бариста':'пекарей';
   var sb=document.getElementById('chk-send-btn'); if(sb)sb.textContent='Отправить отчёт в чат '+chatN;
   var sl=document.getElementById('chk-report-sent-lbl'); if(sl)sl.textContent='Отчёт отправлен в чат '+chatN;
-  document.getElementById('chk-list').innerHTML=items.map(function(i,idx){
+  var _rtChk=(typeof rtPlanChk==='function')?rtPlanChk():'';
+  document.getElementById('chk-list').innerHTML=_rtChk+items.map(function(i,idx){
     var link=i[2]?'<a href="'+i[2]+'" target="_blank" onclick="event.stopPropagation()" class="btn" style="display:inline-block;margin-top:6px;padding:4px 12px;font-size:12px;text-decoration:none">Открыть сайт склада ↗</a>':'';
     return '<div class="chk-item" onclick="this.classList.toggle(\'done\');chkProg()"><div class="cb"></div><div><span>'+i[0]+'</span>'+(i[1]?'<small>'+i[1]+'</small>':'')+link+'</div></div>';
   }).join('');
@@ -10700,7 +10808,7 @@ function sendChk(){
 }
 /* ===================== СОХРАНЕНИЕ В БРАУЗЕРЕ (localStorage) ===================== */
 var BV_KEY='bv_pekar_store_v1';
-var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF_SHIFTS','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','REMINDERS','HOL_INFO','HOL_CUSTOM','SCRIPTS','EQ','SAN','REGL','ERRS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','NOTIF_HID','ACH_MIG','SKILL_GROUPS','TRACK_SKILLS','BADGE_CUSTOM','BADGE_EDITS','BADGE_HIDDEN','ATTEST','OB_TRACKS','OB_VERSIONS','FAQ','FAQ_ASK','MAT','MAT_CATS','ABOUT'];
+var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF_SHIFTS','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','REMINDERS','HOL_INFO','HOL_CUSTOM','RT_PLAN','SCRIPTS','EQ','SAN','REGL','ERRS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','NOTIF_HID','ACH_MIG','SKILL_GROUPS','TRACK_SKILLS','BADGE_CUSTOM','BADGE_EDITS','BADGE_HIDDEN','ATTEST','OB_TRACKS','OB_VERSIONS','FAQ','FAQ_ASK','MAT','MAT_CATS','ABOUT'];
 function bvSnapshot(){ var o={}; for(var i=0;i<BV_PERSIST.length;i++){ var k=BV_PERSIST[i]; try{ if(typeof window[k]!=='undefined') o[k]=window[k]; }catch(e){} } return o; }
 function bvSave(){ try{ localStorage.setItem(BV_KEY, JSON.stringify(bvSnapshot())); }catch(e){} }
 function bvLoad(){ try{ var raw=localStorage.getItem(BV_KEY); if(!raw)return false; var o=JSON.parse(raw); var n=0; for(var k in o){ if(o.hasOwnProperty(k) && BV_PERSIST.indexOf(k)>=0){ try{ window[k]=o[k]; n++; }catch(e){} } } return n>0; }catch(e){ return false; } }
@@ -10756,6 +10864,7 @@ function bvFixups(){
   try{ if(typeof aboutNorm==='function')aboutNorm(); }catch(e){}
   try{ if(typeof staffSync==='function')staffSync(); }catch(e){}
   try{ if(typeof holBoot==='function')holBoot(); }catch(e){}
+  try{ if(typeof rtPlanNorm==='function')rtPlanNorm(); }catch(e){}
 }
 function bvRerender(){
   ['renderTeam','renderHR','renderAch','renderBadgeBook','renderRolesMatrix','renderCompany','renderReminders','renderAttest','renderOnboard','renderLevelLegend','renderNotifs'].forEach(function(fn){
@@ -10787,7 +10896,7 @@ function bvBootCloud(){
   }).catch(function(e){});
 }
 bvBootCloud();bvLoad();bvFixups();try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} var _sn=document.getElementById('bv-store-note'); var _rl=document.getElementById('bv-reset-link'); if(BV_CLOUD_URL){ if(_sn)_sn.innerHTML='☁️ Данные в общей базе<br><span style="opacity:.8">общие для команды</span><br><a onclick="bvPing()" style="cursor:pointer;text-decoration:underline">Проверить базу</a>'; if(_rl)_rl.style.display='none'; } bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
-renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAttest();renderFaq();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderBadgeBook();renderAttest();renderToday();renderDashBday();renderFaq();renderMat();renderAbout();holBoot();renderHolBox();rolesBoot();teamBoot();coMigrate();achMigrate();badgeMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
+renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAttest();renderFaq();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderBadgeBook();renderAttest();renderToday();renderDashBday();renderFaq();renderMat();renderAbout();holBoot();renderHolBox();renderDashTasks();rolesBoot();teamBoot();coMigrate();achMigrate();badgeMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
 
 calcKalk();calcAkt();calcHidr();calcBP();
 
