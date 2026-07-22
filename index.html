@@ -806,6 +806,26 @@
     <button onclick="tab(this,'c-act')">Активная закваска</button>
     <button onclick="tab(this,'c-hidr')">Конвертер гидратации</button>
     <button onclick="tab(this,'c-bp')">Пекарские проценты</button>
+    <button onclick="tab(this,'c-zm')">Замес на два хлеба</button>
+  </div>
+
+  <div class="tabpane" id="c-zm">
+    <div class="note" style="margin-bottom:14px">&#129360; Один общий замес &rarr; снимаем тесто на пшеничный &rarr; в остаток вносим семена и воду &rarr; семечковый. Считает раскладку, сколько теста снять, и <b>сам делит на несколько замесов</b>, если не влезает в дежу.</div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="grid g3" style="gap:12px">
+        <div class="field" style="margin:0"><label>Пшеничных (тартин)</label><input type="number" id="zm-w" value="30" min="0" step="1" oninput="zmCalc()"></div>
+        <div class="field" style="margin:0"><label>Семечковых</label><input type="number" id="zm-s" value="20" min="0" step="1" oninput="zmCalc()"></div>
+        <div class="field" style="margin:0"><label>Всего хлебов</label><input type="number" id="zm-tot" value="50" min="0" step="1" oninput="zmFromTotal()"></div>
+      </div>
+      <div class="grid g2" style="gap:12px;margin-top:10px">
+        <div class="field" style="margin:0"><label>Доля семечковых, %</label><input type="number" id="zm-pct" value="40" min="0" max="100" step="1" oninput="zmFromTotal()"><p class="hint" style="margin:3px 0 0">Меняй долю &mdash; раскладка пересчитается.</p></div>
+        <div class="field" style="margin:0"><label>&nbsp;</label><div id="zm-fill"></div></div>
+      </div>
+    </div>
+    <div id="zm-out"></div>
+    <details class="card" style="margin-top:14px"><summary style="cursor:pointer;font-weight:700;font-size:15px">&#9881; Настройки и раскладка</summary>
+      <div id="zm-cfg" style="margin-top:12px"></div>
+    </details>
   </div>
 
   <div class="tabpane active" id="c-new">
@@ -4469,6 +4489,166 @@ function tkSaveVersion(){
   r._v=r.versions.length-1;renderTK();
 }
 
+
+/* ===== ЗАМЕС НА ДВА ХЛЕБА =====
+   Общий замес -> снимаем тесто на пшеничный -> в остаток вносим семена и воду.
+   Семена и вода ВХОДЯТ в массу семечкового хлеба, поэтому чистого теста
+   в нём меньше: 780 = 706 теста + 60 семян + 14 воды. */
+var ZM={
+  loaf:780, capLoaves:62, seeds:60, water:14, margin:0, oparaH:43,
+  base:[['Белая мука высокобелковая чекович',245.9],['Белая мука капуто',79.6],
+        ['Цельнозерновая пшеничная мука',44.3],['Вода ледяная',294.1],
+        ['Морская соль',12.4],['Опара 43% гидратация',103.8]],
+  mix:[['Семена льна',36.25],['Семена подсолнечника',47.5],['Семена тыквы',16.25]]
+};
+function zmNorm(){
+  if(!ZM||typeof ZM!=='object')ZM={};
+  ['loaf','capLoaves','seeds','water','margin','oparaH'].forEach(function(k){ ZM[k]=parseFloat(ZM[k])||0; });
+  if(ZM.loaf<=0)ZM.loaf=780;
+  if(ZM.capLoaves<=0)ZM.capLoaves=62;
+  if(!Array.isArray(ZM.base)||!ZM.base.length)ZM.base=[['Тесто',ZM.loaf]];
+  if(!Array.isArray(ZM.mix)||!ZM.mix.length)ZM.mix=[['Семена',100]];
+  return ZM;
+}
+function zmBaseSeeded(){ return Math.max(0, ZM.loaf-ZM.seeds-ZM.water); }
+function zmCap(){ return ZM.capLoaves*ZM.loaf; }
+function zmBaseSum(){ var t=0; ZM.base.forEach(function(r){ t+=parseFloat(r[1])||0; }); return t; }
+/* сколько замесов и как разложить хлеба по ним */
+function zmSplit(W,S){
+  var need=W*ZM.loaf + S*zmBaseSeeded();
+  var cap=zmCap();
+  var n=(need<=0)?1:Math.max(1,Math.ceil(need/cap - 1e-9));
+  var out=[];
+  for(var i=0;i<n;i++){
+    out.push({ w:Math.floor(W/n)+(i<W%n?1:0), s:Math.floor(S/n)+(i<S%n?1:0) });
+  }
+  return {need:need,cap:cap,n:n,batches:out};
+}
+/* гидратация: опара разбирается на муку и воду по своей гидратации */
+function zmHydr(){
+  var f=0,w=0,h=(ZM.oparaH||0)/100;
+  ZM.base.forEach(function(r){
+    var nm=String(r[0]).toLowerCase(), g=parseFloat(r[1])||0;
+    if(/опара|левит|закваск/.test(nm)){ var ff=g/(1+h); f+=ff; w+=g-ff; }
+    else if(/вода/.test(nm)) w+=g;
+    else if(/мука|мучн/.test(nm)) f+=g;
+  });
+  return {f:f,w:w,pct:f>0?(w/f*100):0};
+}
+function zmFromTotal(){
+  zmNorm();
+  var tot=Math.max(0,parseInt(document.getElementById('zm-tot').value)||0);
+  var pct=Math.min(100,Math.max(0,parseFloat(document.getElementById('zm-pct').value)||0));
+  var s=Math.round(tot*pct/100), w=tot-s;
+  document.getElementById('zm-w').value=w;
+  document.getElementById('zm-s').value=s;
+  zmCalc(true);
+}
+function zmCalc(skipTotal){
+  zmNorm();
+  var box=document.getElementById('zm-out'); if(!box)return;
+  var wEl=document.getElementById('zm-w'), sEl=document.getElementById('zm-s');
+  if(!wEl||!sEl)return;
+  var W=Math.max(0,parseInt(wEl.value)||0), S=Math.max(0,parseInt(sEl.value)||0);
+  if(!skipTotal){
+    var tEl=document.getElementById('zm-tot'), pEl=document.getElementById('zm-pct');
+    if(tEl)tEl.value=W+S;
+    if(pEl)pEl.value=(W+S)?Math.round(S/(W+S)*100):0;
+  }
+  var r=zmSplit(W,S), bs=zmBaseSum(), k=1+(ZM.margin||0)/100;
+  var fill=document.getElementById('zm-fill');
+  if(fill){
+    var p=r.cap?Math.round(r.need/r.cap*100):0;
+    fill.innerHTML=(W+S)?('<div style="font-size:12.5px;line-height:1.5">Всего теста: <b>'+fmt(Math.round(r.need))+' г</b><br>Дежа: '+fmt(zmCap())+' г ('+ZM.capLoaves+' пшеничных)<br>'+
+      (r.n>1?('<span style="color:#C0392B;font-weight:700">Не влезает \u2014 '+r.n+' замеса</span>')
+            :('<span style="color:#7EA66A;font-weight:700">Влезает в один замес \u00B7 '+p+'% дежи</span>'))+'</div>'):'';
+  }
+  if(!W&&!S){ box.innerHTML='<p class="hint">Укажи, сколько хлебов нужно.</p>'; zmCfg(); return; }
+  var h=zmHydr();
+  box.innerHTML=r.batches.map(function(b,i){
+    var doughW=b.w*ZM.loaf, doughS=b.s*zmBaseSeeded();
+    var dough=(doughW+doughS)*k;
+    var scale=bs>0?dough/bs:0;
+    var rows=ZM.base.map(function(x){
+      return '<div class="pair"><span>'+tkEsc(x[0])+'</span><span><b>'+fmt(Math.round((parseFloat(x[1])||0)*scale))+'</b> г</span></div>';
+    }).join('');
+    var seedTot=b.s*ZM.seeds, watAdd=b.s*ZM.water, mixSum=0;
+    ZM.mix.forEach(function(m){ mixSum+=parseFloat(m[1])||0; });
+    var seedRows=ZM.mix.map(function(m){
+      var g=mixSum>0?seedTot*(parseFloat(m[1])||0)/mixSum:0;
+      return '<div class="pair"><span>'+tkEsc(m[0])+'</span><span><b>'+fmt(Math.round(g))+'</b> г</span></div>';
+    }).join('');
+    return '<div class="card" style="margin-bottom:14px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">'+
+      '<b style="font-size:16px">'+(r.n>1?('Замес '+(i+1)+' из '+r.n):'Замес')+'</b>'+
+      '<span class="tag ok">'+b.w+' пшеничных + '+b.s+' семечковых \u00B7 '+fmt(Math.round(dough))+' г</span></div>'+
+      '<div class="grid g2" style="gap:16px;margin-top:10px">'+
+        '<div><b style="font-size:13.5px">1. Общий замес \u2014 '+fmt(Math.round(dough))+' г</b>'+
+        '<div style="margin-top:6px">'+rows+'</div>'+
+        '<p class="hint" style="margin:6px 0 0">Гидратация теста '+h.pct.toFixed(1)+'%</p></div>'+
+        '<div>'+
+          '<div style="border:1.5px solid var(--ink);border-radius:11px;padding:10px;background:var(--yellow-soft)">'+
+          '<b style="font-size:13.5px">2. Снять на пшеничный</b>'+
+          '<div style="font-size:26px;font-weight:700;line-height:1.1;margin:4px 0">'+fmt(Math.round(doughW*k))+' г</div>'+
+          '<span style="font-size:12px;color:var(--muted)">= '+b.w+' \u00D7 '+fmt(ZM.loaf)+' г</span></div>'+
+          (b.s?('<div style="border:1.5px solid var(--ink);border-radius:11px;padding:10px;margin-top:10px">'+
+          '<b style="font-size:13.5px">3. В остаток внести</b>'+
+          '<p class="hint" style="margin:2px 0 6px">В деже осталось '+fmt(Math.round(doughS*k))+' г</p>'+
+          seedRows+
+          '<div class="pair"><span>Вода ледяная (довесок)</span><span><b>'+fmt(Math.round(watAdd))+'</b> г</span></div>'+
+          '<div class="pair" style="border-top:1.5px solid var(--hair);margin-top:4px;padding-top:6px"><span><b>Итого семечкового</b></span><span><b>'+fmt(Math.round(doughS*k+seedTot+watAdd))+'</b> г = '+b.s+' \u00D7 '+fmt(ZM.loaf)+' г</span></div></div>')
+          :'<p class="hint" style="margin-top:10px">Семечковых в этом замесе нет.</p>')+
+        '</div></div></div>';
+  }).join('')+
+  (r.n>1?('<div class="note">\u26A0\uFE0F '+fmt(Math.round(r.need))+' г теста не влезает в дежу ('+fmt(zmCap())+' г). Разбито на '+r.n+' замеса \u2014 пропорции и гидратация в каждом одинаковые.</div>'):'');
+  zmCfg();
+}
+function zmCfg(){
+  var box=document.getElementById('zm-cfg'); if(!box)return;
+  zmNorm();
+  var chef=isChef(), bs=zmBaseSum(), mixSum=0;
+  ZM.mix.forEach(function(m){ mixSum+=parseFloat(m[1])||0; });
+  function num(lbl,key,step,hint){
+    return '<div class="field" style="margin:0"><label>'+lbl+'</label><input type="number" value="'+ZM[key]+'" step="'+(step||1)+'"'+(chef?'':' disabled')+' oninput="zmSet(\''+key+'\',this.value)">'+(hint?'<p class="hint" style="margin:3px 0 0">'+hint+'</p>':'')+'</div>';
+  }
+  box.innerHTML=
+    '<div class="grid g3" style="gap:12px">'+
+      num('Масса хлеба, г','loaf',10)+
+      num('Дежа, пшеничных хлебов','capLoaves',1,ZM.capLoaves+' \u00D7 '+fmt(ZM.loaf)+' = '+fmt(zmCap())+' г теста')+
+      num('Запас на замес, %','margin',0.1,'Остаток в деже, обрезки')+
+    '</div>'+
+    '<div class="grid g3" style="gap:12px;margin-top:10px">'+
+      num('Семян на семечковый, г','seeds',1)+
+      num('Воды довеска, г','water',1)+
+      num('Гидратация опары, %','oparaH',1,'Для расчёта гидратации теста')+
+    '</div>'+
+    '<p class="hint" style="margin:8px 0 0">Семена и вода входят в '+fmt(ZM.loaf)+' г \u2192 чистого теста в семечковом <b>'+fmt(zmBaseSeeded())+' г</b>.</p>'+
+    '<div style="margin-top:14px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'+
+    '<b style="font-size:14px">Раскладка на '+fmt(ZM.loaf)+' г теста</b>'+
+    (chef?'<button class="btn chef-only" style="padding:2px 10px;font-size:11px" onclick="zmRowAdd()">+ ингредиент</button>':'')+'</div>'+
+    ZM.base.map(function(x,i){
+      return '<div class="pair"><span style="flex:1;min-width:0">'+
+        (chef?('<input type="text" value="'+tkEsc(x[0])+'" oninput="zmRow('+i+',0,this.value)" style="width:100%;border:none;border-bottom:1.5px dashed var(--hair);background:none;font-size:13px;padding:2px 0">'):tkEsc(x[0]))+'</span>'+
+        '<span style="display:flex;gap:6px;align-items:center">'+
+        (chef?('<input type="number" value="'+x[1]+'" step="0.1" oninput="zmRow('+i+',1,this.value)" style="width:78px;text-align:right;border:1.5px solid var(--hair);border-radius:7px;padding:3px 6px;font-size:12.5px"> г<button class="btn chef-only" style="padding:1px 7px;font-size:10.5px;color:#C0392B" onclick="zmRowDel('+i+')">\u2715</button>'):('<b>'+x[1]+'</b> г'))+'</span></div>';
+    }).join('')+
+    '<div class="pair" style="border-top:1.5px solid var(--hair);margin-top:4px;padding-top:6px"><span><b>Сумма</b></span><span><b>'+bs.toFixed(1)+'</b> г '+
+    (Math.abs(bs-ZM.loaf)>1?('<span class="tag crit" style="font-size:10px">\u2260 '+fmt(ZM.loaf)+'</span>'):'<span class="tag ok" style="font-size:10px">\u2713</span>')+'</span></div></div>'+
+    '<div style="margin-top:14px"><b style="font-size:14px">Зерновая смесь \u2014 доли, %</b>'+
+    ZM.mix.map(function(m,i){
+      var g=mixSum>0?ZM.seeds*(parseFloat(m[1])||0)/mixSum:0;
+      return '<div class="pair"><span style="flex:1;min-width:0">'+
+        (chef?('<input type="text" value="'+tkEsc(m[0])+'" oninput="zmMix('+i+',0,this.value)" style="width:100%;border:none;border-bottom:1.5px dashed var(--hair);background:none;font-size:13px;padding:2px 0">'):tkEsc(m[0]))+'</span>'+
+        '<span style="display:flex;gap:6px;align-items:center">'+
+        (chef?('<input type="number" value="'+m[1]+'" step="0.05" oninput="zmMix('+i+',1,this.value)" style="width:70px;text-align:right;border:1.5px solid var(--hair);border-radius:7px;padding:3px 6px;font-size:12.5px"> %'):('<b>'+m[1]+'</b> %'))+
+        '<span style="color:var(--muted);font-size:12px">'+g.toFixed(1)+' г</span></span></div>';
+    }).join('')+'</div>';
+}
+function zmSet(k,v){ ZM[k]=parseFloat(v)||0; zmCalc(); bvSave(); }
+function zmRow(i,j,v){ if(!ZM.base[i])return; ZM.base[i][j]=(j===1)?(parseFloat(v)||0):v; zmCalc(); bvSave(); }
+function zmRowAdd(){ if(!isChef())return; ZM.base.push(['Новый ингредиент',0]); zmCalc(); bvSaveNow(); }
+function zmRowDel(i){ if(!isChef())return; if(!ZM.base[i])return; if(!confirm('Убрать «'+ZM.base[i][0]+'» из раскладки?'))return; ZM.base.splice(i,1); zmCalc(); bvSaveNow(); }
+function zmMix(i,j,v){ if(!ZM.mix[i])return; ZM.mix[i][j]=(j===1)?(parseFloat(v)||0):v; zmCalc(); bvSave(); }
 
 /* ===== ДВИЖОК ТЕСТОВ ===== */
 var TEST_Q=[
@@ -10835,7 +11015,7 @@ function sendChk(){
 }
 /* ===================== СОХРАНЕНИЕ В БРАУЗЕРЕ (localStorage) ===================== */
 var BV_KEY='bv_pekar_store_v1';
-var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF_SHIFTS','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','REMINDERS','HOL_INFO','HOL_CUSTOM','RT_PLAN','SCRIPTS','EQ','SAN','REGL','ERRS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','NOTIF_HID','ACH_MIG','SKILL_GROUPS','TRACK_SKILLS','BADGE_CUSTOM','BADGE_EDITS','BADGE_HIDDEN','ATTEST','OB_TRACKS','OB_VERSIONS','FAQ','FAQ_ASK','MAT','MAT_CATS','ABOUT'];
+var BV_PERSIST=['DECL_DEFAULTS','OVEN','BAKE_PRODUCTS','BAKE_PLAN','BAKE_START','BAKE_ORDER','MIXERS','MIX_RECIPES','MIX_PLAN','MIX_START','VITRINA_BUILD','PARTNERS','SCRIPTS','KB_CUSTOM','REMINDERS','FAILS','RARCH','CHK_ARCH','RTESTS','TEAM','DRINKS','RECIPES','EQ','SAN','PLAN_ITEMS','WEEK_DATA','WEEK_PRODUCTS','BR_ARCHIVE','BR_POSITIONS','BR_SUMMARY','HO_TASKS','HO_PROBLEMS','HO_HANDOVER','HO_PASS','HO_HANDOVER_BAR','HO_PASS_BAR','NOTIFS','NEWS','STAFF_SHIFTS','ABSENCE_INFO','DAY_INFO','SCHED_OVR','SCHED_NOTES','SCHED_WEEKNOTES','OB_STATE','VITRINA','VIT_REST','CHK','SHIFT_CRIT','SHIFT_AVG','ERRS','REGL','HOLIDAYS','SCHED_TPLS','REMINDERS','HOL_INFO','HOL_CUSTOM','RT_PLAN','ZM','SCRIPTS','EQ','SAN','REGL','ERRS','ROLE_TAGS','POS_LIST','DIR_LIST','POS_TRACK','ROLES','PIN_MAP','COMPANY','NOTIF_SEEN','NOTIF_HID','ACH_MIG','SKILL_GROUPS','TRACK_SKILLS','BADGE_CUSTOM','BADGE_EDITS','BADGE_HIDDEN','ATTEST','OB_TRACKS','OB_VERSIONS','FAQ','FAQ_ASK','MAT','MAT_CATS','ABOUT'];
 function bvSnapshot(){ var o={}; for(var i=0;i<BV_PERSIST.length;i++){ var k=BV_PERSIST[i]; try{ if(typeof window[k]!=='undefined') o[k]=window[k]; }catch(e){} } return o; }
 function bvSave(){ try{ localStorage.setItem(BV_KEY, JSON.stringify(bvSnapshot())); }catch(e){} }
 function bvLoad(){ try{ var raw=localStorage.getItem(BV_KEY); if(!raw)return false; var o=JSON.parse(raw); var n=0; for(var k in o){ if(o.hasOwnProperty(k) && BV_PERSIST.indexOf(k)>=0){ try{ window[k]=o[k]; n++; }catch(e){} } } return n>0; }catch(e){ return false; } }
@@ -10892,6 +11072,7 @@ function bvFixups(){
   try{ if(typeof staffSync==='function')staffSync(); }catch(e){}
   try{ if(typeof holBoot==='function')holBoot(); }catch(e){}
   try{ if(typeof rtPlanNorm==='function')rtPlanNorm(); }catch(e){}
+  try{ if(typeof zmNorm==='function')zmNorm(); }catch(e){}
 }
 function bvRerender(){
   ['renderTeam','renderHR','renderAch','renderBadgeBook','renderRolesMatrix','renderCompany','renderReminders','renderAttest','renderOnboard','renderLevelLegend','renderNotifs'].forEach(function(fn){
@@ -10923,7 +11104,7 @@ function bvBootCloud(){
   }).catch(function(e){});
 }
 bvBootCloud();bvLoad();bvFixups();try{var _ci=document.getElementById('bv-cloud-input'); if(_ci)_ci.value=BV_CLOUD_URL; if(BV_CLOUD_URL_EMBED){var _cs=document.getElementById('bv-cloud-setup'); if(_cs)_cs.style.display='none';} var _sn=document.getElementById('bv-store-note'); var _rl=document.getElementById('bv-reset-link'); if(BV_CLOUD_URL){ if(_sn)_sn.innerHTML='☁️ Данные в общей базе<br><span style="opacity:.8">общие для команды</span><br><a onclick="bvPing()" style="cursor:pointer;text-decoration:underline">Проверить базу</a>'; if(_rl)_rl.style.display='none'; } bvCloudStatus(BV_CLOUD_URL?'☁️ Общая база подключена.':'База не подключена — данные пока только на этом устройстве.');}catch(e){}
-renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAttest();renderFaq();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderBadgeBook();renderAttest();renderToday();renderDashBday();renderFaq();renderMat();renderAbout();holBoot();renderHolBox();renderDashTasks();rolesBoot();teamBoot();coMigrate();achMigrate();badgeMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
+renderChk();renderFails();renderNews();renderBakePlanner();renderVitCon();renderMixPlanner();renderSched();renderErrGrid();renderReglGrid();renderKbAll();renderTeam();renderLevelLegend();renderHR();renderReminders();remNotifs();renderRtest();renderAttest();renderFaq();renderAch();renderBadgeBook();renderOnboard();renderRarch();renderHandoff();renderDashImportant();renderBR();renderBRSummary();renderScripts();renderDrinks();renderChkProblems();chkProbCatsRender();renderTpls();applyChkDirections();renderProducts();renderVitrina();renderBadgeBook();zmCalc();renderAttest();renderToday();renderDashBday();renderFaq();renderMat();renderAbout();holBoot();renderHolBox();renderDashTasks();rolesBoot();teamBoot();coMigrate();achMigrate();badgeMigrate();renderCompany();renderRolesMatrix();renderRecipesGrid('all');setRole('chef');renderTK();renderPlanInputs();document.getElementById('pl-z2-box').style.display='none';document.querySelector('#pl-zames .on');calcPlan();renderWeek();
 
 calcKalk();calcAkt();calcHidr();calcBP();
 
